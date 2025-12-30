@@ -16,8 +16,8 @@ const fontMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Workflow App",
-  description: "A modern workflow automation platform",
+  title: "Unified Automation - Web2 + Web3",
+  description: "Connect everything. Automate anything. From APIs to blockchains, one powerful platform for all your automation needs.",
 };
 
 export default function RootLayout({
