@@ -14,6 +14,10 @@ A modern Next.js application with a complete, production-ready design system fea
 # Install dependencies
 npm install
 
+# Configure environment variables (see Configuration section below)
+cp .env.example .env.local
+# Edit .env.local with your contract addresses
+
 # Run development server
 npm run dev
 
@@ -25,7 +29,52 @@ npm start
 ```
 
 Open [http://localhost:3000](http://localhost:3000) to see the app.  
-Visit [http://localhost:3000/demo](http://localhost:3000/demo) to see the design system showcase.
+Visit [http://localhost:3000/demo](http://localhost:3000/demo) to see the workflow builder with wallet integration.
+
+## ⚙️ Configuration
+
+### Required Environment Variables
+
+The Wallet block requires the following environment variables to function:
+
+```env
+# Safe Wallet Factory Address (TriggerXSafeFactory contract)
+NEXT_PUBLIC_SAFE_WALLET_FACTORY_ADDRESS=0x...
+
+# Safe Module Address (TriggerX module for Safe wallets)
+NEXT_PUBLIC_SAFE_MODULE_ADDRESS=0x...
+```
+
+### Optional Environment Variables
+
+For improved performance and mainnet support:
+
+```env
+# Mainnet-specific addresses (if different from testnet)
+NEXT_PUBLIC_MAINNET_SAFE_WALLET_FACTORY_ADDRESS=0x...
+NEXT_PUBLIC_MAINNET_SAFE_MODULE_ADDRESS=0x...
+
+# Safe Transaction Service API endpoints (for faster Safe wallet fetching)
+NEXT_PUBLIC_OP_SEPOLIA_SAFE_ACCOUNTS_BASE_URL=https://...
+NEXT_PUBLIC_BASE_SEPOLIA_SAFE_ACCOUNTS_BASE_URL=https://...
+NEXT_PUBLIC_ARBITRUM_MAINNET_SAFE_ACCOUNTS_BASE_URL=https://...
+
+# Safe API Key (to avoid rate limits)
+NEXT_PUBLIC_SAFE_API_KEY=your_api_key
+
+# Additional contract addresses
+NEXT_PUBLIC_SAFE_MULTISEND_CALL_ONLY_ADDRESS=0x...
+```
+
+### Supported Networks
+
+The wallet block supports the following networks out of the box:
+- **Optimism Sepolia** (chainId: 11155420)
+- **Base Sepolia** (chainId: 84532)
+- **Arbitrum Sepolia** (chainId: 421614)
+- **Arbitrum Mainnet** (chainId: 42161)
+
+To add support for additional networks, update `src/web3/utils/contractAddresses.ts`.
 
 ## 📚 Documentation
 
@@ -52,6 +101,13 @@ Visit [http://localhost:3000/demo](http://localhost:3000/demo) to see the design
 ### Workflow Components (`@/components/workflow`)
 - **WorkflowCanvas** - React Flow-based workflow editor
 - **BaseNode** - Generic workflow node component
+- **WalletNode** - Web3 wallet connection and Safe wallet management
+
+### Web3 Integration (`@/web3`)
+- **Hooks** - Safe wallet creation, fetching, and module management
+- **Utils** - Contract addresses, Safe chain info, local storage
+- **Types** - TypeScript definitions for Safe operations
+- **Artifacts** - Contract ABIs for Safe and TriggerX contracts
 
 ### Utilities
 - `cn()` - Class name merging utility (clsx + tailwind-merge)
@@ -164,6 +220,8 @@ This design system's **architecture** was adapted from a production application 
 - **Workflow**: React Flow
 - **Icons**: Lucide React
 - **Language**: TypeScript
+- **Web3**: wagmi + viem + RainbowKit
+- **Safe Integration**: @safe-global/protocol-kit + api-kit
 
 ## 🛠️ Development
 
@@ -174,11 +232,19 @@ src/
 ├── app/              # Next.js app router
 │   ├── globals.css   # Theme tokens & base styles
 │   ├── layout.tsx    # Root layout with fonts
-│   └── demo/         # Component showcase
+│   ├── providers.tsx # Web3 providers (Wagmi, RainbowKit, Safe)
+│   └── demo/         # Workflow builder demo
 ├── components/
 │   ├── ui/           # UI primitives
 │   ├── layout/       # Layout components
-│   └── workflow/     # Workflow canvas
+│   ├── workflow/     # Workflow canvas & nodes
+│   └── blocks/       # Block definitions (Social, Wallet)
+├── contexts/         # React contexts (SafeWalletContext)
+├── web3/             # Web3 integration
+│   ├── hooks/        # Safe wallet hooks
+│   ├── utils/        # Contract utilities
+│   ├── types/        # TypeScript types
+│   └── artifacts/    # Contract ABIs
 ├── hooks/            # React hooks
 └── lib/              # Utilities
 ```

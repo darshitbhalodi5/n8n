@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useCallback, useRef } from "react";
-import { CheckSquare, Share2 } from "lucide-react";
+import React, { useCallback, useRef, useMemo } from "react";
+import { CheckSquare } from "lucide-react";
 import { WorkflowLayout, WorkflowSidebar } from "@/components/workflow-layout";
 import { TooltipProvider } from "@/components/ui";
-import { WorkflowCanvas, BaseNode } from "@/components/workflow";
+import { WorkflowCanvas, BaseNode, WalletNode } from "@/components/workflow";
 import {
   Node,
   Edge,
@@ -18,6 +18,7 @@ import type { NodeProps } from "reactflow";
 import {
   getBlockById,
   iconRegistry,
+  blockCategories,
   type BlockDefinition,
 } from "@/components/blocks";
 
@@ -52,6 +53,14 @@ const nodeTypes = {
   ),
   "send-message": (props: NodeProps) => (
     <BaseNode
+      {...props}
+      showHandles
+      sourcePosition={Position.Right}
+      targetPosition={Position.Left}
+    />
+  ),
+  "wallet-node": (props: NodeProps) => (
+    <WalletNode
       {...props}
       showHandles
       sourcePosition={Position.Right}
@@ -113,6 +122,15 @@ export default function WorkflowPage() {
           return;
         }
 
+        // Guard: prevent duplicate wallet blocks
+        if (blockDefinition.nodeType === "wallet-node") {
+          const walletNodeExists = nodes.some((n) => n.type === "wallet-node");
+          if (walletNodeExists) {
+            console.warn("Wallet block already exists on canvas");
+            return;
+          }
+        }
+
         // Get position relative to canvas
         const reactFlowBounds = (
           event.currentTarget as HTMLElement
@@ -143,24 +161,43 @@ export default function WorkflowPage() {
         console.error("Error dropping block:", error);
       }
     },
-    [setNodes]
+    [nodes, setNodes]
   );
 
   const handleBlockDragStart = useCallback(() => {
     // Optional: Add visual feedback or tracking
   }, []);
 
-  // React Flow handles keyboard deletion automatically via deleteKeyCode prop
-
-  // Build categories with icons from blockCategories
-  const categories = [
-    { id: "all", label: "All", icon: <CheckSquare className="w-4 h-4" /> },
-    {
-      id: "social",
-      label: "Social",
-      icon: <Share2 className="w-4 h-4" />,
+  // Check if wallet block is disabled (already on canvas)
+  const isBlockDisabled = useCallback(
+    (blockId: string) => {
+      if (blockId === "wallet") {
+        return nodes.some((n) => n.type === "wallet-node");
+      }
+      return false;
     },
-  ];
+    [nodes]
+  );
+
+  // Build categories dynamically from blockCategories
+  const categories = useMemo(() => {
+    const allCategory = {
+      id: "all",
+      label: "All",
+      icon: <CheckSquare className="w-4 h-4" />,
+    };
+
+    const dynamicCategories = blockCategories.map((cat) => {
+      const IconComponent = cat.iconName ? iconRegistry[cat.iconName] : null;
+      return {
+        id: cat.id,
+        label: cat.label,
+        icon: IconComponent ? <IconComponent className="w-4 h-4" /> : null,
+      };
+    });
+
+    return [allCategory, ...dynamicCategories];
+  }, []);
 
   return (
     <TooltipProvider>
@@ -171,6 +208,7 @@ export default function WorkflowPage() {
           <WorkflowSidebar
             activeCategory={activeCategory}
             onBlockDragStart={handleBlockDragStart}
+            isBlockDisabled={isBlockDisabled}
           />
         )}
       >

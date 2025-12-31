@@ -11,3 +11,6 @@ export type { WorkflowCanvasProps } from "./WorkflowCanvas";
 export { BaseNode } from "./nodes/BaseNode";
 export type { BaseNodeData, BaseNodeProps } from "./nodes/BaseNode";
 
+export { WalletNode } from "./nodes/WalletNode";
+export type { WalletNodeData, WalletNodeProps } from "./nodes/WalletNode";
+

@@ -11,11 +11,13 @@ import {
 interface WorkflowSidebarProps {
   activeCategory: string;
   onBlockDragStart?: (block: BlockDefinition) => void;
+  isBlockDisabled?: (blockId: string) => boolean;
 }
 
 export function WorkflowSidebar({
   activeCategory,
   onBlockDragStart,
+  isBlockDisabled,
 }: WorkflowSidebarProps) {
   // Get blocks for the active category
   const blocks =
@@ -41,6 +43,7 @@ export function WorkflowSidebar({
                   key={block.id}
                   block={block}
                   onDragStart={onBlockDragStart}
+                  disabled={isBlockDisabled?.(block.id) ?? false}
                 />
               ))}
             </div>

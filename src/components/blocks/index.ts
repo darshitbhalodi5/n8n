@@ -5,7 +5,8 @@
 
 import type { BlockDefinition, CategoryDefinition, IconRegistry } from "./types";
 import { socialBlocks } from "./social";
-import { MessageCircle, Mail, Send, Share2 } from "lucide-react";
+import { walletBlocks } from "./wallet";
+import { MessageCircle, Mail, Send, Share2, Wallet } from "lucide-react";
 
 // Re-export types
 export type { BlockDefinition, CategoryDefinition, IconRegistry };
@@ -16,6 +17,7 @@ export const iconRegistry: IconRegistry = {
   Mail,
   Send,
   Share2,
+  Wallet,
 };
 
 /**
@@ -28,6 +30,12 @@ export const blockCategories: CategoryDefinition[] = [
     label: "Social",
     iconName: "Share2",
     blocks: socialBlocks,
+  },
+  {
+    id: "wallet",
+    label: "Wallet",
+    iconName: "Wallet",
+    blocks: walletBlocks,
   },
 ];
 
