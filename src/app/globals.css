@@ -24,41 +24,41 @@ body {
   box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px hsl(var(--ring));
 }
 
-  :root {
+:root {
   /* Dark-only color palette - warm, earthy design */
-  --background: 210 22% 10%;      /* #12161B Deep Charcoal */
-  --foreground: 40 14% 89%;       /* #E5E1DB Warm Off-White */
+  --background: 210 22% 10%; /* #12161B Deep Charcoal */
+  --foreground: 40 14% 89%; /* #E5E1DB Warm Off-White */
 
-  --card: 210 14% 14%;            /* #1E2428 Warm Gray */
-  --card-foreground: 40 14% 89%;  /* #E5E1DB Warm Off-White */
+  --card: 210 14% 14%; /* #1E2428 Warm Gray */
+  --card-foreground: 40 14% 89%; /* #E5E1DB Warm Off-White */
 
-  --popover: 210 14% 14%;         /* #1E2428 Warm Gray */
+  --popover: 210 14% 14%; /* #1E2428 Warm Gray */
   --popover-foreground: 40 14% 89%;
 
-  --primary: 30 19% 55%;          /* #9B8B7E Warm Sage-Taupe */
+  --primary: 30 19% 55%; /* #9B8B7E Warm Sage-Taupe */
   --primary-foreground: 40 14% 89%;
 
-  --secondary: 210 14% 18%;       /* #2A3138 Slightly Lighter */
+  --secondary: 210 14% 18%; /* #2A3138 Slightly Lighter */
   --secondary-foreground: 40 14% 89%;
 
-  --muted: 210 14% 18%;           /* #2A3138 Slightly Lighter */
+  --muted: 210 14% 18%; /* #2A3138 Slightly Lighter */
   --muted-foreground: 30 12% 61%; /* #A89E94 Warm Gray */
 
-  --accent: 38 43% 56%;           /* #B8956A Muted Gold */
+  --accent: 38 43% 56%; /* #B8956A Muted Gold */
   --accent-foreground: 210 22% 10%;
 
-  --destructive: 3 57% 58%;       /* #D9534F Rust Red */
+  --destructive: 3 57% 58%; /* #D9534F Rust Red */
   --destructive-foreground: 40 14% 89%;
 
-  --success: 113 31% 65%;         /* #8CC084 Calm Green */
+  --success: 113 31% 65%; /* #8CC084 Calm Green */
   --success-foreground: 210 22% 10%;
 
-  --warning: 9 40% 61%;           /* #C67C6F Muted Rust */
+  --warning: 9 40% 61%; /* #C67C6F Muted Rust */
   --warning-foreground: 210 22% 10%;
 
-  --border: 210 14% 18%;          /* #2A3138 Slightly Lighter */
+  --border: 210 14% 18%; /* #2A3138 Slightly Lighter */
   --input: 210 14% 18%;
-  --ring: 30 19% 55%;             /* #9B8B7E Warm Sage-Taupe */
+  --ring: 30 19% 55%; /* #9B8B7E Warm Sage-Taupe */
 
   --radius: 0.5rem;
 }
@@ -92,4 +92,50 @@ body {
 
 .scrollbar-thin::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--muted-foreground) / 0.5);
+}
+
+/* React Flow Handle Styling - Improved connection points */
+.react-flow__handle {
+  width: 16px !important;
+  height: 16px !important;
+  border: 2px solid hsl(var(--foreground)) !important;
+  background: transparent !important;
+  border-radius: 50% !important;
+}
+
+.react-flow__handle::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 8px;
+  height: 8px;
+  background: hsl(var(--foreground));
+  border-radius: 50%;
+  opacity: 1;
+}
+
+.react-flow__handle:hover {
+  background: hsl(var(--foreground) / 0.1) !important;
+  border-color: hsl(var(--primary)) !important;
+}
+
+.react-flow__handle:hover::after {
+  background: hsl(var(--primary));
+}
+
+.react-flow__handle.react-flow__handle-connecting {
+  background: hsl(var(--primary) / 0.2) !important;
+  border-color: hsl(var(--primary)) !important;
+}
+
+.react-flow__handle.react-flow__handle-valid {
+  background: hsl(var(--success) / 0.2) !important;
+  border-color: hsl(var(--success)) !important;
+}
+
+/* Hide React Flow attribution/link */
+.react-flow__attribution {
+  display: none !important;
 }

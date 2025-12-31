@@ -4,17 +4,18 @@ import React, { useCallback } from "react";
 import {
   ReactFlow,
   Background,
-  Controls,
   MiniMap,
   Node,
   Edge,
   OnNodesChange,
   OnEdgesChange,
   OnConnect,
+  OnNodesDelete,
   NodeTypes,
   ReactFlowProvider,
   BackgroundVariant,
   ConnectionMode,
+  ReactFlowInstance,
 } from "reactflow";
 import "reactflow/dist/style.css";
 import { cn } from "@/lib/utils";
@@ -25,13 +26,14 @@ export interface WorkflowCanvasProps {
   onNodesChange?: OnNodesChange;
   onEdgesChange?: OnEdgesChange;
   onConnect?: OnConnect;
+  onNodesDelete?: OnNodesDelete;
   nodeTypes?: NodeTypes;
   className?: string;
   showBackground?: boolean;
-  showControls?: boolean;
   showMiniMap?: boolean;
   backgroundVariant?: BackgroundVariant;
   fitView?: boolean;
+  onInit?: (instance: ReactFlowInstance) => void;
 }
 
 function WorkflowCanvasInner({
@@ -40,13 +42,14 @@ function WorkflowCanvasInner({
   onNodesChange,
   onEdgesChange,
   onConnect,
+  onNodesDelete,
   nodeTypes,
   className,
   showBackground = true,
-  showControls = true,
   showMiniMap = false,
   backgroundVariant = BackgroundVariant.Dots,
   fitView = true,
+  onInit,
 }: WorkflowCanvasProps) {
   const handleNodesChange = useCallback<OnNodesChange>(
     (changes) => {
@@ -88,9 +91,22 @@ function WorkflowCanvasInner({
         onNodesChange={handleNodesChange}
         onEdgesChange={handleEdgesChange}
         onConnect={handleConnect}
+        onNodesDelete={onNodesDelete}
         nodeTypes={nodeTypes}
         fitView={fitView}
         connectionMode={ConnectionMode.Loose}
+        onInit={onInit}
+        nodesDraggable={true}
+        nodesConnectable={true}
+        elementsSelectable={true}
+        nodesFocusable={true}
+        deleteKeyCode={["Delete", "Backspace"]}
+        zoomOnScroll={true}
+        zoomOnPinch={true}
+        zoomOnDoubleClick={false}
+        panOnScroll={false}
+        panOnDrag={true}
+        preventScrolling={false}
         defaultEdgeOptions={{
           type: "smoothstep",
           animated: true,
@@ -109,12 +125,6 @@ function WorkflowCanvasInner({
             color="hsl(var(--muted-foreground) / 0.2)"
           />
         )}
-        {showControls && (
-          <Controls
-            className="bg-card! border-border! text-foreground!"
-            showInteractive={false}
-          />
-        )}
         {showMiniMap && (
           <MiniMap
             className="bg-card! border-border!"
@@ -129,13 +139,15 @@ function WorkflowCanvasInner({
 
 /**
  * WorkflowCanvas - A generic React Flow canvas component
- * 
+ *
  * Features:
  * - Token-based styling using CSS variables
- * - Optional Background, Controls, and MiniMap
+ * - Optional Background and MiniMap
+ * - Mouse-based zoom (scroll wheel)
+ * - Pan on drag
  * - Fully controlled component pattern
  * - No business logic, pure presentation
- * 
+ *
  * @example
  * ```tsx
  * <WorkflowCanvas
@@ -146,7 +158,6 @@ function WorkflowCanvasInner({
  *   onConnect={handleConnect}
  *   nodeTypes={customNodeTypes}
  *   showBackground
- *   showControls
  * />
  * ```
  */
@@ -157,4 +168,3 @@ export function WorkflowCanvas(props: WorkflowCanvasProps) {
     </ReactFlowProvider>
   );
 }
-
