@@ -7,7 +7,7 @@ import type { BlockDefinition } from "../types";
 export const walletBlock: BlockDefinition = {
   id: "wallet",
   label: "Wallet",
-  iconName: "Wallet",
+  iconName: "WalletLogo",
   description: "Connect wallet and manage Safe",
   category: "wallet",
   nodeType: "wallet-node",

@@ -2,10 +2,13 @@
 
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import type { Node } from "reactflow";
 
 interface WorkflowLayoutProps {
   children: React.ReactNode;
   sidebar: (activeCategory: string) => React.ReactNode;
+  rightSidebar?: (selectedNode: Node | null) => React.ReactNode;
+  selectedNode?: Node | null;
   categories?: Array<{
     id: string;
     label: string;
@@ -18,6 +21,8 @@ interface WorkflowLayoutProps {
 export function WorkflowLayout({
   children,
   sidebar,
+  rightSidebar,
+  selectedNode,
   categories = [],
   defaultCategory = "all",
   onCategoryChange,
@@ -30,6 +35,8 @@ export function WorkflowLayout({
       onCategoryChange(categoryId);
     }
   };
+
+  const showRightSidebar = selectedNode !== null && selectedNode !== undefined;
 
   return (
     <div className="flex flex-col h-screen bg-background">
@@ -60,13 +67,35 @@ export function WorkflowLayout({
 
       {/* Main content area */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Left Sidebar - 255px */}
-        <aside className="w-[255px] border-r border-border bg-card overflow-y-auto">
+        {/* Left Sidebar - 20% width on desktop, hidden on mobile */}
+        <aside className="hidden md:block w-[20%] border-r border-border bg-card overflow-y-auto">
           {sidebar(activeCategory)}
         </aside>
 
-        {/* Canvas area */}
-        <main className="flex-1 overflow-auto">{children}</main>
+        {/* Canvas area - responsive width */}
+        <main
+          className={cn(
+            "overflow-auto transition-all duration-200",
+            // Mobile: full width
+            "w-full md:w-[80%]",
+            // Desktop: 60% when right sidebar visible, 80% when not
+            showRightSidebar && "md:w-[60%]"
+          )}
+        >
+          {children}
+        </main>
+
+        {/* Right Sidebar - 20% width, conditionally visible on desktop */}
+        {rightSidebar && (
+          <aside
+            className={cn(
+              "hidden md:block border-l border-border bg-card overflow-y-auto transition-all duration-200",
+              showRightSidebar ? "w-[20%]" : "w-0 hidden"
+            )}
+          >
+            {showRightSidebar && rightSidebar(selectedNode)}
+          </aside>
+        )}
       </div>
     </div>
   );

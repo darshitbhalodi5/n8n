@@ -1,8 +1,12 @@
 "use client";
 
-import React, { useCallback, useRef, useMemo } from "react";
+import React, { useCallback, useRef, useMemo, useState } from "react";
 import { CheckSquare } from "lucide-react";
-import { WorkflowLayout, WorkflowSidebar } from "@/components/workflow-layout";
+import {
+  WorkflowLayout,
+  WorkflowSidebar,
+  WorkflowRightSidebar,
+} from "@/components/workflow-layout";
 import { TooltipProvider } from "@/components/ui";
 import { WorkflowCanvas, BaseNode, WalletNode } from "@/components/workflow";
 import {
@@ -15,6 +19,10 @@ import {
   ReactFlowInstance,
 } from "reactflow";
 import type { NodeProps } from "reactflow";
+
+// Define handler types for React Flow events
+type OnNodeClick = (event: React.MouseEvent, node: Node) => void;
+type OnPaneClick = (event: React.MouseEvent) => void;
 import {
   getBlockById,
   iconRegistry,
@@ -72,6 +80,7 @@ const nodeTypes = {
 export default function WorkflowPage() {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const reactFlowInstance = useRef<ReactFlowInstance | null>(null);
 
   // React Flow's built-in node deletion handler
@@ -140,7 +149,7 @@ export default function WorkflowPage() {
           y: event.clientY - reactFlowBounds.top,
         });
 
-        // Get icon component for the node
+        // Get icon/logo component for the node
         const IconComponent = blockDefinition.iconName
           ? iconRegistry[blockDefinition.iconName]
           : null;
@@ -152,7 +161,8 @@ export default function WorkflowPage() {
           position,
           data: {
             ...blockDefinition.defaultData,
-            icon: IconComponent ? <IconComponent className="w-4 h-4" /> : null,
+            blockId: block.id, // Store block ID for right sidebar
+            icon: IconComponent ? <IconComponent className="w-8 h-8" /> : null,
           },
         };
 
@@ -179,6 +189,59 @@ export default function WorkflowPage() {
     [nodes]
   );
 
+  // Handle node click - select node
+  const handleNodeClick: OnNodeClick = useCallback((_event, node) => {
+    setSelectedNode(node);
+  }, []);
+
+  // Handle pane click - deselect node
+  const handlePaneClick: OnPaneClick = useCallback(() => {
+    setSelectedNode(null);
+  }, []);
+
+  // Handle node data change from right sidebar
+  const handleNodeDataChange = useCallback(
+    (nodeId: string, data: Record<string, unknown>) => {
+      setNodes((nds) =>
+        nds.map((node) =>
+          node.id === nodeId
+            ? {
+                ...node,
+                data: {
+                  ...node.data,
+                  ...data,
+                },
+              }
+            : node
+        )
+      );
+      // Update selected node if it's the one being edited
+      if (selectedNode?.id === nodeId) {
+        setSelectedNode({
+          ...selectedNode,
+          data: {
+            ...selectedNode.data,
+            ...data,
+          },
+        });
+      }
+    },
+    [selectedNode, setNodes]
+  );
+
+  // Update selected node when nodes change (in case selected node was deleted)
+  React.useEffect(() => {
+    if (selectedNode) {
+      const nodeExists = nodes.find((n) => n.id === selectedNode.id);
+      if (!nodeExists) {
+        setSelectedNode(null);
+      } else {
+        // Update selected node with latest data
+        setSelectedNode(nodeExists);
+      }
+    }
+  }, [nodes, selectedNode]);
+
   // Build categories dynamically from blockCategories
   const categories = useMemo(() => {
     const allCategory = {
@@ -204,11 +267,29 @@ export default function WorkflowPage() {
       <WorkflowLayout
         categories={categories}
         defaultCategory="all"
+        selectedNode={selectedNode}
         sidebar={(activeCategory) => (
           <WorkflowSidebar
             activeCategory={activeCategory}
             onBlockDragStart={handleBlockDragStart}
             isBlockDisabled={isBlockDisabled}
+          />
+        )}
+        rightSidebar={(node) => (
+          <WorkflowRightSidebar
+            selectedNode={node}
+            onNodeDataChange={handleNodeDataChange}
+            onNodeDelete={(nodeId) => {
+              setNodes((nds) => nds.filter((n) => n.id !== nodeId));
+              setEdges((eds) =>
+                eds.filter(
+                  (edge) => edge.source !== nodeId && edge.target !== nodeId
+                )
+              );
+              if (selectedNode?.id === nodeId) {
+                setSelectedNode(null);
+              }
+            }}
           />
         )}
       >
@@ -253,6 +334,8 @@ export default function WorkflowPage() {
                 nodeTypes={nodeTypes}
                 showBackground
                 className="h-full"
+                onNodeClick={handleNodeClick}
+                onPaneClick={handlePaneClick}
                 onInit={(instance) => {
                   reactFlowInstance.current = instance;
                 }}

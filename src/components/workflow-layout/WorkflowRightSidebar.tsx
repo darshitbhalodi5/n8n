@@ -1,0 +1,490 @@
+"use client";
+
+import React, { useState } from "react";
+import { Node } from "reactflow";
+import { Typography } from "@/components/ui/Typography";
+import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/Dialog";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { useAccount, useChainId } from "wagmi";
+import { useSafeWalletContext } from "@/contexts/SafeWalletContext";
+import { getBlockById, getBlockByNodeType } from "@/components/blocks";
+import type { BlockDefinition } from "@/components/blocks";
+import {
+  RefreshCw,
+  Plus,
+  Download,
+  CheckCircle2,
+  XCircle,
+  Loader2,
+  Trash2,
+} from "lucide-react";
+import { addExtraSafe } from "@/web3/utils/safeWalletLocal";
+import { ethers } from "ethers";
+
+interface WorkflowRightSidebarProps {
+  selectedNode: Node | null;
+  onNodeDataChange?: (nodeId: string, data: Record<string, unknown>) => void;
+  onNodeDelete?: (nodeId: string) => void;
+}
+
+export function WorkflowRightSidebar({
+  selectedNode,
+  onNodeDataChange,
+  onNodeDelete,
+}: WorkflowRightSidebarProps) {
+  const { isConnected, address } = useAccount();
+  const chainId = useChainId();
+  const { selection, creation, moduleControl } = useSafeWalletContext();
+  const [importAddress, setImportAddress] = useState("");
+  const [importError, setImportError] = useState("");
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
+  if (!selectedNode) {
+    return (
+      <div className="h-full flex items-center justify-center p-6">
+        <div className="text-center">
+          <Typography variant="body" className="text-muted-foreground">
+            No block selected
+          </Typography>
+          <Typography variant="caption" className="text-muted-foreground mt-2">
+            Click on a block to view and edit its settings
+          </Typography>
+        </div>
+      </div>
+    );
+  }
+
+  // Get block definition from node data or node type
+  const blockId = selectedNode.data?.blockId as string | undefined;
+  const nodeType = selectedNode.type || "";
+  
+  // Try to get block by ID first, then by node type
+  const blockDefinition: BlockDefinition | null =
+    (blockId && getBlockById(blockId)) ||
+    (nodeType && getBlockByNodeType(nodeType)) ||
+    null;
+
+  const nodeData = selectedNode.data || {};
+
+  const handleDataChange = (key: string, value: unknown) => {
+    if (onNodeDataChange && selectedNode.id) {
+      onNodeDataChange(selectedNode.id, {
+        ...nodeData,
+        [key]: value,
+      });
+    }
+  };
+
+  const handleImportSafe = async () => {
+    setImportError("");
+    
+    if (!importAddress) {
+      setImportError("Please enter a Safe address");
+      return;
+    }
+
+    try {
+      // Validate address
+      const checksummed = ethers.getAddress(importAddress);
+      
+      // Add to local storage
+      addExtraSafe(chainId, checksummed);
+      
+      // Refresh the list
+      await selection.refreshSafeList();
+      
+      // Clear input
+      setImportAddress("");
+    } catch {
+      setImportError("Invalid address format");
+    }
+  };
+
+  // Check if this is a wallet node
+  const isWalletNode = nodeType === "wallet-node" || blockId === "wallet";
+
+  const handleDeleteClick = () => {
+    setShowDeleteDialog(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (selectedNode?.id && onNodeDelete) {
+      onNodeDelete(selectedNode.id);
+      setShowDeleteDialog(false);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setShowDeleteDialog(false);
+  };
+
+  return (
+    <>
+      <div className="h-full overflow-y-auto p-4 space-y-4">
+        {/* Header */}
+        <div className="space-y-2 pb-4 border-b border-border">
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex-1">
+              <Typography variant="h3" className="text-foreground">
+                {blockDefinition?.label || "Block Settings"}
+              </Typography>
+              <Typography variant="caption" className="text-muted-foreground">
+                {blockDefinition?.description || "Configure parameters for the selected block"}
+              </Typography>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleDeleteClick}
+              className="text-destructive hover:text-destructive hover:bg-destructive/10"
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+
+      {/* Wallet Node Configuration */}
+      {isWalletNode ? (
+        <div className="space-y-4">
+          {/* Section A: Connect Wallet */}
+          <Card className="p-4 space-y-3">
+            <Typography variant="bodySmall" className="font-semibold text-foreground">
+              1. Connect Wallet
+            </Typography>
+            <div className="flex justify-center">
+              <ConnectButton chainStatus="icon" accountStatus="address" />
+            </div>
+          </Card>
+
+          {/* Section B: Safe Wallet (shown after connect) */}
+          {isConnected && address && (
+            <Card className="p-4 space-y-3">
+              <Typography variant="bodySmall" className="font-semibold text-foreground">
+                2. Select or Create Safe Wallet
+              </Typography>
+              
+              {/* Loading state */}
+              {selection.isLoading && (
+                <div className="flex items-center justify-center py-4">
+                  <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                  <span className="ml-2 text-sm text-muted-foreground">Loading safes...</span>
+                </div>
+              )}
+
+              {/* Error state */}
+              {selection.error && (
+                <div className="text-sm text-destructive">{selection.error}</div>
+              )}
+
+              {/* Safe list */}
+              {!selection.isLoading && !selection.error && (
+                <>
+                  {selection.safeWallets.length > 0 ? (
+                    <div className="space-y-2">
+                      <select
+                        value={selection.selectedSafe || ""}
+                        onChange={(e) => selection.selectSafe(e.target.value || null)}
+                        className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                      >
+                        <option value="">Select a Safe wallet...</option>
+                        {selection.safeWallets.map((safe) => (
+                          <option key={safe} value={safe}>
+                            {safe.slice(0, 6)}...{safe.slice(-4)}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  ) : (
+                    <div className="text-sm text-muted-foreground py-2">
+                      No Safe wallets found
+                    </div>
+                  )}
+
+                  {/* Action buttons */}
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={selection.refreshSafeList}
+                      className="flex-1"
+                    >
+                      <RefreshCw className="w-3 h-3 mr-1" />
+                      Refresh
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="default"
+                      onClick={creation.handleCreateNewSafe}
+                      disabled={creation.isCreating}
+                      className="flex-1"
+                    >
+                      {creation.isCreating ? (
+                        <>
+                          <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                          Creating...
+                        </>
+                      ) : (
+                        <>
+                          <Plus className="w-3 h-3 mr-1" />
+                          Create Safe
+                        </>
+                      )}
+                    </Button>
+                  </div>
+
+                  {/* Import Safe */}
+                  <div className="space-y-2 pt-2 border-t border-border">
+                    <Typography variant="caption" className="text-muted-foreground">
+                      Import existing Safe:
+                    </Typography>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="0x..."
+                        value={importAddress}
+                        onChange={(e) => {
+                          setImportAddress(e.target.value);
+                          setImportError("");
+                        }}
+                        className="flex-1 px-3 py-1.5 text-sm border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                      />
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={handleImportSafe}
+                      >
+                        <Download className="w-3 h-3 mr-1" />
+                        Import
+                      </Button>
+                    </div>
+                    {importError && (
+                      <div className="text-xs text-destructive">{importError}</div>
+                    )}
+                  </div>
+                </>
+              )}
+            </Card>
+          )}
+
+          {/* Section C: Module Status (when a Safe selected) */}
+          {isConnected && selection.selectedSafe && (
+            <Card className="p-4 space-y-3">
+              <Typography variant="bodySmall" className="font-semibold text-foreground">
+                3. TriggerX Module Status
+              </Typography>
+
+              {selection.checkingModule ? (
+                <div className="flex items-center py-2">
+                  <Loader2 className="w-4 h-4 animate-spin text-primary mr-2" />
+                  <span className="text-sm text-muted-foreground">Checking module status...</span>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {/* Status display */}
+                  <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-secondary/30">
+                    <span className="text-sm font-medium">Module Status:</span>
+                    <div className="flex items-center gap-2">
+                      {selection.moduleEnabled === true && (
+                        <>
+                          <CheckCircle2 className="w-4 h-4 text-success" />
+                          <span className="text-sm text-success font-medium">Enabled</span>
+                        </>
+                      )}
+                      {selection.moduleEnabled === false && (
+                        <>
+                          <XCircle className="w-4 h-4 text-destructive" />
+                          <span className="text-sm text-destructive font-medium">Disabled</span>
+                        </>
+                      )}
+                      {selection.moduleEnabled === null && (
+                        <span className="text-sm text-muted-foreground">Unknown</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Action buttons */}
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={moduleControl.handleManualModuleRefresh}
+                      className="flex-1"
+                    >
+                      <RefreshCw className="w-3 h-3 mr-1" />
+                      Refresh Status
+                    </Button>
+                    {selection.moduleEnabled === false && (
+                      <Button
+                        size="sm"
+                        variant="default"
+                        onClick={moduleControl.handleEnableModule}
+                        className="flex-1"
+                      >
+                        Enable Module
+                      </Button>
+                    )}
+                    {selection.moduleEnabled === true && (
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={moduleControl.handleDisableModule}
+                        className="flex-1"
+                      >
+                        Disable Module
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              )}
+            </Card>
+          )}
+
+          {/* Creation flow status */}
+          {creation.showCreateFlow && (
+            <Card className="p-4 space-y-2">
+              <Typography variant="bodySmall" className="font-semibold text-foreground">
+                Creating Safe Wallet...
+              </Typography>
+              
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  {creation.createStep === "pending" && <Loader2 className="w-3 h-3 animate-spin text-primary" />}
+                  {creation.createStep === "success" && <CheckCircle2 className="w-3 h-3 text-success" />}
+                  {creation.createStep === "error" && <XCircle className="w-3 h-3 text-destructive" />}
+                  <span className="text-xs text-foreground">Creating Safe contract</span>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  {creation.signStep === "pending" && <Loader2 className="w-3 h-3 animate-spin text-primary" />}
+                  {creation.signStep === "success" && <CheckCircle2 className="w-3 h-3 text-success" />}
+                  {creation.signStep === "error" && <XCircle className="w-3 h-3 text-destructive" />}
+                  <span className="text-xs text-foreground">Signing module enable</span>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  {creation.enableStep === "pending" && <Loader2 className="w-3 h-3 animate-spin text-primary" />}
+                  {creation.enableStep === "success" && <CheckCircle2 className="w-3 h-3 text-success" />}
+                  {creation.enableStep === "error" && <XCircle className="w-3 h-3 text-destructive" />}
+                  <span className="text-xs text-foreground">Enabling module</span>
+                </div>
+              </div>
+
+              {(creation.createError || creation.signError || creation.enableError) && (
+                <div className="text-xs text-destructive mt-2">
+                  {creation.createError || creation.signError || creation.enableError}
+                </div>
+              )}
+            </Card>
+          )}
+        </div>
+      ) : (
+        /* Other Node Types - Basic Configuration */
+        <>
+          {/* Node Data - Editable Fields */}
+          <Card className="p-4 space-y-4">
+            <Typography variant="bodySmall" className="font-semibold text-foreground">
+              Parameters
+            </Typography>
+
+            {/* Label */}
+            <div className="space-y-2">
+              <label className="block">
+                <Typography variant="caption" className="text-muted-foreground mb-1">
+                  Label
+                </Typography>
+                <input
+                  type="text"
+                  value={(nodeData.label as string) || ""}
+                  onChange={(e) => handleDataChange("label", e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  placeholder="Enter block label"
+                />
+              </label>
+            </div>
+
+            {/* Description */}
+            <div className="space-y-2">
+              <label className="block">
+                <Typography variant="caption" className="text-muted-foreground mb-1">
+                  Description
+                </Typography>
+                <textarea
+                  value={(nodeData.description as string) || ""}
+                  onChange={(e) => handleDataChange("description", e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                  placeholder="Enter block description"
+                  rows={3}
+                />
+              </label>
+            </div>
+
+            {/* Status */}
+            {nodeData.status !== undefined && (
+              <div className="space-y-2">
+                <label className="block">
+                  <Typography variant="caption" className="text-muted-foreground mb-1">
+                    Status
+                  </Typography>
+                  <select
+                    value={(nodeData.status as string) || "idle"}
+                    onChange={(e) => handleDataChange("status", e.target.value)}
+                    className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  >
+                    <option value="idle">Idle</option>
+                    <option value="running">Running</option>
+                    <option value="success">Success</option>
+                    <option value="error">Error</option>
+                  </select>
+                </label>
+              </div>
+            )}
+
+            {/* Node ID (read-only) */}
+            <div className="space-y-2 pt-2 border-t border-border">
+              <Typography variant="caption" className="text-muted-foreground">
+                Node ID
+              </Typography>
+              <Typography
+                variant="caption"
+                className="text-foreground font-mono text-xs break-all"
+              >
+                {selectedNode.id}
+              </Typography>
+            </div>
+          </Card>
+        </>
+      )}
+      </div>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Block</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this block? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={handleDeleteCancel}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteConfirm}>
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+

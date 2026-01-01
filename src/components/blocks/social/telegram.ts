@@ -7,7 +7,7 @@ import type { BlockDefinition } from "../types";
 export const telegramBlock: BlockDefinition = {
   id: "telegram",
   label: "Telegram",
-  iconName: "MessageCircle",
+  iconName: "TelegramLogo",
   description: "Send messages via Telegram",
   category: "social",
   nodeType: "telegram",

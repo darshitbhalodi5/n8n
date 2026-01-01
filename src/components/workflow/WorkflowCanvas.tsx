@@ -17,6 +17,10 @@ import {
   ConnectionMode,
   ReactFlowInstance,
 } from "reactflow";
+
+// Define handler types for React Flow events
+type OnNodeClick = (event: React.MouseEvent, node: Node) => void;
+type OnPaneClick = (event: React.MouseEvent) => void;
 import "reactflow/dist/style.css";
 import { cn } from "@/lib/utils";
 
@@ -34,6 +38,8 @@ export interface WorkflowCanvasProps {
   backgroundVariant?: BackgroundVariant;
   fitView?: boolean;
   onInit?: (instance: ReactFlowInstance) => void;
+  onNodeClick?: OnNodeClick;
+  onPaneClick?: OnPaneClick;
 }
 
 function WorkflowCanvasInner({
@@ -50,6 +56,8 @@ function WorkflowCanvasInner({
   backgroundVariant = BackgroundVariant.Dots,
   fitView = true,
   onInit,
+  onNodeClick,
+  onPaneClick,
 }: WorkflowCanvasProps) {
   const handleNodesChange = useCallback<OnNodesChange>(
     (changes) => {
@@ -96,6 +104,8 @@ function WorkflowCanvasInner({
         fitView={fitView}
         connectionMode={ConnectionMode.Loose}
         onInit={onInit}
+        onNodeClick={onNodeClick}
+        onPaneClick={onPaneClick}
         nodesDraggable={true}
         nodesConnectable={true}
         elementsSelectable={true}

@@ -7,7 +7,7 @@ import type { BlockDefinition } from "../types";
 export const sendMessageBlock: BlockDefinition = {
   id: "send-message",
   label: "Send Message",
-  iconName: "Send",
+  iconName: "SendMessageLogo",
   description: "Generic message sender",
   category: "social",
   nodeType: "send-message",

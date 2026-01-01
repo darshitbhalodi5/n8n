@@ -6,18 +6,24 @@
 import type { BlockDefinition, CategoryDefinition, IconRegistry } from "./types";
 import { socialBlocks } from "./social";
 import { walletBlocks } from "./wallet";
-import { MessageCircle, Mail, Send, Share2, Wallet } from "lucide-react";
+import { Share2 } from "lucide-react";
+import {
+  TelegramLogo,
+  MailLogo,
+  WalletLogo,
+  SendMessageLogo,
+} from "./logos";
 
 // Re-export types
 export type { BlockDefinition, CategoryDefinition, IconRegistry };
 
-// Icon registry - maps icon names to actual components
+// Icon registry - maps icon names to actual components (logos and icons)
 export const iconRegistry: IconRegistry = {
-  MessageCircle,
-  Mail,
-  Send,
-  Share2,
-  Wallet,
+  TelegramLogo,
+  MailLogo,
+  WalletLogo,
+  SendMessageLogo,
+  Share2, // Keep for category icon
 };
 
 /**
@@ -61,6 +67,15 @@ export function getBlockById(blockId: string): BlockDefinition | undefined {
   return blockCategories
     .flatMap((category) => category.blocks)
     .find((block) => block.id === blockId);
+}
+
+/**
+ * Get block definition by node type
+ */
+export function getBlockByNodeType(nodeType: string): BlockDefinition | undefined {
+  return blockCategories
+    .flatMap((category) => category.blocks)
+    .find((block) => block.nodeType === nodeType);
 }
 
 /**

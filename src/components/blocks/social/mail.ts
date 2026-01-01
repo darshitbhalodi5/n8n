@@ -7,7 +7,7 @@ import type { BlockDefinition } from "../types";
 export const mailBlock: BlockDefinition = {
   id: "mail",
   label: "Mail",
-  iconName: "Mail",
+  iconName: "MailLogo",
   description: "Send email notifications",
   category: "social",
   nodeType: "mail",

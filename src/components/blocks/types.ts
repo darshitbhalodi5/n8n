@@ -1,4 +1,5 @@
 import type { LucideIcon } from "lucide-react";
+import type { ComponentType } from "react";
 
 /**
  * Base interface for all block definitions
@@ -24,7 +25,7 @@ export interface CategoryDefinition {
 }
 
 /**
- * Icon registry type
+ * Icon registry type - accepts both Lucide icons and custom React components
  */
-export type IconRegistry = Record<string, LucideIcon>;
+export type IconRegistry = Record<string, LucideIcon | ComponentType<{ className?: string }>>;
 
