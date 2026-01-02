@@ -1,13 +1,14 @@
 "use client";
 
 import React, { useCallback, useRef, useMemo, useState } from "react";
-import { CheckSquare } from "lucide-react";
+import { CheckSquare, LogIn } from "lucide-react";
 import {
   WorkflowLayout,
   WorkflowSidebar,
   WorkflowRightSidebar,
 } from "@/components/workflow-layout";
-import { TooltipProvider } from "@/components/ui";
+import { TooltipProvider, Button, UserMenu } from "@/components/ui";
+import { Navbar } from "@/components/layout";
 import { WorkflowCanvas, BaseNode, WalletNode } from "@/components/workflow";
 import {
   Node,
@@ -19,6 +20,7 @@ import {
   ReactFlowInstance,
 } from "reactflow";
 import type { NodeProps } from "reactflow";
+import { usePrivy } from "@privy-io/react-auth";
 
 // Define handler types for React Flow events
 type OnNodeClick = (event: React.MouseEvent, node: Node) => void;
@@ -82,6 +84,9 @@ export default function WorkflowPage() {
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const reactFlowInstance = useRef<ReactFlowInstance | null>(null);
+
+  // Privy hooks for authentication and wallet access
+  const { ready, authenticated, login } = usePrivy();
 
   // React Flow's built-in node deletion handler
   // This automatically handles Delete/Backspace keys and cleans up edges
@@ -263,8 +268,10 @@ export default function WorkflowPage() {
   }, []);
 
   return (
-    <TooltipProvider>
-      <WorkflowLayout
+    <>
+      <Navbar />
+      <TooltipProvider>
+        <WorkflowLayout
         categories={categories}
         defaultCategory="all"
         selectedNode={selectedNode}
@@ -306,10 +313,29 @@ export default function WorkflowPage() {
                   workflow
                 </p>
               </div>
-              <div className="text-sm text-muted-foreground">
-                {nodes.length === 0
-                  ? "No workflows found"
-                  : `${nodes.length} node${nodes.length > 1 ? "s" : ""}`}
+              <div className="flex items-center gap-4">
+                <div className="text-sm text-muted-foreground">
+                  {nodes.length === 0
+                    ? "No workflows found"
+                    : `${nodes.length} node${nodes.length > 1 ? "s" : ""}`}
+                </div>
+                {/* Privy Login/Logout Button */}
+                {ready && (
+                  <div className="flex items-center gap-2">
+                    {authenticated ? (
+                      <UserMenu size="sm" />
+                    ) : (
+                      <Button
+                        size="sm"
+                        onClick={login}
+                        className="gap-2"
+                      >
+                        <LogIn className="w-4 h-4" />
+                        Login / Sign Up
+                      </Button>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -345,5 +371,6 @@ export default function WorkflowPage() {
         </div>
       </WorkflowLayout>
     </TooltipProvider>
+    </>
   );
 }

@@ -1,19 +1,20 @@
 "use client";
 
-import { RainbowKitProvider, darkTheme } from "@rainbow-me/rainbowkit";
-import "@rainbow-me/rainbowkit/styles.css";
 import { WagmiProvider } from "wagmi";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 import { SafeWalletProvider } from "@/contexts/SafeWalletContext";
 import { config } from "@/lib/wagmiConfig";
 import { useState } from "react";
+import { PrivyProvider } from "@privy-io/react-auth";
+import {
+  baseSepolia,
+  optimismSepolia,
+  arbitrumSepolia,
+  arbitrum,
+} from "wagmi/chains";
 
-const customTheme = darkTheme({
-  accentColor: "#F8FF7C",
-  accentColorForeground: "black",
-  borderRadius: "large",
-  overlayBlur: "small",
-});
+// Supported chains configuration
+const supportedChains = [baseSepolia, optimismSepolia, arbitrumSepolia, arbitrum];
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   // Create QueryClient inside the component to prevent re-initialization
@@ -29,14 +30,33 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       })
   );
 
+  // Get Privy App ID from environment variable
+  const privyAppId = process.env.NEXT_PUBLIC_PRIVY_APP_ID || "";
+
   return (
-    <QueryClientProvider client={queryClient}>
-      <WagmiProvider config={config}>
-        <RainbowKitProvider theme={customTheme}>
+    <PrivyProvider
+      appId={privyAppId}
+      config={{
+        loginMethods: ["email"],
+        embeddedWallets: {
+          ethereum: {
+            createOnLogin: "users-without-wallets",
+          },
+        },
+        appearance: {
+          theme: "dark",
+          accentColor: "#F8FF7C",
+        },
+        defaultChain: baseSepolia,
+        supportedChains: supportedChains,
+      }}
+    >
+      <QueryClientProvider client={queryClient}>
+        <WagmiProvider config={config}>
           <SafeWalletProvider>{children}</SafeWalletProvider>
-        </RainbowKitProvider>
-      </WagmiProvider>
-    </QueryClientProvider>
+        </WagmiProvider>
+      </QueryClientProvider>
+    </PrivyProvider>
   );
 }
 

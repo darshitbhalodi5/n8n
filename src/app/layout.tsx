@@ -17,7 +17,7 @@ const fontMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Unified Automation - Web2 + Web3",
+  title: "FlowForge - Web2 + Web3 Automation Platform",
   description: "Connect everything. Automate anything. From APIs to blockchains, one powerful platform for all your automation needs.",
 };
 

@@ -43,3 +43,9 @@ export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "./Tool
 export { Typography } from "./Typography";
 export type { TypographyProps } from "./Typography";
 
+export { Popover, PopoverTrigger, PopoverContent } from "./Popover";
+export { Avatar } from "./Avatar";
+export type { AvatarProps } from "./Avatar";
+export { UserMenu } from "./UserMenu";
+export type { UserMenuProps } from "./UserMenu";
+

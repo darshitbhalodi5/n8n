@@ -15,7 +15,7 @@ export function useMediaQuery(query: string): boolean {
     return false;
   });
 
-  useEffect(() => {
+  useEffect(() => {                                                                                                                                                                                                                                                                                     
     const media = window.matchMedia(query);
 
     // Create event listener

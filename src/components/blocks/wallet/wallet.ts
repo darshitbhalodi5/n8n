@@ -8,12 +8,12 @@ export const walletBlock: BlockDefinition = {
   id: "wallet",
   label: "Wallet",
   iconName: "WalletLogo",
-  description: "Connect wallet and manage Safe",
+  description: "Login and manage Safe wallet",
   category: "wallet",
   nodeType: "wallet-node",
   defaultData: {
     label: "Wallet",
-    description: "Connect wallet and manage Safe",
+    description: "Login and manage Safe wallet",
     status: "idle",
   },
 };

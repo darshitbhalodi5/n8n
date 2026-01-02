@@ -13,8 +13,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/Dialog";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { useAccount, useChainId } from "wagmi";
+import { usePrivy, useWallets } from "@privy-io/react-auth";
+import { useChainId } from "wagmi";
 import { useSafeWalletContext } from "@/contexts/SafeWalletContext";
 import { getBlockById, getBlockByNodeType } from "@/components/blocks";
 import type { BlockDefinition } from "@/components/blocks";
@@ -26,6 +26,8 @@ import {
   XCircle,
   Loader2,
   Trash2,
+  Wallet,
+  LogIn,
 } from "lucide-react";
 import { addExtraSafe } from "@/web3/utils/safeWalletLocal";
 import { ethers } from "ethers";
@@ -41,8 +43,12 @@ export function WorkflowRightSidebar({
   onNodeDataChange,
   onNodeDelete,
 }: WorkflowRightSidebarProps) {
-  const { isConnected, address } = useAccount();
+  const { authenticated, login } = usePrivy();
+  const { wallets } = useWallets();
+  const embeddedWallet = wallets.find((w) => w.walletClientType === "privy");
   const chainId = useChainId();
+  const isConnected = authenticated && embeddedWallet !== undefined;
+  const address = embeddedWallet?.address;
   const { selection, creation, moduleControl } = useSafeWalletContext();
   const [importAddress, setImportAddress] = useState("");
   const [importError, setImportError] = useState("");
@@ -155,13 +161,22 @@ export function WorkflowRightSidebar({
       {/* Wallet Node Configuration */}
       {isWalletNode ? (
         <div className="space-y-4">
-          {/* Section A: Connect Wallet */}
+          {/* Section A: Login */}
           <Card className="p-4 space-y-3">
             <Typography variant="bodySmall" className="font-semibold text-foreground">
-              1. Connect Wallet
+              1. Login / Sign Up
             </Typography>
             <div className="flex justify-center">
-              <ConnectButton chainStatus="icon" accountStatus="address" />
+              {authenticated && embeddedWallet ? (
+                <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-secondary text-secondary-foreground text-sm">
+                  <span>✓ Connected</span>
+                </div>
+              ) : (
+                <Button onClick={login} className="gap-2">
+                  <LogIn className="w-4 h-4" />
+                  Login / Sign Up
+                </Button>
+              )}
             </div>
           </Card>
 

@@ -9,12 +9,13 @@ import {
   Code2,
 } from "lucide-react";
 import { Button } from "@/components/ui";
-import { Container, Stack, Grid, Section } from "@/components/layout";
+import { Container, Stack, Grid, Section, Navbar } from "@/components/layout";
 import { Typography } from "@/components/ui";
 
 export default function Home() {
   return (
     <div className="min-h-screen bg-background">
+      <Navbar />
       {/* Hero Section */}
       <Section padding="xl">
         <Container maxWidth="xl">
@@ -29,10 +30,10 @@ export default function Home() {
                 variant="h1"
                 className="bg-linear-to-r from-primary via-accent to-primary bg-clip-text text-transparent"
               >
-                Unified Automation
+                FlowForge
               </Typography>
               <Typography variant="h1" className="text-foreground">
-                Web2 + Web3
+                Web2 + Web3 Automation
               </Typography>
             </div>
 
@@ -317,7 +318,7 @@ export default function Home() {
             >
               <Stack direction="column" spacing="sm">
                 <Typography variant="h4" className="text-foreground">
-                  Unified Automation Platform
+                  FlowForge
                 </Typography>
                 <Typography
                   variant="bodySmall"

@@ -1,4 +1,3 @@
-import { getDefaultWallets } from "@rainbow-me/rainbowkit";
 import { createConfig, http } from "wagmi";
 import {
   baseSepolia,
@@ -6,15 +5,17 @@ import {
   arbitrumSepolia,
   arbitrum,
 } from "wagmi/chains";
+import { injected, walletConnect } from "wagmi/connectors";
 
-const { connectors } = getDefaultWallets({
-  appName: "n8n Workflow Builder",
-  projectId: "f8a6524307e28135845a9fe5811fcaa2",
-});
-
+// Configure wagmi with basic connectors (Privy handles wallet connection)
 export const config = createConfig({
   chains: [baseSepolia, optimismSepolia, arbitrumSepolia, arbitrum],
-  connectors,
+  connectors: [
+    injected(),
+    walletConnect({
+      projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || "",
+    }),
+  ],
   transports: {
     [baseSepolia.id]: http(),
     [optimismSepolia.id]: http(),
