@@ -38,7 +38,6 @@ export interface SafeWalletCreation {
   isCreating: boolean;
   isSigningEnableModule: boolean;
   isExecutingEnableModule: boolean;
-  isProposingEnableModule: boolean;
   handleCreateNewSafe: () => Promise<void>;
   handleRetryCreate: () => Promise<void>;
   handleRetrySign: () => Promise<void>;
@@ -57,16 +56,13 @@ export interface SafeWalletImportFlow {
 
 export interface SafeWalletModuleControl {
   showModuleActionDialog: boolean;
-  moduleAction: "enable" | "disable";
   moduleSignStep: "idle" | "pending" | "success" | "error";
   moduleExecuteStep: "idle" | "pending" | "success" | "error";
   moduleSignError?: string;
   moduleExecuteError?: string;
   hasOngoingModuleProcess: boolean;
   handleShowEnableDialog: () => void;
-  handleShowDisableDialog: () => void;
   handleEnableModule: () => Promise<void>;
-  handleDisableModule: () => Promise<void>;
   handleRetryModuleSign: () => Promise<void>;
   handleRetryModuleExecute: () => Promise<void>;
   handleManualModuleRefresh: () => Promise<void>;
@@ -106,15 +102,9 @@ export const SafeWalletProvider: React.FC<{ children: React.ReactNode }> = ({
     createSafeWallet,
     signEnableModule,
     submitEnableModule,
-    signDisableModule,
-    submitDisableModule,
     isCreating,
     isSigningEnableModule,
     isExecutingEnableModule,
-    isProposingEnableModule,
-    isSigningDisableModule,
-    isExecutingDisableModule,
-    isProposingDisableModule,
   } = useCreateSafeWallet();
 
   // Selection State
@@ -138,7 +128,6 @@ export const SafeWalletProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Module Control State
   const [showModuleActionDialog, setShowModuleActionDialog] = useState(false);
-  const [moduleAction, setModuleAction] = useState<"enable" | "disable">("enable");
   const [moduleSignStep, setModuleSignStep] = useState<"idle" | "pending" | "success" | "error">("idle");
   const [moduleExecuteStep, setModuleExecuteStep] = useState<"idle" | "pending" | "success" | "error">("idle");
   const [moduleSignError, setModuleSignError] = useState<string | undefined>(undefined);
@@ -303,12 +292,6 @@ export const SafeWalletProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 
   const handleShowEnableDialog = useCallback(() => {
-    setModuleAction("enable");
-    setShowModuleActionDialog(true);
-  }, []);
-
-  const handleShowDisableDialog = useCallback(() => {
-    setModuleAction("disable");
     setShowModuleActionDialog(true);
   }, []);
 
@@ -370,45 +353,6 @@ export const SafeWalletProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, [selectedSafe, signEnableModule, submitEnableModule, closeModuleActionDialog]);
 
-  const handleDisableModule = useCallback(async () => {
-    if (!selectedSafe) return;
-
-    setModuleSignStep("pending");
-    setModuleExecuteStep("idle");
-    setModuleSignError(undefined);
-    setModuleExecuteError(undefined);
-    setHasOngoingModuleProcess(true);
-
-    try {
-      const signResult = await signDisableModule(selectedSafe);
-      if (!signResult.success) {
-        setModuleSignStep("error");
-        setModuleSignError(signResult.error || "Failed to sign transaction");
-        setHasOngoingModuleProcess(false);
-        return;
-      }
-
-      setModuleSignStep("success");
-
-      setModuleExecuteStep("pending");
-      const submitResult = await submitDisableModule();
-      if (!submitResult.success) {
-        setModuleExecuteStep("error");
-        setModuleExecuteError(submitResult.error || "Failed to disable module");
-        setHasOngoingModuleProcess(false);
-        return;
-      }
-
-      setModuleExecuteStep("success");
-      setHasOngoingModuleProcess(false);
-      setTimeout(() => {
-        closeModuleActionDialog();
-      }, 2000);
-    } catch (err) {
-      setHasOngoingModuleProcess(false);
-      throw err;
-    }
-  }, [selectedSafe, signDisableModule, submitDisableModule, closeModuleActionDialog]);
 
   const handleRetryModuleSign = useCallback(async () => {
     if (!selectedSafe) return;
@@ -418,10 +362,7 @@ export const SafeWalletProvider: React.FC<{ children: React.ReactNode }> = ({
     setHasOngoingModuleProcess(true);
 
     try {
-      const signResult =
-        moduleAction === "enable"
-          ? await signEnableModule(selectedSafe)
-          : await signDisableModule(selectedSafe);
+      const signResult = await signEnableModule(selectedSafe);
 
       if (!signResult.success) {
         setModuleSignStep("error");
@@ -432,11 +373,7 @@ export const SafeWalletProvider: React.FC<{ children: React.ReactNode }> = ({
 
       setModuleSignStep("success");
 
-      if (
-        moduleAction === "enable" &&
-        signResult.data &&
-        !signResult.data.safeTxHash
-      ) {
+      if (signResult.data && !signResult.data.safeTxHash) {
         setModuleExecuteStep("success");
         setHasOngoingModuleProcess(false);
         setTimeout(() => {
@@ -446,16 +383,12 @@ export const SafeWalletProvider: React.FC<{ children: React.ReactNode }> = ({
       }
 
       setModuleExecuteStep("pending");
-      const submitResult =
-        moduleAction === "enable"
-          ? await submitEnableModule()
-          : await submitDisableModule();
+      const submitResult = await submitEnableModule();
 
       if (!submitResult.success) {
         setModuleExecuteStep("error");
         setModuleExecuteError(
-          submitResult.error ||
-            `Failed to ${moduleAction === "enable" ? "enable" : "disable"} module`
+          submitResult.error || "Failed to enable module"
         );
         setHasOngoingModuleProcess(false);
         return;
@@ -472,11 +405,8 @@ export const SafeWalletProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, [
     selectedSafe,
-    moduleAction,
     signEnableModule,
-    signDisableModule,
     submitEnableModule,
-    submitDisableModule,
     closeModuleActionDialog,
   ]);
 
@@ -488,16 +418,12 @@ export const SafeWalletProvider: React.FC<{ children: React.ReactNode }> = ({
     setHasOngoingModuleProcess(true);
 
     try {
-      const submitResult =
-        moduleAction === "enable"
-          ? await submitEnableModule()
-          : await submitDisableModule();
+      const submitResult = await submitEnableModule();
 
       if (!submitResult.success) {
         setModuleExecuteStep("error");
         setModuleExecuteError(
-          submitResult.error ||
-            `Failed to ${moduleAction === "enable" ? "enable" : "disable"} module`
+          submitResult.error || "Failed to enable module"
         );
         setHasOngoingModuleProcess(false);
         return;
@@ -514,9 +440,7 @@ export const SafeWalletProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, [
     selectedSafe,
-    moduleAction,
     submitEnableModule,
-    submitDisableModule,
     closeModuleActionDialog,
   ]);
 
@@ -553,14 +477,13 @@ export const SafeWalletProvider: React.FC<{ children: React.ReactNode }> = ({
       isCreating,
       isSigningEnableModule,
       isExecutingEnableModule,
-      isProposingEnableModule,
       handleCreateNewSafe,
       handleRetryCreate,
       handleRetrySign,
       handleRetryEnable,
       closeCreateFlow,
     }),
-    [showCreateFlow, createStep, signStep, enableStep, createError, signError, enableError, currentSafeAddress, isCreating, isSigningEnableModule, isExecutingEnableModule, isProposingEnableModule, handleCreateNewSafe, handleRetryCreate, handleRetrySign, handleRetryEnable, closeCreateFlow]
+    [showCreateFlow, createStep, signStep, enableStep, createError, signError, enableError, currentSafeAddress, isCreating, isSigningEnableModule, isExecutingEnableModule, handleCreateNewSafe, handleRetryCreate, handleRetrySign, handleRetryEnable, closeCreateFlow]
   );
 
   const importFlowSlice = useMemo<SafeWalletImportFlow>(
@@ -578,22 +501,19 @@ export const SafeWalletProvider: React.FC<{ children: React.ReactNode }> = ({
   const moduleControlSlice = useMemo<SafeWalletModuleControl>(
     () => ({
       showModuleActionDialog,
-      moduleAction,
       moduleSignStep,
       moduleExecuteStep,
       moduleSignError,
       moduleExecuteError,
       hasOngoingModuleProcess,
       handleShowEnableDialog,
-      handleShowDisableDialog,
       handleEnableModule,
-      handleDisableModule,
       handleRetryModuleSign,
       handleRetryModuleExecute,
       handleManualModuleRefresh,
       closeModuleActionDialog,
     }),
-    [showModuleActionDialog, moduleAction, moduleSignStep, moduleExecuteStep, moduleSignError, moduleExecuteError, hasOngoingModuleProcess, handleShowEnableDialog, handleShowDisableDialog, handleEnableModule, handleDisableModule, handleRetryModuleSign, handleRetryModuleExecute, handleManualModuleRefresh, closeModuleActionDialog]
+    [showModuleActionDialog, moduleSignStep, moduleExecuteStep, moduleSignError, moduleExecuteError, hasOngoingModuleProcess, handleShowEnableDialog, handleEnableModule, handleRetryModuleSign, handleRetryModuleExecute, handleManualModuleRefresh, closeModuleActionDialog]
   );
 
   const contextValue = useMemo<SafeWalletContextType>(

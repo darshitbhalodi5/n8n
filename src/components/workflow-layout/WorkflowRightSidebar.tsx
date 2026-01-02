@@ -14,23 +14,18 @@ import {
   DialogTitle,
 } from "@/components/ui/Dialog";
 import { usePrivy, useWallets } from "@privy-io/react-auth";
-import { useChainId } from "wagmi";
 import { useSafeWalletContext } from "@/contexts/SafeWalletContext";
 import { getBlockById, getBlockByNodeType } from "@/components/blocks";
 import type { BlockDefinition } from "@/components/blocks";
 import {
   RefreshCw,
   Plus,
-  Download,
   CheckCircle2,
   XCircle,
   Loader2,
   Trash2,
-  Wallet,
   LogIn,
 } from "lucide-react";
-import { addExtraSafe } from "@/web3/utils/safeWalletLocal";
-import { ethers } from "ethers";
 
 interface WorkflowRightSidebarProps {
   selectedNode: Node | null;
@@ -46,12 +41,9 @@ export function WorkflowRightSidebar({
   const { authenticated, login } = usePrivy();
   const { wallets } = useWallets();
   const embeddedWallet = wallets.find((w) => w.walletClientType === "privy");
-  const chainId = useChainId();
   const isConnected = authenticated && embeddedWallet !== undefined;
   const address = embeddedWallet?.address;
   const { selection, creation, moduleControl } = useSafeWalletContext();
-  const [importAddress, setImportAddress] = useState("");
-  const [importError, setImportError] = useState("");
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   if (!selectedNode) {
@@ -87,31 +79,6 @@ export function WorkflowRightSidebar({
         ...nodeData,
         [key]: value,
       });
-    }
-  };
-
-  const handleImportSafe = async () => {
-    setImportError("");
-    
-    if (!importAddress) {
-      setImportError("Please enter a Safe address");
-      return;
-    }
-
-    try {
-      // Validate address
-      const checksummed = ethers.getAddress(importAddress);
-      
-      // Add to local storage
-      addExtraSafe(chainId, checksummed);
-      
-      // Refresh the list
-      await selection.refreshSafeList();
-      
-      // Clear input
-      setImportAddress("");
-    } catch {
-      setImportError("Invalid address format");
     }
   };
 
@@ -255,36 +222,6 @@ export function WorkflowRightSidebar({
                       )}
                     </Button>
                   </div>
-
-                  {/* Import Safe */}
-                  <div className="space-y-2 pt-2 border-t border-border">
-                    <Typography variant="caption" className="text-muted-foreground">
-                      Import existing Safe:
-                    </Typography>
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        placeholder="0x..."
-                        value={importAddress}
-                        onChange={(e) => {
-                          setImportAddress(e.target.value);
-                          setImportError("");
-                        }}
-                        className="flex-1 px-3 py-1.5 text-sm border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                      />
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={handleImportSafe}
-                      >
-                        <Download className="w-3 h-3 mr-1" />
-                        Import
-                      </Button>
-                    </div>
-                    {importError && (
-                      <div className="text-xs text-destructive">{importError}</div>
-                    )}
-                  </div>
                 </>
               )}
             </Card>
@@ -345,16 +282,6 @@ export function WorkflowRightSidebar({
                         className="flex-1"
                       >
                         Enable Module
-                      </Button>
-                    )}
-                    {selection.moduleEnabled === true && (
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={moduleControl.handleDisableModule}
-                        className="flex-1"
-                      >
-                        Disable Module
                       </Button>
                     )}
                   </div>

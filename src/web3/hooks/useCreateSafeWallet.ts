@@ -6,9 +6,7 @@ import {
   getSafeModuleAddress,
 } from "../utils/contractAddresses";
 import TriggerXSafeFactoryArtifact from "../artifacts/TriggerXSafeFactory.json";
-import { getSafeChainInfo, getSafeQueueUrl } from "../utils/safeChains";
 import Safe from "@safe-global/protocol-kit";
-import SafeApiKit from "@safe-global/api-kit";
 import SafeArtifact from "../artifacts/Safe.json";
 import type { SafeTransaction } from "@safe-global/safe-core-sdk-types";
 import type {
@@ -24,13 +22,6 @@ export const useCreateSafeWallet = () => {
   const [isEnablingModule, setIsEnablingModule] = useState(false);
   const [isSigningEnableModule, setIsSigningEnableModule] = useState(false);
   const [isExecutingEnableModule, setIsExecutingEnableModule] = useState(false);
-  const [isProposingEnableModule, setIsProposingEnableModule] = useState(false);
-  const [isDisablingModule, setIsDisablingModule] = useState(false);
-  const [isSigningDisableModule, setIsSigningDisableModule] = useState(false);
-  const [isExecutingDisableModule, setIsExecutingDisableModule] =
-    useState(false);
-  const [isProposingDisableModule, setIsProposingDisableModule] =
-    useState(false);
 
   // Store signed transaction data for the two-step flow
   const signedTxRef = useRef<{
@@ -47,7 +38,7 @@ export const useCreateSafeWallet = () => {
   const readSafeInfo = async (
     safeAddress: string,
     moduleAddress: string,
-    provider: ethers.BrowserProvider,
+    provider: ethers.BrowserProvider
   ): Promise<{
     threshold: number;
     owners: string[];
@@ -56,7 +47,7 @@ export const useCreateSafeWallet = () => {
     const safeProxy = new ethers.Contract(
       safeAddress,
       SafeArtifact.abi,
-      provider,
+      provider
     );
     let thresholdBig: bigint | undefined;
     let owners: string[] | undefined;
@@ -81,7 +72,7 @@ export const useCreateSafeWallet = () => {
           throw error;
         }
         await new Promise((resolve) =>
-          setTimeout(resolve, 1000 * Math.pow(2, retryCount)),
+          setTimeout(resolve, 1000 * Math.pow(2, retryCount))
         );
       }
     }
@@ -97,9 +88,9 @@ export const useCreateSafeWallet = () => {
     };
   };
 
-  // Create Safe wallet (Step 1)
+  // Create Safe wallet
   const createSafeWallet = async (
-    userAddress: string,
+    userAddress: string
   ): Promise<CreateSafeResult> => {
     setIsCreating(true);
     try {
@@ -126,7 +117,7 @@ export const useCreateSafeWallet = () => {
       const factory = new ethers.Contract(
         factoryAddress,
         TriggerXSafeFactoryArtifact.abi,
-        signer,
+        signer
       );
 
       const tx = await factory.createSafeWallet(userAddress);
@@ -136,13 +127,13 @@ export const useCreateSafeWallet = () => {
       const safeCreatedEvent = receipt.logs.find(
         (log: { topics: string[] }) =>
           log.topics[0] ===
-          ethers.id("SafeWalletCreated(address,address,uint256)"),
+          ethers.id("SafeWalletCreated(address,address,uint256)")
       );
 
       let safeAddress: string | null = null;
       if (safeCreatedEvent) {
         safeAddress = ethers.getAddress(
-          "0x" + safeCreatedEvent.topics[2].slice(-40),
+          "0x" + safeCreatedEvent.topics[2].slice(-40)
         );
       }
 
@@ -227,11 +218,11 @@ export const useCreateSafeWallet = () => {
       const { threshold, owners, isEnabled } = await readSafeInfo(
         safeAddress,
         moduleAddress,
-        provider,
+        provider
       );
 
       const normalizedOwners = owners.map((owner: string) =>
-        owner.toLowerCase(),
+        owner.toLowerCase()
       );
 
       if (!normalizedOwners.includes(signerAddress.toLowerCase())) {
@@ -319,7 +310,7 @@ export const useCreateSafeWallet = () => {
     }
   };
 
-  // Submit (execute or propose) the signed enable module transaction (Step 3)
+  // Submit (execute) the signed enable module transaction
   const submitEnableModule = async (): Promise<SubmitResult> => {
     if (!signedTxRef.current) {
       return {
@@ -328,15 +319,7 @@ export const useCreateSafeWallet = () => {
       };
     }
 
-    const {
-      safeSdk,
-      signedSafeTx,
-      safeTxHash,
-      safeAddress,
-      threshold,
-      owners,
-      signerAddress,
-    } = signedTxRef.current;
+    const { safeSdk, signedSafeTx, threshold, owners } = signedTxRef.current;
 
     try {
       const moduleAddress = getSafeModuleAddress(chainId);
@@ -347,81 +330,30 @@ export const useCreateSafeWallet = () => {
         };
       }
 
-      if (threshold <= 1) {
-        setIsExecutingEnableModule(true);
+      setIsExecutingEnableModule(true);
 
-        const executeTxResponse =
-          await safeSdk.executeTransaction(signedSafeTx);
-        const txResponse = executeTxResponse.transactionResponse;
+      const executeTxResponse = await safeSdk.executeTransaction(signedSafeTx);
+      const txResponse = executeTxResponse.transactionResponse;
 
-        if (
-          txResponse &&
-          typeof txResponse === "object" &&
-          "wait" in txResponse &&
-          typeof txResponse.wait === "function"
-        ) {
-          await txResponse.wait();
-        }
-
-        // Clear signed tx after execution
-        signedTxRef.current = null;
-
-        return {
-          success: true,
-          data: {
-            status: "executed",
-            threshold,
-            owners,
-            transactionHash: executeTxResponse.hash,
-          },
-        };
+      if (
+        txResponse &&
+        typeof txResponse === "object" &&
+        "wait" in txResponse &&
+        typeof txResponse.wait === "function"
+      ) {
+        await txResponse.wait();
       }
 
-      // Multisig flow - propose to Safe Transaction Service
-      const chainInfo = await getSafeChainInfo(chainId);
-      let queueUrl: string | null = null;
-
-      if (chainInfo.transactionService) {
-        setIsProposingEnableModule(true);
-        try {
-          const safeApiKey = process.env.NEXT_PUBLIC_SAFE_API_KEY;
-          const safeApiKit = new SafeApiKit({
-            chainId: BigInt(chainId),
-            ...(safeApiKey && { apiKey: safeApiKey }),
-          });
-
-          await safeApiKit.proposeTransaction({
-            safeAddress,
-            safeTransactionData: signedSafeTx.data,
-            safeTxHash,
-            senderAddress: signerAddress,
-            senderSignature:
-              signedSafeTx.signatures.get(signerAddress.toLowerCase())?.data ||
-              "",
-          });
-
-          queueUrl = await getSafeQueueUrl(chainId, safeAddress);
-        } catch {
-          // Don't fail completely if proposal fails
-        } finally {
-          setIsProposingEnableModule(false);
-        }
-      }
-
-      const fallbackUrl = await getSafeQueueUrl(chainId, safeAddress);
-
-      // Clear signed tx after proposing
+      // Clear signed tx after execution
       signedTxRef.current = null;
 
       return {
         success: true,
         data: {
-          status: "multisig",
+          status: "executed",
           threshold,
           owners,
-          safeTxHash,
-          queueUrl: queueUrl || fallbackUrl,
-          fallbackUrl,
+          transactionHash: executeTxResponse.hash,
         },
       };
     } catch (err) {
@@ -458,354 +390,12 @@ export const useCreateSafeWallet = () => {
       };
     } finally {
       setIsExecutingEnableModule(false);
-      setIsProposingEnableModule(false);
-    }
-  };
-
-  // Sign disable module transaction (Step 2 for disable)
-  const signDisableModule = async (
-    safeAddress: string,
-  ): Promise<SignResult> => {
-    setIsSigningDisableModule(true);
-
-    try {
-      const moduleAddress = getSafeModuleAddress(chainId);
-      if (!moduleAddress) {
-        return {
-          success: false,
-          error: "Safe Module address not configured for this network",
-        };
-      }
-
-      if (typeof window.ethereum === "undefined") {
-        return {
-          success: false,
-          error: "Please connect your wallet",
-        };
-      }
-
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      const signer = await provider.getSigner();
-      const signerAddress = await signer.getAddress();
-
-      // Read Safe info with retry logic
-      const { threshold, owners, isEnabled } = await readSafeInfo(
-        safeAddress,
-        moduleAddress,
-        provider,
-      );
-
-      const normalizedOwners = owners.map((owner: string) =>
-        owner.toLowerCase(),
-      );
-
-      if (!normalizedOwners.includes(signerAddress.toLowerCase())) {
-        return {
-          success: false,
-          error: "Connected wallet is not an owner of this Safe",
-        };
-      }
-
-      if (!isEnabled) {
-        // Module already disabled - this is actually a success state
-        signedTxRef.current = null;
-        return {
-          success: true,
-          data: {
-            threshold,
-            owners,
-            safeTxHash: "", // No transaction needed
-          },
-        };
-      }
-
-      // Initialize Safe SDK
-      const safeSdk = await Safe.init({
-        provider: window.ethereum as unknown as ethers.Eip1193Provider,
-        safeAddress,
-      });
-
-      // Get the list of modules to find the previous module
-      const modules = await safeSdk.getModules();
-      const moduleIndex = modules.findIndex(
-        (m) => m.toLowerCase() === moduleAddress.toLowerCase(),
-      );
-
-      if (moduleIndex === -1) {
-        return {
-          success: false,
-          error: "TriggerX module not found in Safe's module list",
-        };
-      }
-
-      // Create disable module transaction
-      const safeTransaction =
-        await safeSdk.createDisableModuleTx(moduleAddress);
-
-      // Sign the transaction using Safe SDK (this triggers the EIP-712 signature)
-      const signedSafeTx = await safeSdk.signTransaction(safeTransaction);
-      const safeTxHash = await safeSdk.getTransactionHash(signedSafeTx);
-
-      // Store signed transaction for submitDisableModule
-      signedTxRef.current = {
-        safeSdk,
-        signedSafeTx,
-        safeTxHash,
-        safeAddress,
-        threshold,
-        owners,
-        signerAddress,
-      };
-
-      return {
-        success: true,
-        data: {
-          threshold,
-          owners,
-          safeTxHash,
-        },
-      };
-    } catch (err) {
-      signedTxRef.current = null;
-
-      const getErrorMessage = (error: Error): string => {
-        const message = error.message.toLowerCase();
-
-        if (
-          message.includes("user rejected") ||
-          message.includes("user denied")
-        ) {
-          return "Signature rejected by user";
-        }
-        if (message.includes("network")) {
-          return "Network error occurred";
-        }
-
-        // Fallback: take first sentence or 50 chars
-        const msg = error.message.split(".")[0];
-        return msg.length > 50 ? msg.substring(0, 50) + "..." : msg;
-      };
-
-      return {
-        success: false,
-        error:
-          err instanceof Error
-            ? getErrorMessage(err)
-            : "Failed to sign transaction",
-      };
-    } finally {
-      setIsSigningDisableModule(false);
-    }
-  };
-
-  // Submit (execute or propose) the signed disable module transaction (Step 3 for disable)
-  const submitDisableModule = async (): Promise<SubmitResult> => {
-    if (!signedTxRef.current) {
-      return {
-        success: false,
-        error: "No signed transaction found. Please sign first.",
-      };
-    }
-
-    const {
-      safeSdk,
-      signedSafeTx,
-      safeTxHash,
-      safeAddress,
-      threshold,
-      owners,
-      signerAddress,
-    } = signedTxRef.current;
-
-    try {
-      const moduleAddress = getSafeModuleAddress(chainId);
-      if (!moduleAddress) {
-        return {
-          success: false,
-          error: "Safe Module address not configured for this network",
-        };
-      }
-
-      if (threshold <= 1) {
-        setIsExecutingDisableModule(true);
-
-        const executeTxResponse =
-          await safeSdk.executeTransaction(signedSafeTx);
-        const txResponse = executeTxResponse.transactionResponse;
-
-        if (
-          txResponse &&
-          typeof txResponse === "object" &&
-          "wait" in txResponse &&
-          typeof txResponse.wait === "function"
-        ) {
-          await txResponse.wait();
-        }
-
-        // Clear signed tx after execution
-        signedTxRef.current = null;
-
-        return {
-          success: true,
-          data: {
-            status: "executed",
-            threshold,
-            owners,
-            transactionHash: executeTxResponse.hash,
-          },
-        };
-      }
-
-      // Multisig flow - propose to Safe Transaction Service
-      const chainInfo = await getSafeChainInfo(chainId);
-      let queueUrl: string | null = null;
-
-      if (chainInfo.transactionService) {
-        setIsProposingDisableModule(true);
-        try {
-          const safeApiKey = process.env.NEXT_PUBLIC_SAFE_API_KEY;
-          const safeApiKit = new SafeApiKit({
-            chainId: BigInt(chainId),
-            ...(safeApiKey && { apiKey: safeApiKey }),
-          });
-
-          await safeApiKit.proposeTransaction({
-            safeAddress,
-            safeTransactionData: signedSafeTx.data,
-            safeTxHash,
-            senderAddress: signerAddress,
-            senderSignature:
-              signedSafeTx.signatures.get(signerAddress.toLowerCase())?.data ||
-              "",
-          });
-
-          queueUrl = await getSafeQueueUrl(chainId, safeAddress);
-        } catch {
-          // Don't fail completely if proposal fails
-        } finally {
-          setIsProposingDisableModule(false);
-        }
-      }
-
-      const fallbackUrl = await getSafeQueueUrl(chainId, safeAddress);
-
-      // Clear signed tx after proposing
-      signedTxRef.current = null;
-
-      return {
-        success: true,
-        data: {
-          status: "multisig",
-          threshold,
-          owners,
-          safeTxHash,
-          queueUrl: queueUrl || fallbackUrl,
-          fallbackUrl,
-        },
-      };
-    } catch (err) {
-      const getErrorMessage = (error: Error): string => {
-        const message = error.message.toLowerCase();
-
-        if (
-          message.includes("user rejected") ||
-          message.includes("user denied")
-        ) {
-          return "Transaction rejected by user";
-        }
-        if (message.includes("insufficient funds")) {
-          return "Insufficient funds for transaction";
-        }
-        if (message.includes("network")) {
-          return "Network error occurred";
-        }
-        if (message.includes("gas")) {
-          return "Gas estimation failed";
-        }
-
-        // Fallback: take first sentence or 50 chars
-        const msg = error.message.split(".")[0];
-        return msg.length > 50 ? msg.substring(0, 50) + "..." : msg;
-      };
-
-      return {
-        success: false,
-        error:
-          err instanceof Error
-            ? getErrorMessage(err)
-            : "Failed to submit transaction",
-      };
-    } finally {
-      setIsExecutingDisableModule(false);
-      setIsProposingDisableModule(false);
-    }
-  };
-
-  // Convenience wrapper for disabling module - uses the two-step flow
-  const disableModule = async (
-    safeAddress: string,
-  ): Promise<EnableModuleResult | null> => {
-    setIsDisablingModule(true);
-
-    try {
-      const moduleAddress = getSafeModuleAddress(chainId);
-      if (!moduleAddress) {
-        throw new Error("Safe Module address not configured for this network");
-      }
-
-      if (typeof window.ethereum === "undefined") {
-        throw new Error("Please install MetaMask");
-      }
-
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      const signer = await provider.getSigner();
-      const signerAddress = await signer.getAddress();
-
-      // Read Safe info with retry logic
-      const { threshold, owners, isEnabled } = await readSafeInfo(
-        safeAddress,
-        moduleAddress,
-        provider,
-      );
-
-      const normalizedOwners = owners.map((owner: string) =>
-        owner.toLowerCase(),
-      );
-
-      if (!normalizedOwners.includes(signerAddress.toLowerCase())) {
-        throw new Error("Connected wallet is not an owner of this Safe");
-      }
-
-      if (!isEnabled) {
-        return {
-          status: "already_enabled",
-          threshold,
-          owners,
-        };
-      }
-
-      // Use the two-step flow
-      const signResult = await signDisableModule(safeAddress);
-      if (!signResult.success || !signResult.data) {
-        return null;
-      }
-
-      const submitResult = await submitDisableModule();
-      if (!submitResult.success || !submitResult.data) {
-        return null;
-      }
-
-      return submitResult.data;
-    } catch {
-      return null;
-    } finally {
-      setIsDisablingModule(false);
     }
   };
 
   // Keep existing enableModule for backward compatibility - now uses the two-step flow
   const enableModule = async (
-    safeAddress: string,
+    safeAddress: string
   ): Promise<EnableModuleResult | null> => {
     setIsEnablingModule(true);
 
@@ -827,11 +417,11 @@ export const useCreateSafeWallet = () => {
       const { threshold, owners, isEnabled } = await readSafeInfo(
         safeAddress,
         moduleAddress,
-        provider,
+        provider
       );
 
       const normalizedOwners = owners.map((owner: string) =>
-        owner.toLowerCase(),
+        owner.toLowerCase()
       );
 
       if (!normalizedOwners.includes(signerAddress.toLowerCase())) {
@@ -870,17 +460,9 @@ export const useCreateSafeWallet = () => {
     signEnableModule,
     submitEnableModule,
     enableModule,
-    signDisableModule,
-    submitDisableModule,
-    disableModule,
     isCreating,
     isEnablingModule,
     isSigningEnableModule,
     isExecutingEnableModule,
-    isProposingEnableModule,
-    isDisablingModule,
-    isSigningDisableModule,
-    isExecutingDisableModule,
-    isProposingDisableModule,
   };
 };

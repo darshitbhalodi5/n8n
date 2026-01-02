@@ -7,14 +7,12 @@ import { config } from "@/lib/wagmiConfig";
 import { useState } from "react";
 import { PrivyProvider } from "@privy-io/react-auth";
 import {
-  baseSepolia,
-  optimismSepolia,
   arbitrumSepolia,
   arbitrum,
 } from "wagmi/chains";
 
 // Supported chains configuration
-const supportedChains = [baseSepolia, optimismSepolia, arbitrumSepolia, arbitrum];
+const supportedChains = [arbitrumSepolia, arbitrum];
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   // Create QueryClient inside the component to prevent re-initialization
@@ -47,7 +45,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
           theme: "dark",
           accentColor: "#F8FF7C",
         },
-        defaultChain: baseSepolia,
+        defaultChain: arbitrum,
         supportedChains: supportedChains,
       }}
     >
