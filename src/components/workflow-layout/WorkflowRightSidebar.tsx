@@ -202,25 +202,27 @@ export function WorkflowRightSidebar({
                       <RefreshCw className="w-3 h-3 mr-1" />
                       Refresh
                     </Button>
-                    <Button
-                      size="sm"
-                      variant="default"
-                      onClick={creation.handleCreateNewSafe}
-                      disabled={creation.isCreating}
-                      className="flex-1"
-                    >
-                      {creation.isCreating ? (
-                        <>
-                          <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                          Creating...
-                        </>
-                      ) : (
-                        <>
-                          <Plus className="w-3 h-3 mr-1" />
-                          Create Safe
-                        </>
-                      )}
-                    </Button>
+                    {selection.safeWallets.length === 0 && (
+                      <Button
+                        size="sm"
+                        variant="default"
+                        onClick={creation.handleCreateNewSafe}
+                        disabled={creation.isCreating}
+                        className="flex-1"
+                      >
+                        {creation.isCreating ? (
+                          <>
+                            <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                            Creating...
+                          </>
+                        ) : (
+                          <>
+                            <Plus className="w-3 h-3 mr-1" />
+                            Create Safe
+                          </>
+                        )}
+                      </Button>
+                    )}
                   </div>
                 </>
               )}

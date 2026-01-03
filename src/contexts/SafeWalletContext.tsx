@@ -113,13 +113,21 @@ export const SafeWalletProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Creation State
   const [showCreateFlow, setShowCreateFlow] = useState(false);
-  const [createStep, setCreateStep] = useState<"idle" | "pending" | "success" | "error">("idle");
-  const [signStep, setSignStep] = useState<"idle" | "pending" | "success" | "error">("idle");
-  const [enableStep, setEnableStep] = useState<"idle" | "pending" | "success" | "error">("idle");
+  const [createStep, setCreateStep] = useState<
+    "idle" | "pending" | "success" | "error"
+  >("idle");
+  const [signStep, setSignStep] = useState<
+    "idle" | "pending" | "success" | "error"
+  >("idle");
+  const [enableStep, setEnableStep] = useState<
+    "idle" | "pending" | "success" | "error"
+  >("idle");
   const [createError, setCreateError] = useState<string | undefined>(undefined);
   const [signError, setSignError] = useState<string | undefined>(undefined);
   const [enableError, setEnableError] = useState<string | undefined>(undefined);
-  const [currentSafeAddress, setCurrentSafeAddress] = useState<string | null>(null);
+  const [currentSafeAddress, setCurrentSafeAddress] = useState<string | null>(
+    null
+  );
 
   // Import State
   const [showImportDialog, setShowImportDialog] = useState(false);
@@ -127,10 +135,18 @@ export const SafeWalletProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Module Control State
   const [showModuleActionDialog, setShowModuleActionDialog] = useState(false);
-  const [moduleSignStep, setModuleSignStep] = useState<"idle" | "pending" | "success" | "error">("idle");
-  const [moduleExecuteStep, setModuleExecuteStep] = useState<"idle" | "pending" | "success" | "error">("idle");
-  const [moduleSignError, setModuleSignError] = useState<string | undefined>(undefined);
-  const [moduleExecuteError, setModuleExecuteError] = useState<string | undefined>(undefined);
+  const [moduleSignStep, setModuleSignStep] = useState<
+    "idle" | "pending" | "success" | "error"
+  >("idle");
+  const [moduleExecuteStep, setModuleExecuteStep] = useState<
+    "idle" | "pending" | "success" | "error"
+  >("idle");
+  const [moduleSignError, setModuleSignError] = useState<string | undefined>(
+    undefined
+  );
+  const [moduleExecuteError, setModuleExecuteError] = useState<
+    string | undefined
+  >(undefined);
   const [hasOngoingModuleProcess, setHasOngoingModuleProcess] = useState(false);
 
   // Clear selection when chain switches
@@ -208,6 +224,18 @@ export const SafeWalletProvider: React.FC<{ children: React.ReactNode }> = ({
   const handleCreateNewSafe = useCallback(async () => {
     if (!walletAddress) return;
 
+    // Defensive guard: prevent creation if user already has a Safe
+    if (safeWallets.length > 0) {
+      console.warn(
+        { walletAddress, existingSafes: safeWallets },
+        "Attempted to create Safe when user already has one"
+      );
+      setShowCreateFlow(true);
+      setCreateStep("error");
+      setCreateError("You already have a Safe wallet for this address");
+      return;
+    }
+
     setShowCreateFlow(true);
     setCreateStep("pending");
     setSignStep("idle");
@@ -230,7 +258,7 @@ export const SafeWalletProvider: React.FC<{ children: React.ReactNode }> = ({
     setCreateStep("success");
 
     await handleSignStep(newSafe);
-  }, [walletAddress, createSafeWallet, handleSignStep]);
+  }, [walletAddress, safeWallets, createSafeWallet, handleSignStep]);
 
   const handleRetryCreate = useCallback(async () => {
     if (!walletAddress) return;
@@ -350,8 +378,12 @@ export const SafeWalletProvider: React.FC<{ children: React.ReactNode }> = ({
       setHasOngoingModuleProcess(false);
       throw err;
     }
-  }, [selectedSafe, signEnableModule, submitEnableModule, closeModuleActionDialog]);
-
+  }, [
+    selectedSafe,
+    signEnableModule,
+    submitEnableModule,
+    closeModuleActionDialog,
+  ]);
 
   const handleRetryModuleSign = useCallback(async () => {
     if (!selectedSafe) return;
@@ -386,9 +418,7 @@ export const SafeWalletProvider: React.FC<{ children: React.ReactNode }> = ({
 
       if (!submitResult.success) {
         setModuleExecuteStep("error");
-        setModuleExecuteError(
-          submitResult.error || "Failed to enable module"
-        );
+        setModuleExecuteError(submitResult.error || "Failed to enable module");
         setHasOngoingModuleProcess(false);
         return;
       }
@@ -421,9 +451,7 @@ export const SafeWalletProvider: React.FC<{ children: React.ReactNode }> = ({
 
       if (!submitResult.success) {
         setModuleExecuteStep("error");
-        setModuleExecuteError(
-          submitResult.error || "Failed to enable module"
-        );
+        setModuleExecuteError(submitResult.error || "Failed to enable module");
         setHasOngoingModuleProcess(false);
         return;
       }
@@ -437,11 +465,7 @@ export const SafeWalletProvider: React.FC<{ children: React.ReactNode }> = ({
       setHasOngoingModuleProcess(false);
       throw err;
     }
-  }, [
-    selectedSafe,
-    submitEnableModule,
-    closeModuleActionDialog,
-  ]);
+  }, [selectedSafe, submitEnableModule, closeModuleActionDialog]);
 
   const handleManualModuleRefresh = useCallback(async () => {
     if (!selectedSafe) return;
@@ -460,7 +484,17 @@ export const SafeWalletProvider: React.FC<{ children: React.ReactNode }> = ({
       checkingModule,
       refreshModuleStatus,
     }),
-    [selectedSafe, safeWallets, isLoading, error, selectSafe, refetch, moduleEnabled, checkingModule, refreshModuleStatus]
+    [
+      selectedSafe,
+      safeWallets,
+      isLoading,
+      error,
+      selectSafe,
+      refetch,
+      moduleEnabled,
+      checkingModule,
+      refreshModuleStatus,
+    ]
   );
 
   const creation = useMemo<SafeWalletCreation>(
@@ -482,7 +516,24 @@ export const SafeWalletProvider: React.FC<{ children: React.ReactNode }> = ({
       handleRetryEnable,
       closeCreateFlow,
     }),
-    [showCreateFlow, createStep, signStep, enableStep, createError, signError, enableError, currentSafeAddress, isCreating, isSigningEnableModule, isExecutingEnableModule, handleCreateNewSafe, handleRetryCreate, handleRetrySign, handleRetryEnable, closeCreateFlow]
+    [
+      showCreateFlow,
+      createStep,
+      signStep,
+      enableStep,
+      createError,
+      signError,
+      enableError,
+      currentSafeAddress,
+      isCreating,
+      isSigningEnableModule,
+      isExecutingEnableModule,
+      handleCreateNewSafe,
+      handleRetryCreate,
+      handleRetrySign,
+      handleRetryEnable,
+      closeCreateFlow,
+    ]
   );
 
   const importFlowSlice = useMemo<SafeWalletImportFlow>(
@@ -494,7 +545,13 @@ export const SafeWalletProvider: React.FC<{ children: React.ReactNode }> = ({
       handleImportedSafe,
       setHasImportOngoingProcess,
     }),
-    [showImportDialog, hasImportOngoingProcess, openImportDialog, closeImportDialog, handleImportedSafe]
+    [
+      showImportDialog,
+      hasImportOngoingProcess,
+      openImportDialog,
+      closeImportDialog,
+      handleImportedSafe,
+    ]
   );
 
   const moduleControlSlice = useMemo<SafeWalletModuleControl>(
@@ -512,7 +569,20 @@ export const SafeWalletProvider: React.FC<{ children: React.ReactNode }> = ({
       handleManualModuleRefresh,
       closeModuleActionDialog,
     }),
-    [showModuleActionDialog, moduleSignStep, moduleExecuteStep, moduleSignError, moduleExecuteError, hasOngoingModuleProcess, handleShowEnableDialog, handleEnableModule, handleRetryModuleSign, handleRetryModuleExecute, handleManualModuleRefresh, closeModuleActionDialog]
+    [
+      showModuleActionDialog,
+      moduleSignStep,
+      moduleExecuteStep,
+      moduleSignError,
+      moduleExecuteError,
+      hasOngoingModuleProcess,
+      handleShowEnableDialog,
+      handleEnableModule,
+      handleRetryModuleSign,
+      handleRetryModuleExecute,
+      handleManualModuleRefresh,
+      closeModuleActionDialog,
+    ]
   );
 
   const contextValue = useMemo<SafeWalletContextType>(
@@ -531,4 +601,3 @@ export const SafeWalletProvider: React.FC<{ children: React.ReactNode }> = ({
     </SafeWalletContext.Provider>
   );
 };
-
