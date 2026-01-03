@@ -1,19 +1,18 @@
 import { useState, useEffect, useCallback } from "react";
-import { useAccount, useChainId } from "wagmi";
+import { usePrivyEmbeddedWallet } from "@/hooks/usePrivyEmbeddedWallet";
 import { ethers } from "ethers";
 import { getSafeWalletFactoryAddress } from "../utils/contractAddresses";
 import TriggerXSafeFactoryArtifact from "../artifacts/TriggerXSafeFactory.json";
 
 export const useSafeWallets = () => {
-  const { address } = useAccount();
-  const chainId = useChainId();
+  const { walletAddress, chainId, ethereumProvider } = usePrivyEmbeddedWallet();
   const [safeWallets, setSafeWallets] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchSafeWallets = useCallback(
     async (retryCount = 0) => {
-      if (!address) {
+      if (!walletAddress || !chainId || !ethereumProvider) {
         setSafeWallets([]);
         return;
       }
@@ -30,18 +29,14 @@ export const useSafeWallets = () => {
           );
         }
 
-        if (typeof window.ethereum === "undefined") {
-          throw new Error("Please install MetaMask");
-        }
-
-        const provider = new ethers.BrowserProvider(window.ethereum);
+        const provider = new ethers.BrowserProvider(ethereumProvider);
         const contract = new ethers.Contract(
           factoryAddress,
           TriggerXSafeFactoryArtifact.abi,
           provider
         );
 
-        const wallets = await contract.getSafeWallets(address);
+        const wallets = await contract.getSafeWallets(walletAddress);
         setSafeWallets(wallets);
       } catch (err) {
         // Retry logic for network issues
@@ -60,7 +55,7 @@ export const useSafeWallets = () => {
         setIsLoading(false);
       }
     },
-    [address, chainId]
+    [walletAddress, chainId, ethereumProvider]
   );
 
   useEffect(() => {

@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { useChainId } from "wagmi";
+import { usePrivyEmbeddedWallet } from "@/hooks/usePrivyEmbeddedWallet";
 import { ethers } from "ethers";
 import { usePrivyWallet } from "@/hooks/usePrivyWallet";
 import { getSafeModuleAddress } from "../utils/contractAddresses";
@@ -23,7 +23,7 @@ const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3000/api/v1";
 
 export const useCreateSafeWallet = () => {
-  const chainId = useChainId();
+  const { chainId, ethereumProvider } = usePrivyEmbeddedWallet();
   const { wallet, getPrivyAccessToken } = usePrivyWallet();
   const [isCreating, setIsCreating] = useState(false);
   const [isEnablingModule, setIsEnablingModule] = useState(false);
@@ -104,6 +104,15 @@ export const useCreateSafeWallet = () => {
   ): Promise<CreateSafeResult> => {
     setIsCreating(true);
     try {
+      // Check if chainId is available
+      if (!chainId) {
+        return {
+          success: false,
+          safeAddress: null,
+          error: "Wallet not ready. Please wait for wallet to initialize.",
+        };
+      }
+
       // Validate chain ID
       if (!isSupportedChain(chainId)) {
         return {
@@ -192,6 +201,14 @@ export const useCreateSafeWallet = () => {
     setIsSigningEnableModule(true);
 
     try {
+      // Check if chainId is available
+      if (!chainId) {
+        return {
+          success: false,
+          error: "Wallet not ready. Please wait for wallet to initialize.",
+        };
+      }
+
       // Validate chain ID
       if (!isSupportedChain(chainId)) {
         return {
@@ -210,7 +227,7 @@ export const useCreateSafeWallet = () => {
         };
       }
 
-      if (!wallet) {
+      if (!wallet || !ethereumProvider) {
         return {
           success: false,
           error: "Privy wallet not available. Please log in.",
@@ -332,6 +349,14 @@ export const useCreateSafeWallet = () => {
       signedTxRef.current;
 
     try {
+      // Check if chainId is available
+      if (!chainId) {
+        return {
+          success: false,
+          error: "Wallet not ready. Please wait for wallet to initialize.",
+        };
+      }
+
       // Validate chain ID
       if (!isSupportedChain(chainId)) {
         return {
@@ -457,16 +482,17 @@ export const useCreateSafeWallet = () => {
     setIsEnablingModule(true);
 
     try {
+      // Check if chainId and ethereumProvider are available
+      if (!chainId || !ethereumProvider) {
+        throw new Error("Wallet not ready. Please wait for wallet to initialize.");
+      }
+
       const moduleAddress = getSafeModuleAddress(chainId);
       if (!moduleAddress) {
         throw new Error("Safe Module address not configured for this network");
       }
 
-      if (typeof window.ethereum === "undefined") {
-        throw new Error("Please install MetaMask");
-      }
-
-      const provider = new ethers.BrowserProvider(window.ethereum);
+      const provider = new ethers.BrowserProvider(ethereumProvider);
       const signer = await provider.getSigner();
       const signerAddress = await signer.getAddress();
 

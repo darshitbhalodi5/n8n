@@ -216,7 +216,7 @@ This design system's **architecture** was adapted from a production application 
 - **Workflow**: React Flow
 - **Icons**: Lucide React
 - **Language**: TypeScript
-- **Web3**: wagmi + viem + RainbowKit
+- **Web3**: Privy (embedded wallets) + viem + ethers
 - **Safe Integration**: @safe-global/protocol-kit + api-kit
 
 ## 🛠️ Development
@@ -228,7 +228,7 @@ src/
 ├── app/              # Next.js app router
 │   ├── globals.css   # Theme tokens & base styles
 │   ├── layout.tsx    # Root layout with fonts
-│   ├── providers.tsx # Web3 providers (Wagmi, RainbowKit, Safe)
+│   ├── providers.tsx # Web3 providers (Privy, Safe)
 │   └── demo/         # Workflow builder demo
 ├── components/
 │   ├── ui/           # UI primitives
@@ -241,7 +241,7 @@ src/
 │   ├── utils/        # Contract utilities
 │   ├── types/        # TypeScript types
 │   └── artifacts/    # Contract ABIs
-├── hooks/            # React hooks
+├── hooks/            # React hooks (Privy wallet hooks)
 └── lib/              # Utilities
 ```
 

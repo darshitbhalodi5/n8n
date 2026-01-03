@@ -272,8 +272,9 @@ function TriggerXJobCreator() {
 
 ## Notes
 
-- All existing code remains intact - no refactoring was done
-- Privy is added as an additional authentication layer
-- Existing Wagmi/RainbowKit setup continues to work alongside Privy
+- Wagmi and RainbowKit have been removed from the project
+- The application now uses Privy embedded wallets exclusively for Web3 interactions
+- Chain ID and wallet address are obtained directly from Privy's embedded wallet provider
 - Gas sponsorship is handled automatically by Privy based on your policy configuration
+- All Web3 hooks have been refactored to use `usePrivyEmbeddedWallet` instead of wagmi hooks
 

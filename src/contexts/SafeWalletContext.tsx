@@ -8,7 +8,7 @@ import React, {
   useEffect,
   useMemo,
 } from "react";
-import { useAccount, useChainId } from "wagmi";
+import { usePrivyEmbeddedWallet } from "@/hooks/usePrivyEmbeddedWallet";
 import { useSafeWallets } from "@/web3/hooks/useSafeWallets";
 import { useCreateSafeWallet } from "@/web3/hooks/useCreateSafeWallet";
 import { useSafeModuleStatus } from "@/web3/hooks/useSafeModuleStatus";
@@ -93,8 +93,7 @@ export const useSafeWalletContext = () => {
 export const SafeWalletProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const { address } = useAccount();
-  const chainId = useChainId();
+  const { walletAddress, chainId } = usePrivyEmbeddedWallet();
 
   // Core hooks
   const { safeWallets, isLoading, error, refetch } = useSafeWallets();
@@ -207,7 +206,7 @@ export const SafeWalletProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 
   const handleCreateNewSafe = useCallback(async () => {
-    if (!address) return;
+    if (!walletAddress) return;
 
     setShowCreateFlow(true);
     setCreateStep("pending");
@@ -218,7 +217,7 @@ export const SafeWalletProvider: React.FC<{ children: React.ReactNode }> = ({
     setEnableError(undefined);
     setCurrentSafeAddress(null);
 
-    const createResult = await createSafeWallet(address);
+    const createResult = await createSafeWallet(walletAddress);
 
     if (!createResult.success || !createResult.safeAddress) {
       setCreateStep("error");
@@ -231,14 +230,14 @@ export const SafeWalletProvider: React.FC<{ children: React.ReactNode }> = ({
     setCreateStep("success");
 
     await handleSignStep(newSafe);
-  }, [address, createSafeWallet, handleSignStep]);
+  }, [walletAddress, createSafeWallet, handleSignStep]);
 
   const handleRetryCreate = useCallback(async () => {
-    if (!address) return;
+    if (!walletAddress) return;
     setCreateStep("pending");
     setCreateError(undefined);
 
-    const createResult = await createSafeWallet(address);
+    const createResult = await createSafeWallet(walletAddress);
     if (!createResult.success || !createResult.safeAddress) {
       setCreateStep("error");
       setCreateError(createResult.error || "Failed to create Safe wallet");
@@ -250,7 +249,7 @@ export const SafeWalletProvider: React.FC<{ children: React.ReactNode }> = ({
     setCreateStep("success");
 
     await handleSignStep(newSafe);
-  }, [address, createSafeWallet, handleSignStep]);
+  }, [walletAddress, createSafeWallet, handleSignStep]);
 
   const handleRetrySign = useCallback(async () => {
     if (!currentSafeAddress) return;

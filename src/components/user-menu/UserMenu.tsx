@@ -1,9 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { usePrivy, useWallets } from "@privy-io/react-auth";
-import { useChainId } from "wagmi";
-import { arbitrumSepolia, arbitrum } from "wagmi/chains";
+import { usePrivy } from "@privy-io/react-auth";
+import { arbitrumSepolia, arbitrum } from "viem/chains";
+import { usePrivyEmbeddedWallet } from "@/hooks/usePrivyEmbeddedWallet";
 import { Avatar } from "@/components/user-menu/Avatar";
 import {
   Popover,
@@ -21,42 +21,13 @@ export interface UserMenuProps {
 
 export function UserMenu({ size = "md" }: UserMenuProps) {
   const { user, logout } = usePrivy();
-  const { wallets } = useWallets();
-  const chainId = useChainId();
+  const { embeddedWallet, chainId } = usePrivyEmbeddedWallet();
   const [open, setOpen] = React.useState(false);
-  const [walletChainId, setWalletChainId] = React.useState<number | null>(null);
 
-  // Get the embedded wallet
-  const embeddedWallet = React.useMemo(
-    () => wallets.find((w) => w.walletClientType === "privy"),
-    [wallets]
-  );
+  // Use chain ID from Privy embedded wallet (nullable until ready)
+  const currentChainId = chainId;
 
-  // Get chain ID from wallet provider to ensure accurate state
-  React.useEffect(() => {
-    const getWalletChainId = async () => {
-      if (!embeddedWallet) return;
-
-      try {
-        const provider = await embeddedWallet.getEthereumProvider();
-        if (provider) {
-          const chainIdHex = await provider.request({ method: "eth_chainId" });
-          const chainIdNum = parseInt(chainIdHex as string, 16);
-          setWalletChainId(chainIdNum);
-        }
-      } catch {
-        // Fallback to wagmi chainId if wallet provider fails
-        setWalletChainId(chainId);
-      }
-    };
-
-    getWalletChainId();
-  }, [embeddedWallet, chainId]);
-
-  // Use wallet chain ID if available, otherwise fallback to wagmi chainId
-  const currentChainId = walletChainId ?? chainId;
-
-  // Derive testnet mode from current chain
+  // Derive testnet mode from current chain (null-safe)
   const isTestnetMode = currentChainId === arbitrumSepolia.id;
 
   const handleTestnetToggle = async (checked: boolean) => {
@@ -69,9 +40,6 @@ export function UserMenu({ size = "md" }: UserMenuProps) {
 
       // Switch chain using Privy's native API
       await embeddedWallet.switchChain(targetChainId);
-
-      // Update wallet chain ID immediately
-      setWalletChainId(targetChainId);
     } catch (error) {
       console.error("Failed to switch chain:", error);
     }
@@ -158,7 +126,7 @@ export function UserMenu({ size = "md" }: UserMenuProps) {
                 logout();
                 setOpen(false);
               }}
-              className="w-full justify-center gap-2 bg-destructive! !text-destructive-foreground hover:!bg-destructive/90"
+              className="w-full justify-center gap-2"
             >
               <LogOut className="w-4 h-4" />
               <span>Sign out</span>

@@ -1,15 +1,13 @@
 "use client";
 
-import { WagmiProvider } from "wagmi";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 import { SafeWalletProvider } from "@/contexts/SafeWalletContext";
-import { config } from "@/lib/wagmiConfig";
 import { useState } from "react";
 import { PrivyProvider } from "@privy-io/react-auth";
 import {
   arbitrumSepolia,
   arbitrum,
-} from "wagmi/chains";
+} from "viem/chains";
 
 // Supported chains configuration
 const supportedChains = [arbitrumSepolia, arbitrum];
@@ -50,9 +48,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       }}
     >
       <QueryClientProvider client={queryClient}>
-        <WagmiProvider config={config}>
-          <SafeWalletProvider>{children}</SafeWalletProvider>
-        </WagmiProvider>
+        <SafeWalletProvider>{children}</SafeWalletProvider>
       </QueryClientProvider>
     </PrivyProvider>
   );
