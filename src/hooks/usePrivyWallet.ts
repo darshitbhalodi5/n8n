@@ -5,13 +5,30 @@ import { useCallback } from "react";
 
 /**
  * Hook for interacting with Privy embedded wallet
- * Provides utilities for sending sponsored transactions to TriggerX registry
+ * Provides utilities for sending sponsored transactions and getting access tokens
  */
 export function usePrivyWallet() {
-  const { authenticated, ready } = usePrivy();
+  const { authenticated, ready, getAccessToken } = usePrivy();
   const { wallets } = useWallets();
   // Get the embedded wallet (first wallet is typically the embedded one)
   const wallet = wallets.find((w) => w.walletClientType === "privy");
+
+  /**
+   * Get Privy access token for API authentication
+   */
+  const getPrivyAccessToken = useCallback(async (): Promise<string | null> => {
+    if (!authenticated || !ready) {
+      return null;
+    }
+    
+    try {
+      const token = await getAccessToken();
+      return token;
+    } catch (error) {
+      console.error("Failed to get access token:", error);
+      return null;
+    }
+  }, [authenticated, ready, getAccessToken]);
 
   /**
    * Send a sponsored transaction to TriggerX registry
@@ -100,6 +117,7 @@ export function usePrivyWallet() {
     sendSponsoredTransaction,
     calculateGasFees,
     walletAddress: wallet?.address,
+    getPrivyAccessToken,
   };
 }
 
