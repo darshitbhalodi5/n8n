@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePrivy } from "@privy-io/react-auth";
-import { Button, UserMenu } from "@/components/ui";
+import { Button } from "@/components/ui";
+import { UserMenu } from "@/components/user-menu";
 import { LogIn, Workflow } from "lucide-react";
 
 export function Navbar() {

@@ -7,7 +7,8 @@ import {
   WorkflowSidebar,
   WorkflowRightSidebar,
 } from "@/components/workflow-layout";
-import { TooltipProvider, Button, UserMenu } from "@/components/ui";
+import { TooltipProvider, Button } from "@/components/ui";
+import { UserMenu } from "@/components/user-menu";
 import { Navbar } from "@/components/layout";
 import { WorkflowCanvas, BaseNode, WalletNode } from "@/components/workflow";
 import {

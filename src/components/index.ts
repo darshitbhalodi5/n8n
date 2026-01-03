@@ -17,3 +17,5 @@ export * from "./layout";
 // Workflow Canvas
 export * from "./workflow";
 
+// User Menu
+export * from "./user-menu";

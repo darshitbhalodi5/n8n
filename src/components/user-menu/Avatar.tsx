@@ -2,15 +2,19 @@
 
 import * as React from "react";
 import { cn } from "@/lib/utils";
-import { getColorFromEmail, getInitialsFromEmail } from "@/lib/avatarUtils";
+import { getInitialsFromEmail } from "@/lib/avatarUtils";
 
 export interface AvatarProps extends React.HTMLAttributes<HTMLDivElement> {
   email: string;
   size?: "sm" | "md" | "lg";
 }
 
-export function Avatar({ email, size = "md", className, ...props }: AvatarProps) {
-  const color = getColorFromEmail(email);
+export function Avatar({
+  email,
+  size = "md",
+  className,
+  ...props
+}: AvatarProps) {
   const initials = getInitialsFromEmail(email);
 
   const sizeClasses = {
@@ -22,15 +26,13 @@ export function Avatar({ email, size = "md", className, ...props }: AvatarProps)
   return (
     <div
       className={cn(
-        "rounded-full flex items-center justify-center font-semibold text-white cursor-pointer transition-all hover:ring-2 hover:ring-primary/50 hover:scale-105",
+        "rounded-full flex items-center justify-center font-semibold text-primary bg-foreground ring-2 ring-accent",
         sizeClasses[size],
         className
       )}
-      style={{ backgroundColor: color }}
       {...props}
     >
       {initials}
     </div>
   );
 }
-
