@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { useChainId } from "wagmi";
 import { ethers } from "ethers";
+import { usePrivyWallet } from "@/hooks/usePrivyWallet";
 import {
   getSafeWalletFactoryAddress,
   getSafeModuleAddress,
@@ -16,8 +17,12 @@ import type {
   EnableModuleResult,
 } from "../types/safe";
 
+// Backend API base URL
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3000/api/v1";
+
 export const useCreateSafeWallet = () => {
   const chainId = useChainId();
+  const { wallet, getPrivyAccessToken } = usePrivyWallet();
   const [isCreating, setIsCreating] = useState(false);
   const [isEnablingModule, setIsEnablingModule] = useState(false);
   const [isSigningEnableModule, setIsSigningEnableModule] = useState(false);
@@ -94,82 +99,60 @@ export const useCreateSafeWallet = () => {
   ): Promise<CreateSafeResult> => {
     setIsCreating(true);
     try {
-      const factoryAddress = getSafeWalletFactoryAddress(chainId);
-      if (!factoryAddress) {
+      // Get Privy access token
+      const accessToken = await getPrivyAccessToken();
+      if (!accessToken) {
         return {
           success: false,
           safeAddress: null,
-          error: "Safe Wallet Factory address not configured for this network",
+          error: "Authentication required. Please log in with Privy.",
         };
       }
 
-      if (typeof window.ethereum === "undefined") {
+      // Call backend relay API
+      const response = await fetch(`${API_BASE_URL}/relay/create-safe`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          chainId,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
         return {
           success: false,
           safeAddress: null,
-          error: "Please connect your wallet",
+          error: errorData.error || `Server error: ${response.status}`,
         };
       }
 
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      const signer = await provider.getSigner();
+      const data = await response.json();
 
-      const factory = new ethers.Contract(
-        factoryAddress,
-        TriggerXSafeFactoryArtifact.abi,
-        signer
-      );
-
-      const tx = await factory.createSafeWallet(userAddress);
-      const receipt = await tx.wait();
-
-      // Get the Safe address from the event logs
-      const safeCreatedEvent = receipt.logs.find(
-        (log: { topics: string[] }) =>
-          log.topics[0] ===
-          ethers.id("SafeWalletCreated(address,address,uint256)")
-      );
-
-      let safeAddress: string | null = null;
-      if (safeCreatedEvent) {
-        safeAddress = ethers.getAddress(
-          "0x" + safeCreatedEvent.topics[2].slice(-40)
-        );
-      }
-
-      if (!safeAddress) {
+      if (!data.success || !data.data?.safeAddress) {
         return {
           success: false,
           safeAddress: null,
-          error: "Failed to retrieve Safe address from transaction",
+          error: data.error || "Failed to create Safe wallet",
         };
       }
 
       return {
         success: true,
-        safeAddress,
+        safeAddress: data.data.safeAddress,
       };
     } catch (err) {
       const getShortErrorMessage = (error: Error): string => {
         const message = error.message.toLowerCase();
 
-        if (
-          message.includes("user rejected") ||
-          message.includes("user denied")
-        ) {
-          return "Transaction rejected by user";
+        if (message.includes("fetch") || message.includes("network")) {
+          return "Network error. Please check your connection.";
         }
-        if (message.includes("insufficient funds")) {
-          return "Insufficient funds for transaction";
-        }
-        if (message.includes("network")) {
-          return "Network error occurred";
-        }
-        if (message.includes("gas")) {
-          return "Gas estimation failed";
-        }
-        if (message.includes("metamask")) {
-          return "MetaMask error";
+        if (message.includes("timeout")) {
+          return "Request timeout. Please try again.";
         }
 
         // Fallback: take first sentence or 50 chars
@@ -203,22 +186,24 @@ export const useCreateSafeWallet = () => {
         };
       }
 
-      if (typeof window.ethereum === "undefined") {
+      if (!wallet) {
         return {
           success: false,
-          error: "Please connect your wallet",
+          error: "Privy wallet not available. Please log in.",
         };
       }
 
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      const signer = await provider.getSigner();
+      // Get Privy EIP-1193 provider
+      const provider = await wallet.getEthereumProvider();
+      const ethersProvider = new ethers.BrowserProvider(provider);
+      const signer = await ethersProvider.getSigner();
       const signerAddress = await signer.getAddress();
 
       // Read Safe info with retry logic
       const { threshold, owners, isEnabled } = await readSafeInfo(
         safeAddress,
         moduleAddress,
-        provider
+        ethersProvider
       );
 
       const normalizedOwners = owners.map((owner: string) =>
@@ -245,9 +230,9 @@ export const useCreateSafeWallet = () => {
         };
       }
 
-      // Initialize Safe SDK
+      // Initialize Safe SDK with Privy provider
       const safeSdk = await Safe.init({
-        provider: window.ethereum as unknown as ethers.Eip1193Provider,
+        provider: provider as unknown as ethers.Eip1193Provider,
         safeAddress,
       });
 
@@ -319,7 +304,7 @@ export const useCreateSafeWallet = () => {
       };
     }
 
-    const { safeSdk, signedSafeTx, threshold, owners } = signedTxRef.current;
+    const { signedSafeTx, threshold, owners, safeAddress } = signedTxRef.current;
 
     try {
       const moduleAddress = getSafeModuleAddress(chainId);
@@ -332,16 +317,62 @@ export const useCreateSafeWallet = () => {
 
       setIsExecutingEnableModule(true);
 
-      const executeTxResponse = await safeSdk.executeTransaction(signedSafeTx);
-      const txResponse = executeTxResponse.transactionResponse;
+      // Get Privy access token
+      const accessToken = await getPrivyAccessToken();
+      if (!accessToken) {
+        return {
+          success: false,
+          error: "Authentication required. Please log in with Privy.",
+        };
+      }
 
-      if (
-        txResponse &&
-        typeof txResponse === "object" &&
-        "wait" in txResponse &&
-        typeof txResponse.wait === "function"
-      ) {
-        await txResponse.wait();
+      // Extract Safe transaction data
+      const safeTxData = {
+        to: signedSafeTx.data.to,
+        value: signedSafeTx.data.value,
+        data: signedSafeTx.data.data,
+        operation: signedSafeTx.data.operation,
+        safeTxGas: signedSafeTx.data.safeTxGas,
+        baseGas: signedSafeTx.data.baseGas,
+        gasPrice: signedSafeTx.data.gasPrice,
+        gasToken: signedSafeTx.data.gasToken,
+        refundReceiver: signedSafeTx.data.refundReceiver,
+        nonce: signedSafeTx.data.nonce,
+      };
+
+      // Get encoded signatures
+      const signatures = signedSafeTx.encodedSignatures();
+
+      // Call backend relay API
+      const response = await fetch(`${API_BASE_URL}/relay/enable-module`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          chainId,
+          safeAddress,
+          safeTxData,
+          signatures,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        return {
+          success: false,
+          error: errorData.error || `Server error: ${response.status}`,
+        };
+      }
+
+      const data = await response.json();
+
+      if (!data.success || !data.data?.txHash) {
+        return {
+          success: false,
+          error: data.error || "Failed to enable module",
+        };
       }
 
       // Clear signed tx after execution
@@ -353,27 +384,18 @@ export const useCreateSafeWallet = () => {
           status: "executed",
           threshold,
           owners,
-          transactionHash: executeTxResponse.hash,
+          transactionHash: data.data.txHash,
         },
       };
     } catch (err) {
       const getErrorMessage = (error: Error): string => {
         const message = error.message.toLowerCase();
 
-        if (
-          message.includes("user rejected") ||
-          message.includes("user denied")
-        ) {
-          return "Transaction rejected by user";
+        if (message.includes("fetch") || message.includes("network")) {
+          return "Network error. Please check your connection.";
         }
-        if (message.includes("insufficient funds")) {
-          return "Insufficient funds for transaction";
-        }
-        if (message.includes("network")) {
-          return "Network error occurred";
-        }
-        if (message.includes("gas")) {
-          return "Gas estimation failed";
+        if (message.includes("timeout")) {
+          return "Request timeout. Please try again.";
         }
 
         // Fallback: take first sentence or 50 chars
@@ -405,19 +427,21 @@ export const useCreateSafeWallet = () => {
         throw new Error("Safe Module address not configured for this network");
       }
 
-      if (typeof window.ethereum === "undefined") {
-        throw new Error("Please install MetaMask");
+      if (!wallet) {
+        throw new Error("Privy wallet not available. Please log in.");
       }
 
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      const signer = await provider.getSigner();
+      // Get Privy EIP-1193 provider
+      const provider = await wallet.getEthereumProvider();
+      const ethersProvider = new ethers.BrowserProvider(provider);
+      const signer = await ethersProvider.getSigner();
       const signerAddress = await signer.getAddress();
 
       // Read Safe info with retry logic
       const { threshold, owners, isEnabled } = await readSafeInfo(
         safeAddress,
         moduleAddress,
-        provider
+        ethersProvider
       );
 
       const normalizedOwners = owners.map((owner: string) =>
