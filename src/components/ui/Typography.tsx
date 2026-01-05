@@ -5,19 +5,19 @@ import { cn } from "@/lib/utils";
 const typographyVariants = cva("", {
   variants: {
     variant: {
-      h1: "scroll-m-20 text-4xl font-bold tracking-tight lg:text-5xl",
-      h2: "scroll-m-20 text-3xl font-semibold tracking-tight lg:text-4xl",
-      h3: "scroll-m-20 text-2xl font-semibold tracking-tight",
-      h4: "scroll-m-20 text-xl font-semibold tracking-tight",
-      h5: "scroll-m-20 text-lg font-semibold tracking-tight",
-      h6: "scroll-m-20 text-base font-semibold tracking-tight",
+      h1: "text-5xl sm:text-6xl font-medium",
+      // h2: "text-3xl font-semibold tracking-tight lg:text-4xl",
+      // h3: "text-2xl font-semibold tracking-tight",
+      // h4: "text-xl font-semibold tracking-tight",
+      // h5: "text-lg font-semibold tracking-tight",
+      // h6: "text-base font-semibold tracking-tight",
       body: "text-base leading-7",
-      bodyLarge: "text-lg leading-7",
-      bodySmall: "text-sm leading-6",
-      caption: "text-xs text-muted-foreground",
-      lead: "text-xl text-muted-foreground leading-7",
-      muted: "text-sm text-muted-foreground",
-      code: "relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm font-semibold",
+      // bodyLarge: "text-lg leading-7",
+      // bodySmall: "text-sm leading-6",
+      // caption: "text-xs text-muted-foreground",
+      // lead: "text-xl text-muted-foreground leading-7",
+      // muted: "text-sm text-muted-foreground",
+      // code: "relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm font-semibold",
     },
   },
   defaultVariants: {
@@ -33,18 +33,7 @@ export interface TypographyProps
 
 const defaultElements = {
   h1: "h1",
-  h2: "h2",
-  h3: "h3",
-  h4: "h4",
-  h5: "h5",
-  h6: "h6",
   body: "p",
-  bodyLarge: "p",
-  bodySmall: "p",
-  caption: "span",
-  lead: "p",
-  muted: "p",
-  code: "code",
 } as const;
 
 export const Typography = forwardRef<HTMLElement, TypographyProps>(

@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 * {
-  border-color: hsl(var(--border));
+  border-color: var(--border);
   box-sizing: border-box;
 }
 
@@ -13,52 +13,52 @@ html {
 }
 
 body {
-  background: hsl(var(--background));
-  color: hsl(var(--foreground));
+  background: var(--background);
+  color: var(--foreground);
   font-feature-settings: "rlig" 1, "calt" 1;
 }
 
 /* Focus styles for accessibility */
 *:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px hsl(var(--ring));
+  box-shadow: 0 0 0 2px var(--background), 0 0 0 4px var(--ring);
 }
 
 :root {
   /* Dark-only color palette - warm, earthy design */
-  --background: 210 22% 10%; /* #12161B Deep Charcoal */
-  --foreground: 40 14% 89%; /* #E5E1DB Warm Off-White */
+  --background: #020203; /* Dark Gray */
+  --foreground: #eae9f7; /* Bright Blue-Purple */
 
-  --card: 210 14% 14%; /* #1E2428 Warm Gray */
-  --card-foreground: 40 14% 89%; /* #E5E1DB Warm Off-White */
+  --card: #1a1829; /* Dark Blue-Purple Gray */
+  --card-foreground: #e8e6f5; /* Light Blue-Purple tinted White */
 
-  --popover: 210 14% 14%; /* #1E2428 Warm Gray */
-  --popover-foreground: 40 14% 89%;
+  --popover: #1a1829; /* Dark Blue-Purple Gray */
+  --popover-foreground: #e8e6f5; /* Light Blue-Purple tinted White */
 
-  --primary: 30 19% 55%; /* #9B8B7E Warm Sage-Taupe */
-  --primary-foreground: 40 14% 89%;
+  --primary: #6366f1; /* Indigo Blue */
+  --primary-foreground: #e8e6f5; /* Light Blue-Purple tinted White */
 
-  --secondary: 210 14% 18%; /* #2A3138 Slightly Lighter */
-  --secondary-foreground: 40 14% 89%;
+  --secondary: #2a2540; /* Dark Blue-Purple */
+  --secondary-foreground: #e8e6f5; /* Light Blue-Purple tinted White */
 
-  --muted: 210 14% 18%; /* #2A3138 Slightly Lighter */
-  --muted-foreground: 30 12% 61%; /* #A89E94 Warm Gray */
+  --muted: #2a2540; /* Dark Blue-Purple */
+  --muted-foreground: #a5a3c4; /* Muted Blue-Purple Gray */
 
-  --accent: 38 43% 56%; /* #B8956A Muted Gold */
-  --accent-foreground: 210 22% 10%;
+  --accent: #8b5cf6; /* Purple */
+  --accent-foreground: #05021a; /* Deep Black with Blue-Purple tones */
 
-  --destructive: 3 57% 58%; /* #D9534F Rust Red */
-  --destructive-foreground: 40 14% 89%;
+  --destructive: #ef4444; /* Red */
+  --destructive-foreground: #e8e6f5; /* Light Blue-Purple tinted White */
 
-  --success: 113 31% 65%; /* #8CC084 Calm Green */
-  --success-foreground: 210 22% 10%;
+  --success: #10b981; /* Green */
+  --success-foreground: #05021a; /* Deep Black with Blue-Purple tones */
 
-  --warning: 9 40% 61%; /* #C67C6F Muted Rust */
-  --warning-foreground: 210 22% 10%;
+  --warning: #f59e0b; /* Amber */
+  --warning-foreground: #05021a; /* Deep Black with Blue-Purple tones */
 
-  --border: 210 14% 18%; /* #2A3138 Slightly Lighter */
-  --input: 210 14% 18%;
-  --ring: 30 19% 55%; /* #9B8B7E Warm Sage-Taupe */
+  --border: #2a2540; /* Dark Blue-Purple */
+  --input: #2a2540; /* Dark Blue-Purple */
+  --ring: #6366f1; /* Indigo Blue */
 
   --radius: 0.5rem;
 }
