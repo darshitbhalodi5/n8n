@@ -62,7 +62,7 @@ const nodeTypes = {
       targetPosition={Position.Left}
     />
   ),
-  "send-message": (props: NodeProps) => (
+  slack: (props: NodeProps) => (
     <BaseNode
       {...props}
       showHandles

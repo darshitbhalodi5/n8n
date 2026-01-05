@@ -11,7 +11,7 @@ import {
   TelegramLogo,
   MailLogo,
   WalletLogo,
-  SendMessageLogo,
+  SlackLogo,
 } from "./logos";
 
 // Re-export types
@@ -22,7 +22,7 @@ export const iconRegistry: IconRegistry = {
   TelegramLogo,
   MailLogo,
   WalletLogo,
-  SendMessageLogo,
+  SlackLogo,
   Share2, // Keep for category icon
 };
 
