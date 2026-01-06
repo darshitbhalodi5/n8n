@@ -26,6 +26,7 @@ import {
   Trash2,
   LogIn,
   Send,
+  X,
 } from "lucide-react";
 import { usePrivyWallet } from "@/hooks/usePrivyWallet";
 
@@ -33,12 +34,14 @@ interface WorkflowRightSidebarProps {
   selectedNode: Node | null;
   onNodeDataChange?: (nodeId: string, data: Record<string, unknown>) => void;
   onNodeDelete?: (nodeId: string) => void;
+  onClose?: () => void;
 }
 
 export function WorkflowRightSidebar({
   selectedNode,
   onNodeDataChange,
   onNodeDelete,
+  onClose,
 }: WorkflowRightSidebarProps) {
   const { authenticated, login } = usePrivy();
   const { wallets } = useWallets();
@@ -119,14 +122,29 @@ export function WorkflowRightSidebar({
                 {blockDefinition?.description || "Configure parameters for the selected block"}
               </Typography>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleDeleteClick}
-              className="text-destructive hover:text-destructive hover:bg-destructive/10"
-            >
-              <Trash2 className="w-4 h-4" />
-            </Button>
+            <div className="flex items-center gap-1">
+              {/* Mobile Close Button - Next to Delete */}
+              {onClose && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onClose}
+                  className="md:hidden text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                  aria-label="Close settings"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              )}
+              {/* Delete Button */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleDeleteClick}
+                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
         </div>
 
