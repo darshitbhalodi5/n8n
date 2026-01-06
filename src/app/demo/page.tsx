@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useCallback, useRef, useMemo, useState } from "react";
-import { 
-  CheckSquare, 
-  LogIn, 
-  ZoomIn, 
-  ZoomOut, 
-  Maximize2, 
+import React, { useCallback, useRef, useMemo, useState, useEffect } from "react";
+import {
+  CheckSquare,
+  LogIn,
+  ZoomIn,
+  ZoomOut,
+  Maximize2,
   Play,
   Save,
   Share2,
@@ -22,77 +22,36 @@ import { TooltipProvider, Button } from "@/components/ui";
 import { UserMenu } from "@/components/user-menu";
 import { Navbar } from "@/components/layout";
 import { cn } from "@/lib/utils";
-import { WorkflowCanvas, BaseNode, WalletNode } from "@/components/workflow";
+import { WorkflowCanvas, nodeTypes } from "@/components/workflow";
 import {
   Node,
   Edge,
   useNodesState,
   useEdgesState,
   addEdge,
-  Position,
   ReactFlowInstance,
 } from "reactflow";
-import type { NodeProps } from "reactflow";
 import { usePrivy } from "@privy-io/react-auth";
-
-// Define handler types for React Flow events
-type OnNodeClick = (event: React.MouseEvent, node: Node) => void;
-type OnPaneClick = (event: React.MouseEvent) => void;
 import {
   getBlockById,
   iconRegistry,
   blockCategories,
   type BlockDefinition,
 } from "@/components/blocks";
+import { useCanvasDimensions } from "@/hooks/useCanvasDimensions";
+import { calculateCanvasCenter } from "@/utils/canvas";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+
+// Define handler types for React Flow events
+type OnNodeClick = (event: React.MouseEvent, node: Node) => void;
+type OnPaneClick = (event: React.MouseEvent) => void;
 
 const initialNodes: Node[] = [];
 const initialEdges: Edge[] = [];
 
-// Node type registry - React Flow handles deletion automatically
-const nodeTypes = {
-  base: (props: NodeProps) => (
-    <BaseNode
-      {...props}
-      showHandles
-      sourcePosition={Position.Right}
-      targetPosition={Position.Left}
-    />
-  ),
-  telegram: (props: NodeProps) => (
-    <BaseNode
-      {...props}
-      showHandles
-      sourcePosition={Position.Right}
-      targetPosition={Position.Left}
-    />
-  ),
-  mail: (props: NodeProps) => (
-    <BaseNode
-      {...props}
-      showHandles
-      sourcePosition={Position.Right}
-      targetPosition={Position.Left}
-    />
-  ),
-  slack: (props: NodeProps) => (
-    <BaseNode
-      {...props}
-      showHandles
-      sourcePosition={Position.Right}
-      targetPosition={Position.Left}
-    />
-  ),
-  "wallet-node": (props: NodeProps) => (
-    <WalletNode
-      {...props}
-      showHandles
-      sourcePosition={Position.Right}
-      targetPosition={Position.Left}
-    />
-  ),
-};
+// nodeTypes imported from centralized location to prevent re-creation on every render
 
-export default function WorkflowPage() {
+function WorkflowPageInner() {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
@@ -100,8 +59,18 @@ export default function WorkflowPage() {
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // Ref to track selected node ID without causing re-renders
+  // This pattern prevents infinite loops and stabilizes callbacks
+  const selectedNodeIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    selectedNodeIdRef.current = selectedNode?.id ?? null;
+  }, [selectedNode]);
+
   // Privy hooks for authentication and wallet access
   const { ready, authenticated, login } = usePrivy();
+
+  // Responsive canvas dimensions hook (fixes window.innerWidth in callbacks)
+  const canvasDimensions = useCanvasDimensions();
 
   // Canvas control handlers
   const handleZoomIn = useCallback(() => {
@@ -127,6 +96,44 @@ export default function WorkflowPage() {
     console.log("Running workflow...");
   }, []);
 
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ctrl/Cmd + S: Save
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        handleSave();
+      }
+
+      // Ctrl/Cmd + Enter: Run
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        handleRun();
+      }
+
+      // Escape: Close modals/panels
+      if (e.key === 'Escape') {
+        setSelectedNode(null);
+        setMobileMenuOpen(false);
+      }
+
+      // Delete/Backspace: Delete selected node (if any)
+      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedNode) {
+        e.preventDefault();
+        setNodes((nds) => nds.filter((n) => n.id !== selectedNode.id));
+        setEdges((eds) =>
+          eds.filter((edge) =>
+            edge.source !== selectedNode.id && edge.target !== selectedNode.id
+          )
+        );
+        setSelectedNode(null);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleSave, handleRun, selectedNode, setNodes, setEdges]);
+
   // Handle block click to add (mobile tap-to-add)
   const handleBlockClick = useCallback(
     (block: BlockDefinition) => {
@@ -148,37 +155,16 @@ export default function WorkflowPage() {
         }
       }
 
-      // Calculate actual canvas dimensions (excluding sidebars)
-      const isMobile = window.innerWidth < 768;
-      const navbarHeight = 64; // Navbar height
-      
-      let canvasLeft = 0;
-      let canvasWidth = window.innerWidth;
-      const canvasTop = navbarHeight;
-      const canvasHeight = window.innerHeight - navbarHeight;
+      // Use utility to calculate canvas center (eliminates duplicate logic)
+      // Pass null for selectedNode - we use the ref to avoid stale closures
+      const canvasCenter = calculateCanvasCenter(
+        reactFlowInstance.current,
+        canvasDimensions,
+        null // Position at center, not offset
+      );
 
-      if (!isMobile) {
-        // Desktop: account for sidebars
-        const categoryStripWidth = window.innerWidth >= 1024 ? 56 : 48;
-        const blocksWidth = window.innerWidth >= 1280 ? 170 : (window.innerWidth >= 1024 ? 160 : 140);
-        const configWidth = selectedNode ? (window.innerWidth >= 1280 ? 320 : (window.innerWidth >= 1024 ? 300 : 280)) : 0;
-        
-        canvasLeft = categoryStripWidth + blocksWidth;
-        canvasWidth = window.innerWidth - categoryStripWidth - blocksWidth - configWidth;
-      }
-
-      // Calculate center of actual canvas area
-      const canvasCenter = reactFlowInstance.current.screenToFlowPosition({
-        x: canvasLeft + (canvasWidth / 2),
-        y: canvasTop + (canvasHeight / 2),
-      });
-
-      // Get icon/logo component for the node
-      const IconComponent = blockDefinition.iconName
-        ? iconRegistry[blockDefinition.iconName]
-        : null;
-
-      // Create new node at center
+      // Create new node at center with SERIALIZABLE data
+      // iconName is stored instead of JSX for proper serialization/persistence
       const newNode: Node = {
         id: `${block.id}-${Date.now()}`,
         type: blockDefinition.nodeType || "base",
@@ -186,7 +172,7 @@ export default function WorkflowPage() {
         data: {
           ...blockDefinition.defaultData,
           blockId: block.id,
-          icon: IconComponent ? <IconComponent className="w-8 h-8" /> : null,
+          iconName: blockDefinition.iconName, // Serializable - resolved at render
         },
       };
 
@@ -195,7 +181,7 @@ export default function WorkflowPage() {
       // Close mobile menu after adding
       setMobileMenuOpen(false);
     },
-    [nodes, setNodes, setMobileMenuOpen, selectedNode]
+    [nodes, setNodes, canvasDimensions] // Removed selectedNode - use ref instead
   );
 
   // React Flow's built-in node deletion handler
@@ -264,12 +250,8 @@ export default function WorkflowPage() {
           y: event.clientY - reactFlowBounds.top,
         });
 
-        // Get icon/logo component for the node
-        const IconComponent = blockDefinition.iconName
-          ? iconRegistry[blockDefinition.iconName]
-          : null;
-
-        // Create new node
+        // Create new node with SERIALIZABLE data
+        // iconName is stored instead of JSX for proper serialization/persistence
         const newNode: Node = {
           id: `${block.id}-${Date.now()}`,
           type: blockDefinition.nodeType || "base",
@@ -277,7 +259,7 @@ export default function WorkflowPage() {
           data: {
             ...blockDefinition.defaultData,
             blockId: block.id, // Store block ID for right sidebar
-            icon: IconComponent ? <IconComponent className="w-8 h-8" /> : null,
+            iconName: blockDefinition.iconName, // Serializable - resolved at render
           },
         };
 
@@ -315,47 +297,55 @@ export default function WorkflowPage() {
   }, []);
 
   // Handle node data change from right sidebar
+  // Uses ref pattern for stable callback that doesn't recreate on selectedNode changes
   const handleNodeDataChange = useCallback(
     (nodeId: string, data: Record<string, unknown>) => {
-      setNodes((nds) =>
-        nds.map((node) =>
+      setNodes((nds) => {
+        const updatedNodes = nds.map((node) =>
           node.id === nodeId
             ? {
-                ...node,
-                data: {
-                  ...node.data,
-                  ...data,
-                },
-              }
+              ...node,
+              data: {
+                ...node.data,
+                ...data,
+              },
+            }
             : node
-        )
-      );
-      // Update selected node if it's the one being edited
-      if (selectedNode?.id === nodeId) {
-        setSelectedNode({
-          ...selectedNode,
-          data: {
-            ...selectedNode.data,
-            ...data,
-          },
-        });
-      }
+        );
+
+        // If the edited node is selected, also update selectedNode state
+        // We do this inside setNodes to ensure we have the latest data
+        if (selectedNodeIdRef.current === nodeId) {
+          const updatedNode = updatedNodes.find((n) => n.id === nodeId);
+          if (updatedNode) {
+            // Queue the selectedNode update for after this render
+            setTimeout(() => setSelectedNode(updatedNode), 0);
+          }
+        }
+
+        return updatedNodes;
+      });
     },
-    [selectedNode, setNodes]
+    [setNodes] // Stable! No selectedNode in deps
   );
 
-  // Update selected node when nodes change (in case selected node was deleted)
-  React.useEffect(() => {
-    if (selectedNode) {
-      const nodeExists = nodes.find((n) => n.id === selectedNode.id);
-      if (!nodeExists) {
-        setSelectedNode(null);
-      } else {
-        // Update selected node with latest data
-        setSelectedNode(nodeExists);
-      }
+  // Sync selectedNode with nodes array when nodes change
+  // Uses ref pattern to prevent infinite loops
+  useEffect(() => {
+    const currentSelectedId = selectedNodeIdRef.current;
+    if (!currentSelectedId) return;
+
+    const nodeInArray = nodes.find((n) => n.id === currentSelectedId);
+
+    if (!nodeInArray) {
+      // Node was deleted
+      setSelectedNode(null);
+    } else if (nodeInArray !== selectedNode) {
+      // Node data changed - sync it
+      // Only update if the reference actually changed to prevent loops
+      setSelectedNode(nodeInArray);
     }
-  }, [nodes, selectedNode]);
+  }, [nodes]); // Only depend on nodes, not selectedNode
 
   // Build categories dynamically from blockCategories
   const categories = useMemo(() => {
@@ -382,236 +372,250 @@ export default function WorkflowPage() {
       <Navbar />
       <TooltipProvider>
         <WorkflowLayout
-        categories={categories}
-        defaultCategory="all"
-        selectedNode={selectedNode}
-        mobileMenuOpen={mobileMenuOpen}
-        onMobileMenuOpenChange={setMobileMenuOpen}
-        onMobileConfigClose={() => setSelectedNode(null)}
-        sidebar={(activeCategory) => (
-          <WorkflowSidebar
-            activeCategory={activeCategory}
-            onBlockDragStart={handleBlockDragStart}
-            onBlockClick={handleBlockClick}
-            isBlockDisabled={isBlockDisabled}
-          />
-        )}
-        rightSidebar={(node) => (
-          <WorkflowRightSidebar
-            selectedNode={node}
-            onNodeDataChange={handleNodeDataChange}
-            onNodeDelete={(nodeId) => {
-              setNodes((nds) => nds.filter((n) => n.id !== nodeId));
-              setEdges((eds) =>
-                eds.filter(
-                  (edge) => edge.source !== nodeId && edge.target !== nodeId
-                )
-              );
-              if (selectedNode?.id === nodeId) {
-                setSelectedNode(null);
-              }
-            }}
-            onClose={() => setSelectedNode(null)}
-          />
-        )}
-      >
-        <div className="h-full bg-background relative">
-          {/* Responsive Floating Toolbar */}
-          <div className="absolute top-2 md:top-3 left-2 md:left-3 right-2 md:right-3 z-10 flex items-center justify-between gap-2">
-            {/* Left Section */}
-            <div className="flex items-center gap-1.5 md:gap-2 flex-1 min-w-0">
-              {/* Mobile Menu Button - Integrated in toolbar */}
-              <button
-                onClick={() => setMobileMenuOpen(true)}
-                className={cn(
-                  "md:hidden",
-                  "bg-card/95 backdrop-blur-sm border border-border rounded-lg shadow-lg",
-                  "w-8 h-8 flex items-center justify-center",
-                  "text-muted-foreground hover:text-foreground hover:bg-secondary/50",
-                  "transition-colors duration-200"
-                )}
-                aria-label="Open blocks menu"
-              >
-                <Menu className="w-4 h-4" />
-              </button>
+          categories={categories}
+          defaultCategory="all"
+          selectedNode={selectedNode}
+          mobileMenuOpen={mobileMenuOpen}
+          onMobileMenuOpenChange={setMobileMenuOpen}
+          onMobileConfigClose={() => setSelectedNode(null)}
+          sidebar={(activeCategory) => (
+            <WorkflowSidebar
+              activeCategory={activeCategory}
+              onBlockDragStart={handleBlockDragStart}
+              onBlockClick={handleBlockClick}
+              isBlockDisabled={isBlockDisabled}
+            />
+          )}
+          rightSidebar={(node) => (
+            <WorkflowRightSidebar
+              selectedNode={node}
+              onNodeDataChange={handleNodeDataChange}
+              onNodeDelete={(nodeId) => {
+                setNodes((nds) => nds.filter((n) => n.id !== nodeId));
+                setEdges((eds) =>
+                  eds.filter(
+                    (edge) => edge.source !== nodeId && edge.target !== nodeId
+                  )
+                );
+                if (selectedNode?.id === nodeId) {
+                  setSelectedNode(null);
+                }
+              }}
+              onClose={() => setSelectedNode(null)}
+            />
+          )}
+        >
+          <div className="h-full bg-background relative">
+            {/* Responsive Floating Toolbar */}
+            <div className="absolute top-2 md:top-3 left-2 md:left-3 right-2 md:right-3 z-10 flex items-center justify-between gap-2">
+              {/* Left Section */}
+              <div className="flex items-center gap-1.5 md:gap-2 flex-1 min-w-0">
+                {/* Mobile Menu Button - Integrated in toolbar */}
+                <button
+                  onClick={() => setMobileMenuOpen(true)}
+                  className={cn(
+                    "md:hidden",
+                    "bg-card/95 backdrop-blur-sm border border-border rounded-lg shadow-lg",
+                    "w-8 h-8 flex items-center justify-center",
+                    "text-muted-foreground hover:text-foreground hover:bg-secondary/50",
+                    "transition-colors duration-200"
+                  )}
+                  aria-label="Open blocks menu"
+                >
+                  <Menu className="w-4 h-4" />
+                </button>
 
-              {/* Workflow Title - Responsive */}
-              <div className="bg-card/95 backdrop-blur-sm border border-border rounded-lg px-2 md:px-4 py-1.5 md:py-2 shadow-lg min-w-0 shrink">
-                <h2 className="text-xs md:text-sm font-semibold text-foreground truncate">
-                  Untitled Workflow
-                </h2>
-              </div>
-              
-              {/* Node Counter Badge - Hide on mobile */}
-              <div className="hidden sm:flex bg-card/95 backdrop-blur-sm border border-border rounded-lg px-2 md:px-3 py-1.5 md:py-2 shadow-lg">
-                <div className="flex items-center gap-1.5 md:gap-2">
-                  <div className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-success animate-pulse" />
-                  <span className="text-[10px] md:text-xs font-medium text-muted-foreground whitespace-nowrap">
-                    {nodes.length} {nodes.length === 1 ? "node" : "nodes"}
-                  </span>
+                {/* Workflow Title - Responsive */}
+                <div className="bg-card/95 backdrop-blur-sm border border-border rounded-lg px-2 md:px-4 py-1.5 md:py-2 shadow-lg min-w-0 shrink">
+                  <h2 className="text-xs md:text-sm font-semibold text-foreground truncate">
+                    Untitled Workflow
+                  </h2>
                 </div>
+
+                {/* Node Counter Badge - Hide on mobile */}
+                <div className="hidden sm:flex bg-card/95 backdrop-blur-sm border border-border rounded-lg px-2 md:px-3 py-1.5 md:py-2 shadow-lg">
+                  <div className="flex items-center gap-1.5 md:gap-2">
+                    <div className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-success animate-pulse" />
+                    <span className="text-[10px] md:text-xs font-medium text-muted-foreground whitespace-nowrap">
+                      {nodes.length} {nodes.length === 1 ? "node" : "nodes"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Actions - Responsive */}
+              <div className="flex items-center gap-1 md:gap-2">
+                {/* Canvas Controls - Hide zoom on small mobile */}
+                <div className="hidden xs:flex bg-card/95 backdrop-blur-sm border border-border rounded-lg shadow-lg items-center divide-x divide-border">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleZoomOut}
+                    className="rounded-none rounded-l-lg h-7 md:h-9 px-2 md:px-3 hover:bg-muted"
+                    title="Zoom Out (Ctrl + -)"
+                    aria-label="Zoom out canvas"
+                  >
+                    <ZoomOut className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleZoomIn}
+                    className="rounded-none h-7 md:h-9 px-2 md:px-3 hover:bg-muted"
+                    title="Zoom In (Ctrl + +)"
+                    aria-label="Zoom in canvas"
+                  >
+                    <ZoomIn className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleFitView}
+                    className="rounded-none rounded-r-lg h-7 md:h-9 px-2 md:px-3 hover:bg-muted"
+                    title="Fit View"
+                    aria-label="Fit all nodes into view"
+                  >
+                    <Maximize2 className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                  </Button>
+                </div>
+
+                {/* Workflow Actions - Responsive */}
+                <div className="bg-card/95 backdrop-blur-sm border border-border rounded-lg shadow-lg flex items-center gap-0.5 md:gap-1 px-0.5 md:px-1 py-0.5 md:py-1">
+                  {/* Save - Icon only on mobile */}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleSave}
+                    className="h-7 md:h-8 px-2 md:px-3 hover:bg-muted gap-1.5"
+                    title="Save"
+                  >
+                    <Save className="w-3.5 h-3.5" />
+                    <span className="hidden md:inline text-xs font-medium">Save</span>
+                  </Button>
+                  {/* Share - Hide on small screens */}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="hidden sm:flex h-7 md:h-8 px-2 md:px-3 hover:bg-muted gap-1.5"
+                    title="Share"
+                  >
+                    <Share2 className="w-3.5 h-3.5" />
+                    <span className="hidden lg:inline text-xs font-medium">Share</span>
+                  </Button>
+                  <div className="hidden sm:block w-px h-4 bg-border" />
+                  {/* Run Button - Always visible, compact on mobile */}
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={handleRun}
+                    disabled={nodes.length === 0}
+                    className="h-7 md:h-8 px-3 md:px-4 gap-1 md:gap-1.5 bg-primary hover:bg-primary/90"
+                    title="Run Workflow"
+                  >
+                    <Play className="w-3 h-3 md:w-3.5 md:h-3.5 fill-current" />
+                    <span className="text-[10px] md:text-xs font-semibold">Run</span>
+                  </Button>
+                </div>
+
+                {/* User Menu / Auth - Compact on mobile */}
+                {ready && (
+                  <div className="bg-card/95 backdrop-blur-sm border border-border rounded-lg shadow-lg px-0.5 md:px-1 py-0.5 md:py-1">
+                    {authenticated ? (
+                      <div className="scale-90 md:scale-100 origin-right">
+                        <UserMenu size="sm" />
+                      </div>
+                    ) : (
+                      <Button
+                        size="sm"
+                        onClick={login}
+                        className="h-7 md:h-8 px-2 md:px-3 gap-1 md:gap-1.5 bg-accent hover:bg-accent/90"
+                      >
+                        <LogIn className="w-3.5 h-3.5" />
+                        <span className="hidden sm:inline text-xs font-semibold">Sign In</span>
+                      </Button>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Right Actions - Responsive */}
-            <div className="flex items-center gap-1 md:gap-2">
-              {/* Canvas Controls - Hide zoom on small mobile */}
-              <div className="hidden xs:flex bg-card/95 backdrop-blur-sm border border-border rounded-lg shadow-lg items-center divide-x divide-border">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleZoomOut}
-                  className="rounded-none rounded-l-lg h-7 md:h-9 px-2 md:px-3 hover:bg-muted"
-                  title="Zoom Out"
-                >
-                  <ZoomOut className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleZoomIn}
-                  className="rounded-none h-7 md:h-9 px-2 md:px-3 hover:bg-muted"
-                  title="Zoom In"
-                >
-                  <ZoomIn className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleFitView}
-                  className="rounded-none rounded-r-lg h-7 md:h-9 px-2 md:px-3 hover:bg-muted"
-                  title="Fit View"
-                >
-                  <Maximize2 className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                </Button>
-              </div>
+            {/* Workflow Canvas - Full Height */}
+            <div
+              className="h-full w-full"
+              onDragOver={onDragOver}
+              onDrop={onDrop}
+              onClick={(e) => {
+                e.stopPropagation();
+              }}
+              role="application"
+              aria-label="Workflow canvas - drag blocks here to build your workflow"
+            >
+              <WorkflowCanvas
+                nodes={nodes}
+                edges={edges}
+                onNodesChange={onNodesChange}
+                onEdgesChange={onEdgesChange}
+                onConnect={onConnect}
+                onNodesDelete={onNodesDelete}
+                nodeTypes={nodeTypes}
+                showBackground
+                className="h-full"
+                onNodeClick={handleNodeClick}
+                onPaneClick={handlePaneClick}
+                onInit={(instance) => {
+                  reactFlowInstance.current = instance;
+                }}
+              />
+            </div>
 
-              {/* Workflow Actions - Responsive */}
-              <div className="bg-card/95 backdrop-blur-sm border border-border rounded-lg shadow-lg flex items-center gap-0.5 md:gap-1 px-0.5 md:px-1 py-0.5 md:py-1">
-                {/* Save - Icon only on mobile */}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleSave}
-                  className="h-7 md:h-8 px-2 md:px-3 hover:bg-muted gap-1.5"
-                  title="Save"
-                >
-                  <Save className="w-3.5 h-3.5" />
-                  <span className="hidden md:inline text-xs font-medium">Save</span>
-                </Button>
-                {/* Share - Hide on small screens */}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="hidden sm:flex h-7 md:h-8 px-2 md:px-3 hover:bg-muted gap-1.5"
-                  title="Share"
-                >
-                  <Share2 className="w-3.5 h-3.5" />
-                  <span className="hidden lg:inline text-xs font-medium">Share</span>
-                </Button>
-                <div className="hidden sm:block w-px h-4 bg-border" />
-                {/* Run Button - Always visible, compact on mobile */}
-                <Button
-                  variant="default"
-                  size="sm"
-                  onClick={handleRun}
-                  disabled={nodes.length === 0}
-                  className="h-7 md:h-8 px-3 md:px-4 gap-1 md:gap-1.5 bg-primary hover:bg-primary/90"
-                  title="Run Workflow"
-                >
-                  <Play className="w-3 h-3 md:w-3.5 md:h-3.5 fill-current" />
-                  <span className="text-[10px] md:text-xs font-semibold">Run</span>
-                </Button>
-              </div>
+            {/* Responsive Status Bar */}
+            <div className="absolute bottom-2 md:bottom-3 left-2 md:left-3 z-10">
+              <div className="bg-card/95 backdrop-blur-sm border border-border rounded-lg px-2 md:px-4 py-1.5 md:py-2 shadow-lg">
+                <div className="flex items-center gap-2 md:gap-4 text-[10px] md:text-xs text-muted-foreground">
+                  {/* Save Status */}
+                  <div className="flex items-center gap-1 md:gap-1.5">
+                    <Clock className="w-3 h-3 md:w-3.5 md:h-3.5" />
+                    <span className="hidden xs:inline">
+                      {lastSaved
+                        ? `Saved ${lastSaved.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+                        : "Not saved"
+                      }
+                    </span>
+                    <span className="xs:hidden">
+                      {lastSaved ? "Saved" : "Unsaved"}
+                    </span>
+                  </div>
 
-              {/* User Menu / Auth - Compact on mobile */}
-              {ready && (
-                <div className="bg-card/95 backdrop-blur-sm border border-border rounded-lg shadow-lg px-0.5 md:px-1 py-0.5 md:py-1">
-                  {authenticated ? (
-                    <div className="scale-90 md:scale-100 origin-right">
-                      <UserMenu size="sm" />
-                    </div>
-                  ) : (
-                    <Button
-                      size="sm"
-                      onClick={login}
-                      className="h-7 md:h-8 px-2 md:px-3 gap-1 md:gap-1.5 bg-accent hover:bg-accent/90"
-                    >
-                      <LogIn className="w-3.5 h-3.5" />
-                      <span className="hidden sm:inline text-xs font-semibold">Sign In</span>
-                    </Button>
+                  {/* Connections - Hide on very small screens */}
+                  <div className="hidden sm:flex items-center gap-2">
+                    <div className="w-px h-3 bg-border" />
+                    <span>{edges.length} {edges.length === 1 ? "connection" : "connections"}</span>
+                  </div>
+
+                  {/* Helper Text - Hide on mobile */}
+                  {nodes.length === 0 && (
+                    <>
+                      <div className="hidden md:block w-px h-3 bg-border" />
+                      <span className="hidden md:inline text-muted-foreground/70">
+                        Drag blocks from sidebar to get started
+                      </span>
+                    </>
                   )}
                 </div>
-              )}
-            </div>
-          </div>
-
-          {/* Workflow Canvas - Full Height */}
-          <div
-            className="h-full w-full"
-            onDragOver={onDragOver}
-            onDrop={onDrop}
-            onClick={(e) => {
-              e.stopPropagation();
-            }}
-          >
-            <WorkflowCanvas
-              nodes={nodes}
-              edges={edges}
-              onNodesChange={onNodesChange}
-              onEdgesChange={onEdgesChange}
-              onConnect={onConnect}
-              onNodesDelete={onNodesDelete}
-              nodeTypes={nodeTypes}
-              showBackground
-              className="h-full"
-              onNodeClick={handleNodeClick}
-              onPaneClick={handlePaneClick}
-              onInit={(instance) => {
-                reactFlowInstance.current = instance;
-              }}
-            />
-          </div>
-
-          {/* Responsive Status Bar */}
-          <div className="absolute bottom-2 md:bottom-3 left-2 md:left-3 z-10">
-            <div className="bg-card/95 backdrop-blur-sm border border-border rounded-lg px-2 md:px-4 py-1.5 md:py-2 shadow-lg">
-              <div className="flex items-center gap-2 md:gap-4 text-[10px] md:text-xs text-muted-foreground">
-                {/* Save Status */}
-                <div className="flex items-center gap-1 md:gap-1.5">
-                  <Clock className="w-3 h-3 md:w-3.5 md:h-3.5" />
-                  <span className="hidden xs:inline">
-                    {lastSaved 
-                      ? `Saved ${lastSaved.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
-                      : "Not saved"
-                    }
-                  </span>
-                  <span className="xs:hidden">
-                    {lastSaved ? "Saved" : "Unsaved"}
-                  </span>
-                </div>
-                
-                {/* Connections - Hide on very small screens */}
-                <div className="hidden sm:flex items-center gap-2">
-                  <div className="w-px h-3 bg-border" />
-                  <span>{edges.length} {edges.length === 1 ? "connection" : "connections"}</span>
-                </div>
-                
-                {/* Helper Text - Hide on mobile */}
-                {nodes.length === 0 && (
-                  <>
-                    <div className="hidden md:block w-px h-3 bg-border" />
-                    <span className="hidden md:inline text-muted-foreground/70">
-                      Drag blocks from sidebar to get started
-                    </span>
-                  </>
-                )}
               </div>
             </div>
           </div>
-        </div>
-      </WorkflowLayout>
-    </TooltipProvider>
+        </WorkflowLayout>
+      </TooltipProvider>
     </div>
+  );
+}
+
+// Wrap with ErrorBoundary for production error handling
+export default function WorkflowPage() {
+  return (
+    <ErrorBoundary>
+      <WorkflowPageInner />
+    </ErrorBoundary>
   );
 }

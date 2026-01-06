@@ -14,3 +14,5 @@ export type { BaseNodeData, BaseNodeProps } from "./nodes/BaseNode";
 export { WalletNode } from "./nodes/WalletNode";
 export type { WalletNodeData, WalletNodeProps } from "./nodes/WalletNode";
 
+export { nodeTypes, NODE_TYPE_KEYS, isValidNodeType, DEFAULT_HANDLE_CONFIG } from "./nodeTypes";
+

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import type { BlockDefinition } from "@/components/blocks";
@@ -13,7 +13,12 @@ interface DraggableBlockProps {
   disabled?: boolean;
 }
 
-export function DraggableBlock({ block, onDragStart, onClick, disabled = false }: DraggableBlockProps) {
+export const DraggableBlock = React.memo(function DraggableBlock({
+  block,
+  onDragStart,
+  onClick,
+  disabled = false
+}: DraggableBlockProps) {
   const dragRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const IconComponent = block.iconName ? iconRegistry[block.iconName] : null;
@@ -114,5 +119,6 @@ export function DraggableBlock({ block, onDragStart, onClick, disabled = false }
       </TooltipContent>
     </Tooltip>
   );
-}
+});
+
 
