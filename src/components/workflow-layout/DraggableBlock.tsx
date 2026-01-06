@@ -17,7 +17,7 @@ export const DraggableBlock = React.memo(function DraggableBlock({
   block,
   onDragStart,
   onClick,
-  disabled = false
+  disabled = false,
 }: DraggableBlockProps) {
   const dragRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -91,11 +91,17 @@ export const DraggableBlock = React.memo(function DraggableBlock({
           )}
         >
           {/* Icon - Responsive sizing for mobile */}
-          <div className={cn(
-            "flex items-center justify-center transition-colors",
-            disabled ? "text-muted-foreground" : "text-foreground/80 group-hover:text-primary"
-          )}>
-            {IconComponent && <IconComponent className="w-5 h-5 md:w-[18px] md:h-[18px] lg:w-5 lg:h-5" />}
+          <div
+            className={cn(
+              "flex items-center justify-center transition-colors",
+              disabled
+                ? "text-muted-foreground"
+                : "text-foreground/80 group-hover:text-primary"
+            )}
+          >
+            {IconComponent && (
+              <IconComponent className="w-5 h-5 md:w-[18px] md:h-[18px] lg:w-5 lg:h-5" />
+            )}
           </div>
 
           {/* Disabled indicator - Small dot */}
@@ -104,7 +110,11 @@ export const DraggableBlock = React.memo(function DraggableBlock({
           )}
         </div>
       </TooltipTrigger>
-      <TooltipContent side="right" sideOffset={16} className="max-w-[220px] md:max-w-[220px]">
+      <TooltipContent
+        side="right"
+        sideOffset={16}
+        className="max-w-[220px] md:max-w-[220px]"
+      >
         <div className="space-y-1">
           <p className="font-semibold text-sm">{block.label}</p>
           {block.description && (
@@ -120,5 +130,3 @@ export const DraggableBlock = React.memo(function DraggableBlock({
     </Tooltip>
   );
 });
-
-

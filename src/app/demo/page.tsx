@@ -1,9 +1,14 @@
 "use client";
 
-import React, { useCallback, useRef, useMemo, useState, useEffect } from "react";
+import React, {
+  useCallback,
+  useRef,
+  useMemo,
+  useState,
+  useEffect,
+} from "react";
 import {
   CheckSquare,
-  LogIn,
   ZoomIn,
   ZoomOut,
   Maximize2,
@@ -11,7 +16,7 @@ import {
   Save,
   Share2,
   Clock,
-  Menu
+  Menu,
 } from "lucide-react";
 import {
   WorkflowLayout,
@@ -19,7 +24,6 @@ import {
   WorkflowRightSidebar,
 } from "@/components/workflow-layout";
 import { TooltipProvider, Button } from "@/components/ui";
-import { UserMenu } from "@/components/user-menu";
 import { Navbar } from "@/components/layout";
 import { cn } from "@/lib/utils";
 import { WorkflowCanvas, nodeTypes } from "@/components/workflow";
@@ -31,7 +35,6 @@ import {
   addEdge,
   ReactFlowInstance,
 } from "reactflow";
-import { usePrivy } from "@privy-io/react-auth";
 import {
   getBlockById,
   iconRegistry,
@@ -59,15 +62,14 @@ function WorkflowPageInner() {
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Ref to track selected node ID without causing re-renders
+  // Refs to track the selected node without causing re-renders
   // This pattern prevents infinite loops and stabilizes callbacks
   const selectedNodeIdRef = useRef<string | null>(null);
+  const selectedNodeRef = useRef<Node | null>(null);
   useEffect(() => {
     selectedNodeIdRef.current = selectedNode?.id ?? null;
+    selectedNodeRef.current = selectedNode;
   }, [selectedNode]);
-
-  // Privy hooks for authentication and wallet access
-  const { ready, authenticated, login } = usePrivy();
 
   // Responsive canvas dimensions hook (fixes window.innerWidth in callbacks)
   const canvasDimensions = useCanvasDimensions();
@@ -100,38 +102,39 @@ function WorkflowPageInner() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Ctrl/Cmd + S: Save
-      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+      if ((e.ctrlKey || e.metaKey) && e.key === "s") {
         e.preventDefault();
         handleSave();
       }
 
       // Ctrl/Cmd + Enter: Run
-      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
         e.preventDefault();
         handleRun();
       }
 
       // Escape: Close modals/panels
-      if (e.key === 'Escape') {
+      if (e.key === "Escape") {
         setSelectedNode(null);
         setMobileMenuOpen(false);
       }
 
       // Delete/Backspace: Delete selected node (if any)
-      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedNode) {
+      if ((e.key === "Delete" || e.key === "Backspace") && selectedNode) {
         e.preventDefault();
         setNodes((nds) => nds.filter((n) => n.id !== selectedNode.id));
         setEdges((eds) =>
-          eds.filter((edge) =>
-            edge.source !== selectedNode.id && edge.target !== selectedNode.id
+          eds.filter(
+            (edge) =>
+              edge.source !== selectedNode.id && edge.target !== selectedNode.id
           )
         );
         setSelectedNode(null);
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [handleSave, handleRun, selectedNode, setNodes, setEdges]);
 
   // Handle block click to add (mobile tap-to-add)
@@ -304,12 +307,12 @@ function WorkflowPageInner() {
         const updatedNodes = nds.map((node) =>
           node.id === nodeId
             ? {
-              ...node,
-              data: {
-                ...node.data,
-                ...data,
-              },
-            }
+                ...node,
+                data: {
+                  ...node.data,
+                  ...data,
+                },
+              }
             : node
         );
 
@@ -333,17 +336,20 @@ function WorkflowPageInner() {
   // Uses ref pattern to prevent infinite loops
   useEffect(() => {
     const currentSelectedId = selectedNodeIdRef.current;
+    const previousSelectedNode = selectedNodeRef.current;
     if (!currentSelectedId) return;
 
     const nodeInArray = nodes.find((n) => n.id === currentSelectedId);
 
     if (!nodeInArray) {
       // Node was deleted
-      setSelectedNode(null);
-    } else if (nodeInArray !== selectedNode) {
+      queueMicrotask(() => setSelectedNode(null));
+      selectedNodeRef.current = null;
+    } else if (nodeInArray !== previousSelectedNode) {
       // Node data changed - sync it
       // Only update if the reference actually changed to prevent loops
-      setSelectedNode(nodeInArray);
+      queueMicrotask(() => setSelectedNode(nodeInArray));
+      selectedNodeRef.current = nodeInArray;
     }
   }, [nodes]); // Only depend on nodes, not selectedNode
 
@@ -490,7 +496,9 @@ function WorkflowPageInner() {
                     title="Save"
                   >
                     <Save className="w-3.5 h-3.5" />
-                    <span className="hidden md:inline text-xs font-medium">Save</span>
+                    <span className="hidden md:inline text-xs font-medium">
+                      Save
+                    </span>
                   </Button>
                   {/* Share - Hide on small screens */}
                   <Button
@@ -500,7 +508,9 @@ function WorkflowPageInner() {
                     title="Share"
                   >
                     <Share2 className="w-3.5 h-3.5" />
-                    <span className="hidden lg:inline text-xs font-medium">Share</span>
+                    <span className="hidden lg:inline text-xs font-medium">
+                      Share
+                    </span>
                   </Button>
                   <div className="hidden sm:block w-px h-4 bg-border" />
                   {/* Run Button - Always visible, compact on mobile */}
@@ -513,29 +523,12 @@ function WorkflowPageInner() {
                     title="Run Workflow"
                   >
                     <Play className="w-3 h-3 md:w-3.5 md:h-3.5 fill-current" />
-                    <span className="text-[10px] md:text-xs font-semibold">Run</span>
+                    <span className="text-[10px] md:text-xs font-semibold">
+                      Run
+                    </span>
                   </Button>
                 </div>
 
-                {/* User Menu / Auth - Compact on mobile */}
-                {ready && (
-                  <div className="bg-card/95 backdrop-blur-sm border border-border rounded-lg shadow-lg px-0.5 md:px-1 py-0.5 md:py-1">
-                    {authenticated ? (
-                      <div className="scale-90 md:scale-100 origin-right">
-                        <UserMenu size="sm" />
-                      </div>
-                    ) : (
-                      <Button
-                        size="sm"
-                        onClick={login}
-                        className="h-7 md:h-8 px-2 md:px-3 gap-1 md:gap-1.5 bg-accent hover:bg-accent/90"
-                      >
-                        <LogIn className="w-3.5 h-3.5" />
-                        <span className="hidden sm:inline text-xs font-semibold">Sign In</span>
-                      </Button>
-                    )}
-                  </div>
-                )}
               </div>
             </div>
 
@@ -577,9 +570,11 @@ function WorkflowPageInner() {
                     <Clock className="w-3 h-3 md:w-3.5 md:h-3.5" />
                     <span className="hidden xs:inline">
                       {lastSaved
-                        ? `Saved ${lastSaved.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
-                        : "Not saved"
-                      }
+                        ? `Saved ${lastSaved.toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}`
+                        : "Not saved"}
                     </span>
                     <span className="xs:hidden">
                       {lastSaved ? "Saved" : "Unsaved"}
@@ -589,7 +584,10 @@ function WorkflowPageInner() {
                   {/* Connections - Hide on very small screens */}
                   <div className="hidden sm:flex items-center gap-2">
                     <div className="w-px h-3 bg-border" />
-                    <span>{edges.length} {edges.length === 1 ? "connection" : "connections"}</span>
+                    <span>
+                      {edges.length}{" "}
+                      {edges.length === 1 ? "connection" : "connections"}
+                    </span>
                   </div>
 
                   {/* Helper Text - Hide on mobile */}

@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import type { Node } from "reactflow";
-import { Tooltip, TooltipContent, TooltipTrigger, Button } from "@/components/ui";
-import { X, Menu } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui";
+import { X } from "lucide-react";
 
 interface WorkflowLayoutProps {
   children: React.ReactNode;
@@ -122,11 +122,13 @@ export function WorkflowLayout({
         </div>
       </div>
 
-      {/* Desktop: Vertical Category Strip - Ubuntu Style */}
-      <aside className={cn(
-        "hidden md:flex flex-col border-r border-border bg-card/80 backdrop-blur-sm",
-        "md:w-12 lg:w-14"
-      )}>
+      {/* Desktop: Vertical Category Strip */}
+      <aside
+        className={cn(
+          "hidden md:flex flex-col border-r border-border bg-card/80 backdrop-blur-sm",
+          "md:w-12 lg:w-14"
+        )}
+      >
         <div className="flex-1 flex flex-col items-center gap-1 py-3">
           {categories.map((category) => (
             <Tooltip key={category.id}>
@@ -159,18 +161,19 @@ export function WorkflowLayout({
       </aside>
 
       {/* Desktop: Blocks Panel */}
-      <aside className={cn(
-        "hidden md:block border-r border-border bg-card overflow-y-auto scrollbar-thin",
-        "md:w-[140px] lg:w-[160px] xl:w-[170px]"
-      )}>
+      <aside
+        className={cn(
+          "hidden md:block border-r border-border bg-card overflow-y-auto scrollbar-thin",
+          "md:w-[140px] lg:w-[160px] xl:w-[170px]"
+        )}
+      >
         {sidebar(activeCategory)}
       </aside>
 
       {/* Canvas area */}
-      <main className={cn(
-        "flex-1 overflow-auto",
-        "max-w-[2400px] mx-auto w-full"
-      )}>
+      <main
+        className={cn("flex-1 overflow-auto", "max-w-[2400px] mx-auto w-full")}
+      >
         {children}
       </main>
 
@@ -187,7 +190,7 @@ export function WorkflowLayout({
             }}
             aria-hidden="true"
           />
-          
+
           {/* Mobile Config Drawer - Slides from right (below navbar) */}
           <aside
             className={cn(
@@ -196,7 +199,7 @@ export function WorkflowLayout({
               "bg-card border-l border-border",
               "overflow-y-auto scrollbar-thin",
               "transform transition-transform duration-300 ease-in-out",
-              "translate-x-0" // Always visible when showRightSidebar is true on mobile
+              "translate-x-0"
             )}
           >
             {rightSidebar(selectedNode)}

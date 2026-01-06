@@ -56,7 +56,10 @@ export function WorkflowSidebar({
       {/* Empty State */}
       {blocks.length === 0 && (
         <div className="flex flex-col items-center justify-center py-12 px-2 text-center">
-          <Typography variant="caption" className="text-muted-foreground text-xs">
+          <Typography
+            variant="caption"
+            className="text-muted-foreground text-xs"
+          >
             No blocks
           </Typography>
         </div>
