@@ -17,45 +17,16 @@ export function ProblemStatementSection() {
     offset: ["start start", "end end"],
   });
 
-  // --- COORDINATE MAPPING ---
-  // We use 3 keyframes in the arrays: [Start, Gap-Expanded, Final-Position]
-  // Scroll Points: 0.0 (Start) -> 0.15 (Gap Max) -> 0.3 (Corner Reached)
-
   // 1. COMPLEX
-  // X: Stays 0 initially, then moves Left
-  const complexX = useTransform(
-    scrollYProgress,
-    [0, 0.15, 0.35, 0.75],
-    ["0%", "0%", "-28vw", "-32vw"]
-  );
-  // Y: Starts at -90px (top of stack), moves to -150px (gap), moves to -42vh (top corner)
-  const complexY = useTransform(
-    scrollYProgress,
-    [0, 0.15, 0.35, 0.75],
-    ["-10vh", "-20vh", "-20vh", "-40vh"]
-  );
+  const complexX = useTransform(scrollYProgress, [0, 0.15, 0.35, 0.75], ["0%", "0%", "-28vw", "-32vw"]);
+  const complexY = useTransform(scrollYProgress, [0, 0.15, 0.35, 0.75], ["-10vh", "-20vh", "-20vh", "-40vh"]);
 
   // 2. MADE
-  // X: Stays 0 initially, then moves Right
-  const madeX = useTransform(
-    scrollYProgress,
-    [0, 0.15, 0.35, 0.75],
-    ["0%", "0%", "28vw", "32vw"]
-  );
-  // Y: Starts Center, Stays Center during gap, moves to -42vh (aligns with Complex at top)
-  const madeY = useTransform(
-    scrollYProgress,
-    [0, 0.15, 0.35, 0.75],
-    ["0vh", "0vh", "-20vh", "-40vh"]
-  );
+  const madeX = useTransform(scrollYProgress, [0, 0.15, 0.35, 0.75], ["0%", "0%", "28vw", "32vw"]);
+  const madeY = useTransform(scrollYProgress, [0, 0.15, 0.35, 0.75], ["0vh", "0vh", "-20vh", "-40vh"]);
 
   // 3. COMPELLING
-  // Y: Starts 60px (bottom of stack), moves to 150px (gap), moves to 38vh (bottom)
-  const compellingY = useTransform(
-    scrollYProgress,
-    [0, 0.15, 0.35, 0.75],
-    ["10vh", "20vh", "20vh", "40vh"]
-  );
+  const compellingY = useTransform(scrollYProgress, [0, 0.15, 0.35, 0.75], ["10vh", "20vh", "20vh", "40vh"]);
 
   // --- TEXT SCALING ---
   // Large in center stack (1), shrinks slightly when moving to corners (0.6)
@@ -63,11 +34,7 @@ export function ProblemStatementSection() {
 
   // --- ICON SWAPPING ---
   // 1. Initial Lockup Icons (Play, Square, etc): Visible at start, fade out as they move to corners
-  const initialIconsOpacity = useTransform(
-    scrollYProgress,
-    [0.15, 0.25],
-    [1, 0]
-  );
+  const initialIconsOpacity = useTransform(scrollYProgress, [0.15, 0.25], [1, 0]);
 
   // 2. Final Layout Icons (Arrows at bottom): Invisible at start, fade in at end
   const finalIconsOpacity = useTransform(scrollYProgress, [0.25, 0.35], [0, 1]);

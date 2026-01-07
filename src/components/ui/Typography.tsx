@@ -19,9 +19,16 @@ const typographyVariants = cva("", {
       muted: "text-sm text-muted-foreground",
       code: "relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm font-semibold",
     },
+    align: {
+      left: "text-left",
+      center: "text-center",
+      right: "text-right",
+      justify: "text-justify",
+    },
   },
   defaultVariants: {
     variant: "body",
+    align: "left",
   },
 });
 
@@ -48,14 +55,14 @@ const defaultElements = {
 } as const;
 
 export const Typography = forwardRef<HTMLElement, TypographyProps>(
-  ({ className, variant = "body", as, ...props }, ref) => {
+  ({ className, variant = "body", align, as, ...props }, ref) => {
     const Component = (as ||
       (variant && defaultElements[variant]) ||
       "p") as ElementType;
 
     return (
       <Component
-        className={cn(typographyVariants({ variant }), className)}
+        className={cn(typographyVariants({ variant, align }), className)}
         ref={ref}
         {...props}
       />

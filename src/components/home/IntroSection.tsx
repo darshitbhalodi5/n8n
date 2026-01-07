@@ -1,14 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
 import {
   motion,
   MotionValue,
-  useTransform,
   useMotionValue,
-  useMotionValueEvent,
-  AnimatePresence,
+  useTransform,
 } from "framer-motion";
+import { Typography } from "../ui/Typography";
 
 interface IntroSectionProps {
   scrollProgress?: MotionValue<number>;
@@ -19,76 +17,53 @@ export function IntroSection({ scrollProgress }: IntroSectionProps) {
   const defaultProgress = useMotionValue(0.2);
   const progress = scrollProgress || defaultProgress;
 
-  // Track when description should be visible (after 0.6 scroll progress)
-  const [showDescription, setShowDescription] = useState(false);
+  // Header Y position: starts at 0, moves to -60px when scrollProgress reaches 0.4
+  const headerY = useTransform(
+    progress,
+    [0.4, 0.6],
+    [0, -60]
+  );
 
-  // Listen to scroll progress changes to show/hide description
-  useMotionValueEvent(progress, "change", (latest) => {
-    setShowDescription(latest >= 0.6);
-  });
+  // Header scale: starts at 1, scales to 0.70 when scrollProgress reaches 0.4
+  const headerScale = useTransform(
+    progress,
+    [0.4, 0.6],
+    [1, 0.50]
+  );
+
+  // Description container opacity: starts at 0, becomes 1 when scrollProgress reaches 0.4
+  const descriptionOpacity = useTransform(
+    progress,
+    [0.5, 0.7],
+    [0, 1]
+  );
 
   return (
     // Added w-full h-full to ensure it fills the wrapper
-    <div className="h-full w-full flex flex-col gap-6 items-center justify-center bg-[#10091d]">
+    <div className="h-full w-full flex flex-col gap-3 items-center justify-center bg-[#10091d]">
       <motion.h1
-        className="text-white text-8xl font-bold tracking-tighter"
-        animate={{ 
-          y: showDescription ? -60 : 0,
-          scale: showDescription ? 0.70 : 1
+        className="text-white text-[14vw] font-bold tracking-tighter"
+        style={{ 
+          y: headerY,
+          scale: headerScale
         }}
-        transition={{ duration: 0.6, ease: "easeInOut" }}
       >
         FlowForge
       </motion.h1>
-      <AnimatePresence>
-        {showDescription && (
-          <motion.div
-            className="text-lg text-gray-400 max-w-2xl text-center leading-relaxed"
-            initial="hidden"
-            animate="visible"
-            exit="hidden"
-            variants={{
-              hidden: { opacity: 0 },
-              visible: {
-                opacity: 1,
-                transition: {
-                  staggerChildren: 0.08,
-                  delayChildren: 0.2,
-                },
-              },
-            }}
-          >
-            <motion.span
-              variants={{
-                hidden: { opacity: 0, y: 20, filter: "blur(4px)" },
-                visible: {
-                  opacity: 1,
-                  y: 0,
-                  filter: "blur(0px)",
-                  transition: { duration: 0.5, ease: "easeOut" },
-                },
-              }}
-            >
-              Connect everything. Automate anything.
-            </motion.span>
-            <br />
-            <motion.span
-              variants={{
-                hidden: { opacity: 0, y: 20, filter: "blur(4px)" },
-                visible: {
-                  opacity: 1,
-                  y: 0,
-                  filter: "blur(0px)",
-                  transition: { duration: 0.5, ease: "easeOut" },
-                },
-              }}
-            >
-              From APIs to blockchains, one powerful platform for all your
-              automation needs.
-            </motion.span>
-          </motion.div>
-        )}
-      </AnimatePresence>
+
+      <motion.div
+        className="max-w-2xl"
+        style={{ opacity: descriptionOpacity }}
+      >
+        <Typography
+          variant="body"
+          align="center"
+          className="text-gray-400"
+        >
+          Connect everything. Automate anything. From APIs to blockchains, one powerful platform for all your
+          automation needs.
+        </Typography>
+      </motion.div>
     </div>
   );
 }
