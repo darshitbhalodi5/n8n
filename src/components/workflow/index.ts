@@ -1,6 +1,6 @@
 /**
  * Workflow components - Generic React Flow canvas primitives
- * 
+ *
  * This module provides reusable workflow visualization components
  * with no business logic, fully token-based styling, and accessible design.
  */
@@ -14,3 +14,9 @@ export type { BaseNodeData, BaseNodeProps } from "./nodes/BaseNode";
 export { WalletNode } from "./nodes/WalletNode";
 export type { WalletNodeData, WalletNodeProps } from "./nodes/WalletNode";
 
+export {
+  nodeTypes,
+  NODE_TYPE_KEYS,
+  isValidNodeType,
+  DEFAULT_HANDLE_CONFIG,
+} from "./nodeTypes";

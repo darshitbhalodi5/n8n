@@ -15,6 +15,13 @@ export const slackBlock: BlockDefinition = {
     label: "Slack",
     description: "Send Slack message",
     status: "idle" as const,
+    slackConnectionType: "webhook" as "webhook" | "oauth",
+    slackConnectionId: undefined,
+    slackConnectionName: undefined,
+    slackTeamName: undefined,
+    slackChannelId: undefined,
+    slackChannelName: undefined,
+    testMessage: "Hello from FlowForge! 🚀",
   },
 };
 

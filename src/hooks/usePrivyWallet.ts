@@ -20,7 +20,7 @@ export function usePrivyWallet() {
     if (!authenticated || !ready) {
       return null;
     }
-    
+
     try {
       const token = await getAccessToken();
       return token;
@@ -59,11 +59,12 @@ export function usePrivyWallet() {
         // Use the wallet's provider to send transaction
         // Privy will automatically sponsor the transaction based on your policy
         const provider = await wallet.getEthereumProvider();
-        
+
         // Convert value to hex if needed
-        const valueHex = typeof value === "string" && value.startsWith("0x") 
-          ? value 
-          : `0x${BigInt(value).toString(16)}`;
+        const valueHex =
+          typeof value === "string" && value.startsWith("0x")
+            ? value
+            : `0x${BigInt(value).toString(16)}`;
 
         const txHash = await provider.request({
           method: "eth_sendTransaction",
@@ -120,4 +121,3 @@ export function usePrivyWallet() {
     getPrivyAccessToken,
   };
 }
-

@@ -4,12 +4,18 @@ import React from "react";
 import { Handle, Position, NodeProps } from "reactflow";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/Card";
+import { iconRegistry } from "@/components/blocks";
 
 export interface BaseNodeData {
   label: string;
   description?: string;
+  /** Icon name from iconRegistry - serializable */
+  iconName?: string;
+  /** @deprecated Use iconName instead. JSX is not serializable. */
   icon?: React.ReactNode;
   status?: "idle" | "running" | "success" | "error";
+  blockId?: string;
+  [key: string]: unknown;
 }
 
 export interface BaseNodeProps extends NodeProps<BaseNodeData> {
@@ -24,26 +30,25 @@ export interface BaseNodeProps extends NodeProps<BaseNodeData> {
  * Features:
  * - Card-based surface design
  * - Configurable handles (connection points)
- * - Icon/logo support
+ * - Icon support via iconName (serializable) or legacy icon prop
  * - Token-based styling
- * - Minimal design (delete handled in right sidebar)
- *
- * @example
- * ```tsx
- * const nodeTypes = {
- *   custom: (props: NodeProps) => (
- *     <BaseNode {...props} showHandles sourcePosition={Position.Right} />
- *   ),
- * };
- * ```
+ * - Memoized for performance
  */
-export function BaseNode({
+export const BaseNode = React.memo(function BaseNode({
   data,
   selected,
   showHandles = true,
   sourcePosition = Position.Right,
   targetPosition = Position.Left,
 }: BaseNodeProps) {
+  // Resolve icon: prefer iconName (serializable), fallback to legacy icon prop
+  const IconComponent = data.iconName ? iconRegistry[data.iconName] : null;
+  const renderedIcon = IconComponent ? (
+    <IconComponent className="w-8 h-8" />
+  ) : (
+    // Legacy support: direct icon JSX (will be removed in future)
+    data.icon || null
+  );
 
   return (
     <div className="relative group">
@@ -78,11 +83,11 @@ export function BaseNode({
           selected && "ring-2 ring-primary/50 shadow-lg border-primary/30"
         )}
       >
-        {/* Simple icon/logo only */}
+        {/* Icon container */}
         <div className="flex items-center justify-center p-2 w-full h-full">
-          {data.icon ? (
+          {renderedIcon ? (
             <div className="w-full h-full flex items-center justify-center rounded-lg bg-background">
-              {data.icon}
+              {renderedIcon}
             </div>
           ) : (
             <div className="w-full h-full flex items-center justify-center rounded-lg bg-muted/20" />
@@ -91,4 +96,4 @@ export function BaseNode({
       </Card>
     </div>
   );
-}
+});
