@@ -11,8 +11,12 @@ export function FlowChartAnimation() {
   useGSAP(
     () => {
       const flows = [
-        { path: "#path-1", packet: "#packet-1", duration: 8, delay: 0 },
-        { path: "#path-2", packet: "#packet-2", duration: 8, delay: 0 },
+        // Forward direction packets
+        { path: "#path-1", packet: "#packet-1", duration: 8, delay: 0, reverse: false },
+        { path: "#path-2", packet: "#packet-2", duration: 9, delay: 2, reverse: false },
+        // Reverse direction packets
+        { path: "#path-1", packet: "#packet-1-reverse", duration: 6, delay: 1, reverse: true },
+        { path: "#path-2", packet: "#packet-2-reverse", duration: 10, delay: 0, reverse: true },
       ];
 
       flows.forEach((flow, index) => {
@@ -23,6 +27,8 @@ export function FlowChartAnimation() {
             align: flow.path,
             alignOrigin: [0.5, 0.5], // Centers the packet on the line
             autoRotate: true, // Rotates the packet to follow the curve direction
+            start: flow.reverse ? 1 : 0, // Start at end for reverse direction
+            end: flow.reverse ? 0 : 1, // End at start for reverse direction
           },
           duration: flow.duration,
           repeat: -1,
@@ -32,7 +38,7 @@ export function FlowChartAnimation() {
 
         // Add a pulsing opacity effect to make it look like active energy
         // Packet 2 needs higher base opacity to be more visible
-        const minOpacity = index === 1 ? 0.6 : 0.4;
+        const minOpacity = index === 1 || index === 3 ? 0.6 : 0.4;
         gsap.to(flow.packet, {
           opacity: minOpacity,
           duration: 0.5,
@@ -82,7 +88,7 @@ export function FlowChartAnimation() {
         </g>
 
         {/* --- GROUP 2: Animated "Packets" (The moving data) --- */}
-        {/* Packet 1 (Blue) */}
+        {/* Packet 1 (Blue) - Forward */}
         <g id="packet-1">
           <circle r="6" fill="url(#grad-blue)" />
           {/* A small tail for speed effect */}
@@ -94,10 +100,33 @@ export function FlowChartAnimation() {
           />
         </g>
 
-        {/* Packet 2 (Purple) */}
+        {/* Packet 1 Reverse (Blue) - Backward */}
+        <g id="packet-1-reverse">
+          <circle r="6" fill="url(#grad-blue)" />
+          {/* A small tail for speed effect */}
+          <path
+            d="M -10 0 L 0 0"
+            stroke="#60a5fa"
+            strokeWidth="2"
+            opacity="0.5"
+          />
+        </g>
+
+        {/* Packet 2 (Purple) - Forward */}
         <g id="packet-2">
           <circle r="6" fill="url(#grad-purple)" fillOpacity="0.9" />
           {/* <circle r="12" fill="#a78bfa" fillOpacity="0.2" /> */}
+          <path
+            d="M -12 0 L 0 0"
+            stroke="#a78bfa"
+            strokeWidth="2"
+            opacity="0.6"
+          />
+        </g>
+
+        {/* Packet 2 Reverse (Purple) - Backward */}
+        <g id="packet-2-reverse">
+          <circle r="6" fill="url(#grad-purple)" fillOpacity="0.9" />
           <path
             d="M -12 0 L 0 0"
             stroke="#a78bfa"

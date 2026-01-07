@@ -8,7 +8,7 @@ Privy has been integrated into the application with:
 - **Email Login**: Email-based authentication (no premium required)
 - **Embedded Wallets**: ERC-4337 compatible smart wallets
 - **Gas Sponsorship**: Automatic gas fee sponsorship for TriggerX registry transactions
-- **Network Support**: Configured to use the same chains as RainbowKit (Base Sepolia, Optimism Sepolia, Arbitrum Sepolia, Arbitrum)
+- **Network Support**: Configured to use Arbitrum Sepolia and Arbitrum mainnet
 
 ## Step 1: Get Your Privy App ID
 
@@ -47,15 +47,13 @@ NEXT_PUBLIC_PRIVY_APP_ID=your-privy-app-id-here
 ### 3.3 Configure Supported Networks
 
 1. Navigate to **Networks** section
-2. Ensure the following networks are enabled (matching your RainbowKit configuration):
-   - **Base Sepolia** (Chain ID: 84532)
-   - **Optimism Sepolia** (Chain ID: 11155420)
+2. Ensure the following networks are enabled:
    - **Arbitrum Sepolia** (Chain ID: 421614)
    - **Arbitrum** (Chain ID: 42161)
 
 ### 3.4 Set Default Chain
 
-1. In **Networks** section, set **Base Sepolia** as the default chain (or your preferred default)
+1. In **Networks** section, set **Arbitrum Mainnet** as the default chain (or your preferred default)
 2. This ensures users connect to the correct network by default
 
 ## Step 4: Configure Gas Sponsorship Policy
@@ -64,7 +62,7 @@ NEXT_PUBLIC_PRIVY_APP_ID=your-privy-app-id-here
 
 1. Navigate to **Gas Sponsorship** tab in Privy Dashboard
 2. Enable gas sponsorship for your app
-3. Select your preferred network(s) from the supported chains (Base Sepolia, Optimism Sepolia, Arbitrum Sepolia, or Arbitrum)
+3. Select your preferred network(s) from the supported chains (Arbitrum Sepolia or Arbitrum)
 
 ### 4.2 Create Sponsorship Policy
 
@@ -73,7 +71,7 @@ Create a policy that sponsors transactions to the TriggerX registry:
 1. Click **Create Policy** or **New Policy**
 2. Configure the policy:
    - **Policy Name**: `TriggerX Registry Deposits`
-   - **Network**: Base Sepolia (or your preferred network from supported chains)
+   - **Network**: Arbitrum Sepolia (or your preferred network from supported chains)
    - **Conditions**:
      - **Recipient Address**: `TRIGGERX_REGISTRY_ADDRESS` (replace with actual address)
      - **Max Gas Price**: Set appropriate limit (e.g., 20 gwei)
@@ -87,8 +85,8 @@ Create a policy that sponsors transactions to the TriggerX registry:
 ```json
 {
   "name": "TriggerX Registry Deposits",
-  "network": "base-sepolia",
-  "chainId": 84532,
+  "network": "arbitrum-sepolia",
+  "chainId": 421614,
   "conditions": {
     "to": "0x...TRIGGERX_REGISTRY_ADDRESS",
     "maxGasPrice": "20000000000",
@@ -98,7 +96,7 @@ Create a policy that sponsors transactions to the TriggerX registry:
 }
 ```
 
-**Note**: Adjust the `network` and `chainId` based on which chain you're deploying to (Base Sepolia, Optimism Sepolia, Arbitrum Sepolia, or Arbitrum).
+**Note**: Adjust the `network` and `chainId` based on which chain you're deploying to (Arbitrum Sepolia or Arbitrum).
 
 **Important**: Replace `TRIGGERX_REGISTRY_ADDRESS` with your actual TriggerX registry contract address.
 
@@ -116,7 +114,7 @@ Create a policy that sponsors transactions to the TriggerX registry:
 
 After logging in, verify:
 - ✅ Wallet address is displayed in the header
-- ✅ Wallet is connected to the default chain (Base Sepolia)
+- ✅ Wallet is connected to the default chain (Arbitrum Mainnet)
 - ✅ Embedded wallet is created automatically
 
 ### 5.3 Test Sponsored Transaction
@@ -175,7 +173,7 @@ If deploying to mainnet:
 
 1. **`src/app/providers.tsx`**
    - Added `PrivyProvider` wrapper
-   - Configured to use RainbowKit chains (Base Sepolia, Optimism Sepolia, Arbitrum Sepolia, Arbitrum)
+   - Configured to use Arbitrum Sepolia and Arbitrum mainnet
    - Enabled embedded wallets and social logins
 
 2. **`src/app/demo/page.tsx`**
@@ -258,7 +256,7 @@ function TriggerXJobCreator() {
 
 - Verify gas sponsorship policy is active in Privy Dashboard
 - Check policy conditions match transaction parameters
-- Ensure policy is configured for the correct network (Base Sepolia, Optimism Sepolia, Arbitrum Sepolia, or Arbitrum)
+- Ensure policy is configured for the correct network (Arbitrum Sepolia or Arbitrum)
 - Verify TriggerX registry address matches policy recipient
 
 ### Network Not Available
@@ -274,8 +272,9 @@ function TriggerXJobCreator() {
 
 ## Notes
 
-- All existing code remains intact - no refactoring was done
-- Privy is added as an additional authentication layer
-- Existing Wagmi/RainbowKit setup continues to work alongside Privy
+- Wagmi and RainbowKit have been removed from the project
+- The application now uses Privy embedded wallets exclusively for Web3 interactions
+- Chain ID and wallet address are obtained directly from Privy's embedded wallet provider
 - Gas sponsorship is handled automatically by Privy based on your policy configuration
+- All Web3 hooks have been refactored to use `usePrivyEmbeddedWallet` instead of wagmi hooks
 

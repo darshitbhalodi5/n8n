@@ -2,7 +2,7 @@ import Image from "next/image";
 import telegram from "@/assets/blocks/Telegram.svg";
 import mail from "@/assets/blocks/Mail.svg";
 import wallet from "@/assets/blocks/Wallet.svg";
-import sendMessage from "@/assets/blocks/SendMessage.svg";
+import slack from "@/assets/blocks/Slack.svg";
 
 interface LogoProps {
   className?: string;
@@ -41,10 +41,10 @@ export const WalletLogo = ({ className }: LogoProps) => (
   />
 );
 
-export const SendMessageLogo = ({ className }: LogoProps) => (
+export const SlackLogo = ({ className }: LogoProps) => (
   <Image
-    src={sendMessage}
-    alt="Send Message"
+    src={slack}
+    alt="Slack"
     className={className}
     width={32}
     height={32}

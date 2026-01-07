@@ -6,7 +6,7 @@ Blocks for social media and messaging integrations.
 
 - **Telegram** - Send messages via Telegram
 - **Mail** - Send email notifications
-- **Send Message** - Generic message sender
+- **Slack** - Send messages via Slack
 
 ## Usage
 

@@ -55,4 +55,3 @@ export interface MultisigInfo {
   fallbackUrl: string | null;
   owners: string[];
 }
-

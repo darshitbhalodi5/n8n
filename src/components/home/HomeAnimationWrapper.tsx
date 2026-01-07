@@ -11,15 +11,12 @@ interface HomeAnimationWrapperProps {
 export function HomeAnimationWrapper({ hero, intro }: HomeAnimationWrapperProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Track scroll progress within this specific container
   const { scrollYProgress } = useScroll({
     target: containerRef,
-    offset: ["start start", "end start"], // Animation runs while this element is in view
+    offset: ["start start", "end start"],
   });
 
   // Map scroll progress to gap spacing between headers
-  // Initial: 0.5rem (8px - gap-2), Final: 3.3125rem (53px - 8px + 45px)
-  // Happens first: from 0 to 0.4 (first 40% of scroll)
   const gapAnimation = useTransform(
     scrollYProgress,
     [0, 0.1], // Gap animation completes in first 40% of scroll
@@ -32,7 +29,7 @@ export function HomeAnimationWrapper({ hero, intro }: HomeAnimationWrapperProps)
   // Happens after gap: from 0.4 to 0.8 (after gap is complete)
   const clipPathAnimation = useTransform(
     scrollYProgress,
-    [0, 0.8], // Clipping starts after gap animation completes, finishes at 80%
+    [0.05, 0.7], // Clipping starts after gap animation completes, finishes at 80%
     ["inset(50% 0 50% 0)", "inset(0% 0 0% 0)"]
   );
 
@@ -48,10 +45,10 @@ export function HomeAnimationWrapper({ hero, intro }: HomeAnimationWrapperProps)
 
   return (
     // 1. The container needs extra height (200vh) to allow for the scrolling action
-    <section ref={containerRef} className="relative h-[550vh] w-full bg-black">
+    <section ref={containerRef} className="relative h-[550vh] w-full bg-black z-10">
       
       {/* 2. The Sticky Viewport: Holds both sections in place while we scroll */}
-      <div className="sticky top-0 left-0 h-screen w-full overflow-hidden">
+      <div className="fixed top-0 left-0 h-screen w-full overflow-hidden z-0">
         
         {/* Layer 1: The Hero Section (Background) */}
         {/* It stays static behind the opening curtain */}

@@ -55,8 +55,6 @@ NEXT_PUBLIC_MAINNET_SAFE_WALLET_FACTORY_ADDRESS=0x...
 NEXT_PUBLIC_MAINNET_SAFE_MODULE_ADDRESS=0x...
 
 # Safe Transaction Service API endpoints (for faster Safe wallet fetching)
-NEXT_PUBLIC_OP_SEPOLIA_SAFE_ACCOUNTS_BASE_URL=https://...
-NEXT_PUBLIC_BASE_SEPOLIA_SAFE_ACCOUNTS_BASE_URL=https://...
 NEXT_PUBLIC_ARBITRUM_MAINNET_SAFE_ACCOUNTS_BASE_URL=https://...
 
 # Safe API Key (to avoid rate limits)
@@ -69,8 +67,6 @@ NEXT_PUBLIC_SAFE_MULTISEND_CALL_ONLY_ADDRESS=0x...
 ### Supported Networks
 
 The wallet block supports the following networks out of the box:
-- **Optimism Sepolia** (chainId: 11155420)
-- **Base Sepolia** (chainId: 84532)
 - **Arbitrum Sepolia** (chainId: 421614)
 - **Arbitrum Mainnet** (chainId: 42161)
 
@@ -220,7 +216,7 @@ This design system's **architecture** was adapted from a production application 
 - **Workflow**: React Flow
 - **Icons**: Lucide React
 - **Language**: TypeScript
-- **Web3**: wagmi + viem + RainbowKit
+- **Web3**: Privy (embedded wallets) + viem + ethers
 - **Safe Integration**: @safe-global/protocol-kit + api-kit
 
 ## 🛠️ Development
@@ -232,7 +228,7 @@ src/
 ├── app/              # Next.js app router
 │   ├── globals.css   # Theme tokens & base styles
 │   ├── layout.tsx    # Root layout with fonts
-│   ├── providers.tsx # Web3 providers (Wagmi, RainbowKit, Safe)
+│   ├── providers.tsx # Web3 providers (Privy, Safe)
 │   └── demo/         # Workflow builder demo
 ├── components/
 │   ├── ui/           # UI primitives
@@ -245,7 +241,7 @@ src/
 │   ├── utils/        # Contract utilities
 │   ├── types/        # TypeScript types
 │   └── artifacts/    # Contract ABIs
-├── hooks/            # React hooks
+├── hooks/            # React hooks (Privy wallet hooks)
 └── lib/              # Utilities
 ```
 

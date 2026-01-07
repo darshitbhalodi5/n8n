@@ -22,11 +22,13 @@ export default function Home() {
       <Navbar />
       <HomeAnimationWrapper hero={<HeroSection />} intro={<IntroSection />} />
       <ProblemStatementSection />
-      <SolutionSection />
-      <UseCasesSection />
-      <SecuritySection />
-      <CTASection />
-      <Footer />
+      <div className="relative z-20 bg-black">
+        <SolutionSection />
+        <UseCasesSection />
+        <SecuritySection />
+        <CTASection />
+        <Footer />
+      </div>
     </div>
   );
 }

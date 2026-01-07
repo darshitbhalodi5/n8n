@@ -7,7 +7,8 @@ import {
   WorkflowSidebar,
   WorkflowRightSidebar,
 } from "@/components/workflow-layout";
-import { TooltipProvider, Button, UserMenu } from "@/components/ui";
+import { TooltipProvider, Button } from "@/components/ui";
+import { UserMenu } from "@/components/user-menu";
 import { Navbar } from "@/components/layout";
 import { WorkflowCanvas, BaseNode, WalletNode } from "@/components/workflow";
 import {
@@ -61,7 +62,7 @@ const nodeTypes = {
       targetPosition={Position.Left}
     />
   ),
-  "send-message": (props: NodeProps) => (
+  slack: (props: NodeProps) => (
     <BaseNode
       {...props}
       showHandles
