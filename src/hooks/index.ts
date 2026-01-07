@@ -8,3 +8,5 @@ export type { WindowSize } from "./useWindowSize";
 
 export { useCanvasDimensions } from "./useCanvasDimensions";
 export type { CanvasDimensions } from "./useCanvasDimensions";
+
+export { useSlackConnection } from "./useSlackConnection";

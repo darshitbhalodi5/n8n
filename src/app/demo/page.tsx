@@ -66,10 +66,22 @@ function WorkflowPageInner() {
   // This pattern prevents infinite loops and stabilizes callbacks
   const selectedNodeIdRef = useRef<string | null>(null);
   const selectedNodeRef = useRef<Node | null>(null);
+  // Timeout ref for cleanup on unmount (prevents memory leaks)
+  const pendingUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   useEffect(() => {
     selectedNodeIdRef.current = selectedNode?.id ?? null;
     selectedNodeRef.current = selectedNode;
   }, [selectedNode]);
+
+  // Cleanup pending timeouts on unmount
+  useEffect(() => {
+    return () => {
+      if (pendingUpdateTimeoutRef.current) {
+        clearTimeout(pendingUpdateTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Responsive canvas dimensions hook (fixes window.innerWidth in callbacks)
   const canvasDimensions = useCanvasDimensions();
@@ -87,6 +99,11 @@ function WorkflowPageInner() {
     reactFlowInstance.current?.fitView({ padding: 0.2 });
   }, []);
 
+  // Memoized onInit callback to prevent recreation on every render
+  const handleReactFlowInit = useCallback((instance: ReactFlowInstance) => {
+    reactFlowInstance.current = instance;
+  }, []);
+
   const handleSave = useCallback(() => {
     setLastSaved(new Date());
     // TODO: Implement actual save logic
@@ -98,9 +115,37 @@ function WorkflowPageInner() {
     console.log("Running workflow...");
   }, []);
 
+  /**
+   * Shared utility to delete nodes and their connected edges
+   * Extracted to avoid duplication between keyboard handler and onNodesDelete
+   */
+  const deleteNodes = useCallback(
+    (nodeIds: string[]) => {
+      setNodes((nds) => nds.filter((n) => !nodeIds.includes(n.id)));
+      setEdges((eds) =>
+        eds.filter(
+          (edge) =>
+            !nodeIds.includes(edge.source) && !nodeIds.includes(edge.target)
+        )
+      );
+      // Clear selection if the selected node was deleted
+      if (selectedNodeIdRef.current && nodeIds.includes(selectedNodeIdRef.current)) {
+        setSelectedNode(null);
+      }
+    },
+    [setNodes, setEdges]
+  );
+
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Check if user is typing in an input field - don't intercept those events
+      const activeElement = document.activeElement;
+      const isTypingInInput =
+        activeElement instanceof HTMLInputElement ||
+        activeElement instanceof HTMLTextAreaElement ||
+        activeElement?.getAttribute("contenteditable") === "true";
+
       // Ctrl/Cmd + S: Save
       if ((e.ctrlKey || e.metaKey) && e.key === "s") {
         e.preventDefault();
@@ -119,23 +164,21 @@ function WorkflowPageInner() {
         setMobileMenuOpen(false);
       }
 
-      // Delete/Backspace: Delete selected node (if any)
-      if ((e.key === "Delete" || e.key === "Backspace") && selectedNode) {
+      // Delete/Backspace: Delete selected node (using ref to avoid stale closure)
+      // ONLY when not typing in an input field
+      if (
+        (e.key === "Delete" || e.key === "Backspace") &&
+        selectedNodeIdRef.current &&
+        !isTypingInInput
+      ) {
         e.preventDefault();
-        setNodes((nds) => nds.filter((n) => n.id !== selectedNode.id));
-        setEdges((eds) =>
-          eds.filter(
-            (edge) =>
-              edge.source !== selectedNode.id && edge.target !== selectedNode.id
-          )
-        );
-        setSelectedNode(null);
+        deleteNodes([selectedNodeIdRef.current]);
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [handleSave, handleRun, selectedNode, setNodes, setEdges]);
+  }, [handleSave, handleRun, deleteNodes]);
 
   // Handle block click to add (mobile tap-to-add)
   const handleBlockClick = useCallback(
@@ -188,22 +231,14 @@ function WorkflowPageInner() {
   );
 
   // React Flow's built-in node deletion handler
-  // This automatically handles Delete/Backspace keys and cleans up edges
+  // Uses shared deleteNodes utility for consistency
   const onNodesDelete = useCallback(
     (deleted: Node[]) => {
-      // Get IDs of deleted nodes
       const deletedIds = deleted.map((node) => node.id);
-
-      // Delete connected edges
-      setEdges((eds) =>
-        eds.filter(
-          (edge) =>
-            !deletedIds.includes(edge.source) &&
-            !deletedIds.includes(edge.target)
-        )
-      );
+      // Use shared utility (edges cleanup and selection clear handled there)
+      deleteNodes(deletedIds);
     },
-    [setEdges]
+    [deleteNodes]
   );
 
   const onConnect = useCallback(
@@ -307,12 +342,12 @@ function WorkflowPageInner() {
         const updatedNodes = nds.map((node) =>
           node.id === nodeId
             ? {
-                ...node,
-                data: {
-                  ...node.data,
-                  ...data,
-                },
-              }
+              ...node,
+              data: {
+                ...node.data,
+                ...data,
+              },
+            }
             : node
         );
 
@@ -321,8 +356,15 @@ function WorkflowPageInner() {
         if (selectedNodeIdRef.current === nodeId) {
           const updatedNode = updatedNodes.find((n) => n.id === nodeId);
           if (updatedNode) {
-            // Queue the selectedNode update for after this render
-            setTimeout(() => setSelectedNode(updatedNode), 0);
+            // Clear any pending timeout to prevent stale updates
+            if (pendingUpdateTimeoutRef.current) {
+              clearTimeout(pendingUpdateTimeoutRef.current);
+            }
+            // Queue the selectedNode update for after this render (with cleanup)
+            pendingUpdateTimeoutRef.current = setTimeout(() => {
+              setSelectedNode(updatedNode);
+              pendingUpdateTimeoutRef.current = null;
+            }, 0);
           }
         }
 
@@ -438,10 +480,14 @@ function WorkflowPageInner() {
                   </h2>
                 </div>
 
-                {/* Node Counter Badge - Hide on mobile */}
-                <div className="hidden sm:flex bg-card/95 backdrop-blur-sm border border-border rounded-lg px-2 md:px-3 py-1.5 md:py-2 shadow-lg">
+                {/* Node Counter Badge - Hide on mobile, with aria-live for accessibility */}
+                <div
+                  className="hidden sm:flex bg-card/95 backdrop-blur-sm border border-border rounded-lg px-2 md:px-3 py-1.5 md:py-2 shadow-lg"
+                  aria-live="polite"
+                  aria-atomic="true"
+                >
                   <div className="flex items-center gap-1.5 md:gap-2">
-                    <div className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-success animate-pulse" />
+                    <div className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-success animate-pulse" aria-hidden="true" />
                     <span className="text-[10px] md:text-xs font-medium text-muted-foreground whitespace-nowrap">
                       {nodes.length} {nodes.length === 1 ? "node" : "nodes"}
                     </span>
@@ -451,8 +497,8 @@ function WorkflowPageInner() {
 
               {/* Right Actions - Responsive */}
               <div className="flex items-center gap-1 md:gap-2">
-                {/* Canvas Controls - Hide zoom on small mobile */}
-                <div className="hidden xs:flex bg-card/95 backdrop-blur-sm border border-border rounded-lg shadow-lg items-center divide-x divide-border">
+                {/* Canvas Controls - Hide zoom on small mobile (xs: requires Tailwind config) */}
+                <div className="hidden sm:flex bg-card/95 backdrop-blur-sm border border-border rounded-lg shadow-lg items-center divide-x divide-border">
                   <Button
                     variant="ghost"
                     size="sm"
@@ -555,28 +601,30 @@ function WorkflowPageInner() {
                 className="h-full"
                 onNodeClick={handleNodeClick}
                 onPaneClick={handlePaneClick}
-                onInit={(instance) => {
-                  reactFlowInstance.current = instance;
-                }}
+                onInit={handleReactFlowInit}
               />
             </div>
 
-            {/* Responsive Status Bar */}
+            {/* Responsive Status Bar with aria-live for save status announcements */}
             <div className="absolute bottom-2 md:bottom-3 left-2 md:left-3 z-10">
               <div className="bg-card/95 backdrop-blur-sm border border-border rounded-lg px-2 md:px-4 py-1.5 md:py-2 shadow-lg">
                 <div className="flex items-center gap-2 md:gap-4 text-[10px] md:text-xs text-muted-foreground">
-                  {/* Save Status */}
-                  <div className="flex items-center gap-1 md:gap-1.5">
-                    <Clock className="w-3 h-3 md:w-3.5 md:h-3.5" />
-                    <span className="hidden xs:inline">
+                  {/* Save Status - aria-live for screen reader announcements */}
+                  <div
+                    className="flex items-center gap-1 md:gap-1.5"
+                    aria-live="polite"
+                    aria-atomic="true"
+                  >
+                    <Clock className="w-3 h-3 md:w-3.5 md:h-3.5" aria-hidden="true" />
+                    <span className="hidden sm:inline">
                       {lastSaved
                         ? `Saved ${lastSaved.toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}`
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}`
                         : "Not saved"}
                     </span>
-                    <span className="xs:hidden">
+                    <span className="sm:hidden">
                       {lastSaved ? "Saved" : "Unsaved"}
                     </span>
                   </div>
