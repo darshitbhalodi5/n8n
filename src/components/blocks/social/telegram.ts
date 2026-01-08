@@ -15,8 +15,14 @@ export const telegramBlock: BlockDefinition = {
     label: "Telegram",
     description: "Send Telegram message",
     status: "idle" as const,
+    telegramConnectionId: undefined,
+    telegramConnectionName: undefined,
+    telegramBotUsername: undefined,
+    telegramChatId: undefined,
+    telegramChatTitle: undefined,
+    telegramChatType: undefined,
+    telegramMessage: "Hello from FlowForge! 🚀",
   },
 };
 
 export default telegramBlock;
-

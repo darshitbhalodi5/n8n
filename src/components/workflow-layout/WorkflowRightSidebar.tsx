@@ -28,6 +28,7 @@ import {
   X,
 } from "lucide-react";
 import { SlackNodeConfiguration } from "./slack";
+import { TelegramNodeConfiguration } from "./telegram";
 import { EmailNodeConfiguration } from "./email";
 
 interface WorkflowRightSidebarProps {
@@ -106,6 +107,9 @@ export function WorkflowRightSidebar({
 
   // Check if this is an Email node
   const isEmailNode = nodeType === "mail" || blockId === "mail";
+
+  // Check if this is a Telegram node
+  const isTelegramNode = nodeType === "telegram" || blockId === "telegram";
 
   const handleDeleteClick = () => {
     setShowDeleteDialog(true);
@@ -437,6 +441,14 @@ export function WorkflowRightSidebar({
         ) : isSlackNode ? (
           /* Slack Node Configuration - Using refactored component with batched updates */
           <SlackNodeConfiguration
+            nodeData={nodeData}
+            handleDataChange={handleBatchDataChange}
+            authenticated={authenticated}
+            login={login}
+          />
+        ) : isTelegramNode ? (
+          /* Telegram Node Configuration */
+          <TelegramNodeConfiguration
             nodeData={nodeData}
             handleDataChange={handleBatchDataChange}
             authenticated={authenticated}
