@@ -29,7 +29,7 @@ export function HomeAnimationWrapper({ hero, intro }: HomeAnimationWrapperProps)
   // Happens after gap: from 0.4 to 0.8 (after gap is complete)
   const clipPathAnimation = useTransform(
     scrollYProgress,
-    [0.05, 0.7], // Clipping starts after gap animation completes, finishes at 80%
+    [0.05, 0.4], // Clipping starts after gap animation completes, finishes at 80%
     ["inset(50% 0 50% 0)", "inset(0% 0 0% 0)"]
   );
 
@@ -45,7 +45,7 @@ export function HomeAnimationWrapper({ hero, intro }: HomeAnimationWrapperProps)
 
   return (
     // 1. The container needs extra height (200vh) to allow for the scrolling action
-    <section ref={containerRef} className="relative h-[550vh] w-full bg-black z-10">
+    <section ref={containerRef} className="relative h-[450vh] w-full bg-black z-10">
       
       {/* 2. The Sticky Viewport: Holds both sections in place while we scroll */}
       <div className="fixed top-0 left-0 h-screen w-full overflow-hidden z-0">

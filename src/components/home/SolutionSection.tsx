@@ -5,7 +5,7 @@ import { FeatureItem } from "./FeatureItem";
 
 export function SolutionSection() {
   return (
-    <Section padding="xl" id="features">
+    <Section padding="xl" id="features" className="bg-white h-screen flex flex-col justify-center">
       <Container maxWidth="xl">
         <Stack direction="column" spacing="xl" align="center">
           <div className="text-center space-y-4">
