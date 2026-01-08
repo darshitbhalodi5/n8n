@@ -14,6 +14,10 @@ export const API_CONFIG = {
             SEND: "/integrations/slack/send",
             OAUTH_AUTHORIZE: "/integrations/slack/oauth/authorize",
         },
+        EMAIL: {
+            TEST: "/integrations/email/test",
+            SEND: "/integrations/email/send",
+        },
     },
 
     // OAuth polling configuration
