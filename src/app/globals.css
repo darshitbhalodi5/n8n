@@ -94,6 +94,16 @@ body {
   background: hsl(var(--muted-foreground) / 0.5);
 }
 
+/* Hide scrollbar */
+.scrollbar-hide {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
+}
+
 /* React Flow Handle Styling - Improved connection points */
 .react-flow__handle {
   width: 16px !important;

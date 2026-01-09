@@ -1,7 +1,12 @@
-"use client"
+"use client";
 
 import { useRef } from "react";
-import { motion, useScroll, useTransform, type MotionValue } from "framer-motion";
+import {
+  motion,
+  useScroll,
+  useTransform,
+  type MotionValue,
+} from "framer-motion";
 import { ProblemStatementSection } from "./ProblemStatementSection";
 import { SolutionSection } from "./SolutionSection";
 
@@ -9,20 +14,36 @@ type ProblemSolutionHorizontalProps = {
   externalProgress?: MotionValue<number>;
 };
 
-export function ProblemSolutionHorizontal({ externalProgress }: ProblemSolutionHorizontalProps) {
+export function ProblemSolutionHorizontal({
+  externalProgress,
+}: ProblemSolutionHorizontalProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // 1. Master Scroll Progress (0 to 1)
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ["start start", "end end"],
   });
 
   // Prefer external timeline when provided, otherwise fall back to local scroll.
-  const progress = externalProgress ?? scrollYProgress;
+  const masterProgress = externalProgress ?? scrollYProgress;
 
-  // Hold the track still until the Problem timeline finishes, then add a small buffer,
-  // and only after that slide to the Solution panel.
-  const translateX = useTransform(progress, [0, 0.95, 0.952, 1], ["0vw", "0vw", "0vw", "-100vw"]);
+  // --- TIMELINE REMAPPING ---
+  // A. Problem Timeline:
+  const problemProgress = useTransform(masterProgress, [0, 0.7], [0, 1]);
+
+  // B. The Slide Transition:
+  // Happens between 40% and 50%.
+  const translateX = useTransform(
+    masterProgress,
+    [0.7, 0.75, 0.77, 0.8],
+    ["0vw", "-20vw", "-20vw", "-100vw"]
+  );
+
+  // C. Solution Timeline:
+  // Consumes the last 50% of the scroll. Maps 0.5-1.0 to 0.0-1.0.
+  // Before 0.5, it stays at 0 (waiting).
+  const solutionProgress = useTransform(masterProgress, [0.8, 1], [0, 1]);
 
   return (
     <section ref={containerRef} className="relative h-[1000vh] bg-black z-50">
@@ -31,17 +52,17 @@ export function ProblemSolutionHorizontal({ externalProgress }: ProblemSolutionH
           className="flex h-screen w-[200vw]"
           style={{ x: translateX }}
         >
-          <div className="w-screen h-screen shrink-0">
-            <ProblemStatementSection heightClass="h-[900vh]" progressExternal={progress} />
+          <div className="w-screen h-screen shrink-0 overflow-hidden">
+            <ProblemStatementSection
+              heightClass="h-full"
+              progressExternal={problemProgress}
+            />
           </div>
-          <div className="w-screen h-screen shrink-0">
-            <div className="h-full flex items-center bg-black">
-              <SolutionSection />
-            </div>
+          <div className="w-screen h-screen shrink-0 overflow-hidden">
+            <SolutionSection progress={solutionProgress}/>
           </div>
         </motion.div>
       </div>
     </section>
   );
 }
-

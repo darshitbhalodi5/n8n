@@ -1,7 +1,12 @@
 "use client";
 
 import { useRef } from "react";
-import { motion, useScroll, useTransform, type MotionValue } from "framer-motion";
+import {
+  motion,
+  useScroll,
+  useTransform,
+  type MotionValue,
+} from "framer-motion";
 import {
   ArrowLeft,
   ArrowRight,
@@ -10,15 +15,7 @@ import {
 } from "lucide-react";
 
 type ProblemStatementSectionProps = {
-  /**
-   * Allows reusing this section inside other composites (e.g., horizontal scrollers)
-   * without enforcing the default extremely tall scroll height.
-   */
   heightClass?: string;
-  /**
-   * Optional externally provided scroll progress (0-1) so a wrapper can drive this timeline.
-   * If not provided, it uses its own internal scroll observer (current behavior).
-   */
   progressExternal?: MotionValue<number>;
 };
 
@@ -73,11 +70,7 @@ export function ProblemStatementSection({
 
   // --- ICON SWAPPING ---
   // 1. Initial Lockup Icons (Play, Square, etc): Visible at start, fade out as they move to corners
-  const initialIconsOpacity = useTransform(
-    progress,
-    [0.1, 0.15],
-    [1, 0]
-  );
+  const initialIconsOpacity = useTransform(progress, [0.1, 0.15], [1, 0]);
 
   // 2. Final Layout Icons (Arrows at bottom): Invisible at start, fade in at end
   const finalIconsOpacity = useTransform(progress, [0.15, 0.35], [0, 1]);
@@ -85,16 +78,8 @@ export function ProblemStatementSection({
   // --- ORANGE CARD ANIMATIONS ---
   // Starts after the text has cleared the center area (around 0.3)
   const cardOpacity = useTransform(progress, [0.2, 0.25], [0, 1]);
-  const cardHeight = useTransform(
-    progress,
-    [0.15, 0.4],
-    ["60px", "500px"]
-  );
-  const cardWidth = useTransform(
-    progress,
-    [0.15, 0.3],
-    ["55vw", "55vw"]
-  );
+  const cardHeight = useTransform(progress, [0.15, 0.4], ["60px", "500px"]);
+  const cardWidth = useTransform(progress, [0.15, 0.3], ["55vw", "55vw"]);
 
   const cardX = useTransform(progress, [0.55, 0.65], ["0vw", "-36vw"]);
   const cardY = useTransform(progress, [0.55, 0.65], ["0vh", "-10vh"]);
@@ -139,14 +124,22 @@ export function ProblemStatementSection({
   const sideImage2X = useTransform(
     progress,
     [0.67, 0.75, 0.78, 0.85],
-    ["0vw", "-38vw", "-38vw", "-75.5vw"]
+    ["0vw", "-38vw", "-38vw", "-76vw"]
   );
-  const sideImage2Scale = useTransform(progress, [0.67, 0.75, 0.78, 0.85], [1, 3.7, 3.7, 1.4]);
-  const sideImage2ZIndex = useTransform(progress, [0.67, 0.75, 0.78, 0.85], [0, 40, 40, 0]);
+  const sideImage2Scale = useTransform(
+    progress,
+    [0.67, 0.75, 0.78, 0.85],
+    [1, 3.7, 3.7, 1.4]
+  );
+  const sideImage2ZIndex = useTransform(
+    progress,
+    [0.67, 0.75, 0.78, 0.85],
+    [0, 40, 40, 0]
+  );
   const sideImage2Y = useTransform(
     progress,
     [0.67, 0.75, 0.78, 0.85],
-    ["0vh", "-11vh", "-11vh", "-22vh"]
+    ["0vh", "-11vh", "-11vh", "-20.7vh"]
   );
 
   const sideImage3Opacity = useTransform(progress, [0.5, 0.55], [0, 1]);
@@ -176,31 +169,18 @@ export function ProblemStatementSection({
     ["0vh", "10vh", "10vh", "26vh"]
   );
 
-
   const sideImage4Height = useTransform(
     progress,
     [0.65, 0.7],
     ["0px", "170px"]
   );
-  const sideImage4X = useTransform(
-    progress,
-    [0.87, 0.95],
-    ["0vw", "-36vw"]
-  );
+  const sideImage4X = useTransform(progress, [0.87, 0.95], ["0vw", "-36vw"]);
   const sideImage4Scale = useTransform(progress, [0.85, 0.9], [1, 2.85]);
   const sideImage4ZIndex = useTransform(progress, [0.85, 0.9], [0, 50]);
-  const sideImage4Y = useTransform(
-    progress,
-    [0.85, 0.9],
-    ["0vh", "-13vh"]
-  );
+  const sideImage4Y = useTransform(progress, [0.85, 0.9], ["0vh", "-13vh"]);
 
   // Shift everything left once the sequence ends to open right-side space
-  const finalLeftShiftX = useTransform(
-    progress,
-    [0.95, 1],
-    ["0vw", "-22vw"]
-  );
+  const finalLeftShiftX = useTransform(progress, [0.95, 1], ["0vw", "-1vw"]);
 
   return (
     <section
@@ -208,7 +188,10 @@ export function ProblemStatementSection({
       className={`relative ${heightClass} bg-black z-10`}
     >
       <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center justify-center">
-        <motion.div className="absolute inset-0 top-0 h-screen w-full flex items-center justify-center" style={{ x: finalLeftShiftX }}>
+        <motion.div
+          className="absolute inset-0 top-0 h-screen w-full flex items-center justify-center"
+          style={{ x: finalLeftShiftX }}
+        >
           {/* --- 1. COMPLEX ROW --- */}
           <motion.div
             className="absolute flex items-center z-30 whitespace-nowrap origin-center"
@@ -252,7 +235,7 @@ export function ProblemStatementSection({
 
           {/* --- 3. CENTER CARD (THE REVEAL) --- */}
           <motion.div
-            className="absolute z-20 bg-[#FF4400] overflow-hidden flex items-center justify-center rounded-lg"
+            className="absolute z-20 bg-[#FF4400] overflow-hidden flex items-center justify-center rounded-4xl"
             style={{
               x: cardX,
               y: cardY,
@@ -260,39 +243,18 @@ export function ProblemStatementSection({
               opacity: cardOpacity,
               height: cardHeight,
               width: cardWidth,
-              maskImage: `
-            radial-gradient(ellipse 50px 40px at 50% -10px, transparent 45%, black 45.5%),
-            radial-gradient(ellipse 50px 40px at 50% calc(100% + 10px), transparent 45%, black 45.5%)
-          `,
-              // Essential for visibility: Split the mask vertically so they don't overlap
-              maskSize: "100% 51%",
-              maskPosition: "top, bottom",
-              maskRepeat: "no-repeat",
-              // Webkit prefixes for Chrome/Safari support
-              WebkitMaskImage: `
-            radial-gradient(ellipse 50px 40px at 50% -10px, transparent 45%, black 45.5%),
-            radial-gradient(ellipse 50px 40px at 50% calc(100% + 10px), transparent 45%, black 45.5%)
-          `,
-              WebkitMaskSize: "100% 51%",
-              WebkitMaskPosition: "top, bottom",
-              WebkitMaskRepeat: "no-repeat",
             }}
           >
+            {/* Card Content... */}
             <motion.div
               className="absolute inset-0 w-full h-full mix-blend-multiply opacity-60"
               style={{ scale: imageScale }}
             >
-              <div className="w-full h-full bg-[url('https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center grayscale" />
+              <div className="w-full h-full bg-neutral-600 grayscale" />
             </motion.div>
-
-            <div className="relative z-10 flex flex-col items-center justify-center">
-              <h3 className="text-white text-6xl md:text-9xl font-black tracking-widest uppercase opacity-90 mix-blend-overlay">
-                SCIFY
-              </h3>
-              <p className="mt-4 text-white text-xs md:text-sm tracking-[0.8em] font-medium uppercase">
-                Demand Proof
-              </p>
-            </div>
+            <h3 className="relative z-10 text-white text-6xl md:text-9xl font-black uppercase opacity-90 mix-blend-overlay">
+              SCIFY
+            </h3>
           </motion.div>
 
           {/* --- 4. RIGHT SIDE IMAGES (Expanding from Center) --- */}
@@ -300,7 +262,7 @@ export function ProblemStatementSection({
             className="absolute right-[3vw] top-1/2 -translate-y-1/2 flex flex-col gap-6 z-20"
             style={{ opacity: sideImagesOpacity }}
           >
-            {/* WRAPPER 1 */}
+            {/* Image Wrappers (Using your logic) */}
             <div className="w-[18vw] h-[170px] flex items-center justify-center">
               <motion.div
                 style={{
@@ -310,31 +272,20 @@ export function ProblemStatementSection({
                   scale: sideImage1Scale,
                   zIndex: sideImage1ZIndex,
                 }}
-                className="w-full bg-slate-800 rounded-lg overflow-hidden relative"
-              >
-                <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1478760329108-5c3ed9d495a0?q=80&w=1974&auto=format&fit=crop')] bg-cover bg-center opacity-80" />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-white font-mono text-2xl font-bold tracking-[0.2em] drop-shadow-lg">
-                    1984
-                  </span>
-                </div>
-              </motion.div>
+                className="w-full bg-slate-800 rounded-2xl"
+              />
             </div>
-
-            {/* WRAPPER 2 */}
             <div className="h-[130px] w-[14vw] ml-[4vw] flex items-center justify-center">
               <motion.div
                 style={{
                   height: sideImage2Height,
                   x: sideImage2X,
+                  y: sideImage2Y,
                   scale: sideImage2Scale,
                   zIndex: sideImage2ZIndex,
-                  y: sideImage2Y,
                 }}
-                className="w-full bg-blue-900 rounded-lg overflow-hidden relative"
-              >
-                <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-80 mix-blend-screen" />
-              </motion.div>
+                className="w-full bg-blue-900 rounded-2xl"
+              />
             </div>
           </motion.div>
 
@@ -343,30 +294,29 @@ export function ProblemStatementSection({
             className="absolute right-[3vw] top-1/2 -translate-y-1/2 flex flex-col gap-10"
             style={{ opacity: sideImage3Opacity }}
           >
-            {/* WRAPPER 1 */}
             <div className="w-[18vw] h-[170px] flex items-center justify-center">
               <motion.div
                 style={{
                   height: sideImage3Height,
                   x: sideImage3X,
+                  y: sideImage3Y,
                   scale: sideImage3Scale,
                   zIndex: sideImage3ZIndex,
-                  y: sideImage3Y,
                 }}
-                className="w-full rounded-lg overflow-hidden relative bg-[#FF4400]"
-              >
-                <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-80" />
-              </motion.div>
+                className="w-full bg-[#FF4400] rounded-2xl"
+              />
             </div>
-
-            {/* WRAPPER 2 */}
             <div className="h-[130px] w-[14vw] ml-[4vw] flex items-center justify-center">
               <motion.div
-                style={{ height: sideImage4Height, x: sideImage4X, scale: sideImage4Scale, zIndex: sideImage4ZIndex, y: sideImage4Y }}
-                className="w-full rounded-lg overflow-hidden relative bg-[#b700ff]"
-              >
-                <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-80 mix-blend-screen" />
-              </motion.div>
+                style={{
+                  height: sideImage4Height,
+                  x: sideImage4X,
+                  y: sideImage4Y,
+                  scale: sideImage4Scale,
+                  zIndex: sideImage4ZIndex,
+                }}
+                className="w-full bg-[#b700ff] rounded-2xl"
+              />
             </div>
           </motion.div>
 
