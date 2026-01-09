@@ -236,7 +236,7 @@ export function SolutionSection({ progress }: SolutionSectionProps) {
           <h2 className="text-7xl md:text-9xl font-bold tracking-tight leading-none shrink-0 text-black uppercase select-none">
             Campaigns
           </h2>
-          <div className="shrink-0 h-[100px] md:h-[160px] w-[180px] md:w-[300px] rounded-2xl bg-gradient-to-tr from-pink-500 via-red-500 to-yellow-500 flex items-center justify-center">
+          <div className="shrink-0 h-[100px] md:h-[160px] w-[180px] md:w-[300px] rounded-2xl bg-linear-to-tr from-pink-500 via-red-500 to-yellow-500 flex items-center justify-center">
             <div className="grid grid-cols-6 gap-2 opacity-50">
               {[...Array(24)].map((_, i) => (
                 <div key={i} className="w-1 h-1 bg-white rounded-full" />
