@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Navbar } from "@/components/layout";
 import { HeroSection } from "@/components/home/HeroSection";
-import { ProblemStatementSection } from "@/components/home/ProblemStatementSection";
-import { SolutionSection } from "@/components/home/SolutionSection";
+import { ProblemSolutionHorizontal } from "@/components/home/ProblemSolutionHorizontal";
 import { UseCasesSection } from "@/components/home/UseCasesSection";
 import { SecuritySection } from "@/components/home/SecuritySection";
 import { CTASection } from "@/components/home/CTASection";
@@ -21,9 +20,8 @@ export default function Home() {
     <div className="min-h-screen bg-background">
       <Navbar />
       <HomeAnimationWrapper hero={<HeroSection />} intro={<IntroSection />} />
-      <ProblemStatementSection />
+      <ProblemSolutionHorizontal />
       <div className="relative z-20 bg-black">
-        <SolutionSection />
         <UseCasesSection />
         <SecuritySection />
         <CTASection />
