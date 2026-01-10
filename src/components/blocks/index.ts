@@ -6,16 +6,21 @@
 import type { BlockDefinition, CategoryDefinition, IconRegistry } from "./types";
 import { socialBlocks } from "./social";
 import { walletBlocks } from "./wallet";
-import { Share2 } from "lucide-react";
+import { triggerBlocks, startBlock } from "./triggers";
+import { Share2, Play } from "lucide-react";
 import {
   TelegramLogo,
   MailLogo,
   WalletLogo,
   SlackLogo,
+  StartLogo,
 } from "./logos";
 
 // Re-export types
 export type { BlockDefinition, CategoryDefinition, IconRegistry };
+
+// Re-export startBlock for initial node setup
+export { startBlock };
 
 // Icon registry - maps icon names to actual components (logos and icons)
 export const iconRegistry: IconRegistry = {
@@ -23,12 +28,15 @@ export const iconRegistry: IconRegistry = {
   MailLogo,
   WalletLogo,
   SlackLogo,
+  StartLogo,
   Share2, // Keep for category icon
+  Play,   // For triggers category
 };
 
 /**
  * All block categories
  * Add new categories here as they are created
+ * Note: Triggers category is internal-only (Start block is default and not user-addable)
  */
 export const blockCategories: CategoryDefinition[] = [
   {
@@ -42,6 +50,20 @@ export const blockCategories: CategoryDefinition[] = [
     label: "Wallet",
     iconName: "Wallet",
     blocks: walletBlocks,
+  },
+  // Note: triggers category intentionally excluded from sidebar
+  // Start block is auto-added and cannot be manually placed
+];
+
+/**
+ * Internal categories (not shown in sidebar)
+ */
+export const internalCategories: CategoryDefinition[] = [
+  {
+    id: "triggers",
+    label: "Triggers",
+    iconName: "Play",
+    blocks: triggerBlocks,
   },
 ];
 
@@ -61,19 +83,35 @@ export function getAllBlocks(): BlockDefinition[] {
 }
 
 /**
- * Get block definition by ID
+ * Get block definition by ID (includes internal blocks like Start)
  */
 export function getBlockById(blockId: string): BlockDefinition | undefined {
-  return blockCategories
+  // Check regular categories first
+  const regularBlock = blockCategories
+    .flatMap((category) => category.blocks)
+    .find((block) => block.id === blockId);
+
+  if (regularBlock) return regularBlock;
+
+  // Check internal categories (for Start block, etc.)
+  return internalCategories
     .flatMap((category) => category.blocks)
     .find((block) => block.id === blockId);
 }
 
 /**
- * Get block definition by node type
+ * Get block definition by node type (includes internal blocks)
  */
 export function getBlockByNodeType(nodeType: string): BlockDefinition | undefined {
-  return blockCategories
+  // Check regular categories first
+  const regularBlock = blockCategories
+    .flatMap((category) => category.blocks)
+    .find((block) => block.nodeType === nodeType);
+
+  if (regularBlock) return regularBlock;
+
+  // Check internal categories
+  return internalCategories
     .flatMap((category) => category.blocks)
     .find((block) => block.nodeType === nodeType);
 }

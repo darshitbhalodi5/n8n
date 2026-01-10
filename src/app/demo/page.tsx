@@ -39,17 +39,35 @@ import {
   getBlockById,
   iconRegistry,
   blockCategories,
+  startBlock,
   type BlockDefinition,
 } from "@/components/blocks";
 import { useCanvasDimensions } from "@/hooks/useCanvasDimensions";
 import { calculateCanvasCenter } from "@/utils/canvas";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
+// The Start node ID - used to identify and protect it from deletion
+const START_NODE_ID = "start-node";
+
 // Define handler types for React Flow events
 type OnNodeClick = (event: React.MouseEvent, node: Node) => void;
 type OnPaneClick = (event: React.MouseEvent) => void;
 
-const initialNodes: Node[] = [];
+// Initial nodes include the Start node which is always present
+const initialNodes: Node[] = [
+  {
+    id: START_NODE_ID,
+    type: "start",
+    position: { x: 100, y: 200 },
+    data: {
+      ...startBlock.defaultData,
+      blockId: startBlock.id,
+      iconName: startBlock.iconName,
+    },
+    // Deletable is hint to React Flow, we also enforce this in our code
+    deletable: false,
+  },
+];
 const initialEdges: Edge[] = [];
 
 // nodeTypes imported from centralized location to prevent re-creation on every render
@@ -116,24 +134,40 @@ function WorkflowPageInner() {
   }, []);
 
   /**
+   * Check if a node is protected from deletion (e.g., Start node)
+   */
+  const isProtectedNode = useCallback((nodeId: string): boolean => {
+    return nodeId === START_NODE_ID;
+  }, []);
+
+  /**
    * Shared utility to delete nodes and their connected edges
    * Extracted to avoid duplication between keyboard handler and onNodesDelete
+   * Note: Start node cannot be deleted - it's filtered out automatically
    */
   const deleteNodes = useCallback(
     (nodeIds: string[]) => {
-      setNodes((nds) => nds.filter((n) => !nodeIds.includes(n.id)));
+      // Filter out protected nodes (Start node)
+      const deletableIds = nodeIds.filter((id) => !isProtectedNode(id));
+
+      if (deletableIds.length === 0) {
+        console.log("Cannot delete Start node");
+        return;
+      }
+
+      setNodes((nds) => nds.filter((n) => !deletableIds.includes(n.id)));
       setEdges((eds) =>
         eds.filter(
           (edge) =>
-            !nodeIds.includes(edge.source) && !nodeIds.includes(edge.target)
+            !deletableIds.includes(edge.source) && !deletableIds.includes(edge.target)
         )
       );
       // Clear selection if the selected node was deleted
-      if (selectedNodeIdRef.current && nodeIds.includes(selectedNodeIdRef.current)) {
+      if (selectedNodeIdRef.current && deletableIds.includes(selectedNodeIdRef.current)) {
         setSelectedNode(null);
       }
     },
-    [setNodes, setEdges]
+    [setNodes, setEdges, isProtectedNode]
   );
 
   // Keyboard shortcuts

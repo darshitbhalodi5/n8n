@@ -8,6 +8,7 @@ import { Position, NodeTypes } from "reactflow";
 import type { NodeProps } from "reactflow";
 import { BaseNode } from "./nodes/BaseNode";
 import { WalletNode } from "./nodes/WalletNode";
+import { StartNode } from "./nodes/StartNode";
 
 /**
  * Default configuration for node handles
@@ -36,6 +37,12 @@ const WalletNodeWrapper: React.FC<NodeProps> = (props) => (
 );
 WalletNodeWrapper.displayName = "WalletNodeWrapper";
 
+// Start node wrapper - specialized for the workflow start point
+const StartNodeWrapper: React.FC<NodeProps> = (props) => (
+  <StartNode {...props} sourcePosition={Position.Right} />
+);
+StartNodeWrapper.displayName = "StartNodeWrapper";
+
 /**
  * Node type registry
  * Maps node type strings to React components
@@ -46,6 +53,9 @@ WalletNodeWrapper.displayName = "WalletNodeWrapper";
  * 3. Add the mapping below
  */
 export const nodeTypes: NodeTypes = {
+  // Start node - workflow entry point (special shape)
+  start: StartNodeWrapper,
+
   // Generic base node
   base: BaseNodeWrapper,
 
