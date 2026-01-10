@@ -75,11 +75,11 @@ export function IfNodeConfiguration({
               id="if-left-path"
               value={leftPath}
               onChange={handleLeftPathChange}
-              placeholder="input.amount"
+              placeholder="100"
               className="text-sm"
             />
             <Typography variant="caption" className="text-muted-foreground">
-              Path to the value to test (e.g., input.amount, data.status)
+              Value to compare
             </Typography>
           </div>
 
@@ -116,45 +116,11 @@ export function IfNodeConfiguration({
                 className="text-sm"
               />
               <Typography variant="caption" className="text-muted-foreground">
-                Value to compare against (string or number)
+                Value to compare against
               </Typography>
             </div>
           )}
         </div>
-      </Card>
-
-      {/* Branching Info Card */}
-      <Card className="p-4 space-y-3 border-border bg-secondary/20">
-        <Typography
-          variant="bodySmall"
-          className="font-semibold text-foreground"
-        >
-          💡 How Branching Works
-        </Typography>
-        <div className="space-y-2 text-xs text-muted-foreground">
-          <div className="flex items-start gap-2">
-            <div className="w-3 h-3 mt-0.5 rounded-full bg-green-500 shrink-0" />
-            <div>
-              <span className="font-medium text-green-600 dark:text-green-400">
-                True path:
-              </span>{" "}
-              Connect the top handle to blocks that should run when condition is true
-            </div>
-          </div>
-          <div className="flex items-start gap-2">
-            <div className="w-3 h-3 mt-0.5 rounded-full bg-red-500 shrink-0" />
-            <div>
-              <span className="font-medium text-red-600 dark:text-red-400">
-                False path:
-              </span>{" "}
-              Connect the bottom handle to blocks that should run when condition is false
-            </div>
-          </div>
-        </div>
-        <Typography variant="caption" className="text-muted-foreground">
-          The edge will automatically show &quot;True&quot; or &quot;False&quot; label based on
-          which handle you connect from.
-        </Typography>
       </Card>
     </div>
   );

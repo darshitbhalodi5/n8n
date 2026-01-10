@@ -5,6 +5,7 @@ import wallet from "@/assets/blocks/Wallet.svg";
 import slack from "@/assets/blocks/Slack.svg";
 import start from "@/assets/blocks/Start.svg";
 import ifElse from "@/assets/blocks/IfElse.svg";
+import switchIcon from "@/assets/blocks/Switch.svg";
 
 interface LogoProps {
   className?: string;
@@ -46,5 +47,21 @@ export const StartLogo = ({ className }: LogoProps) => (
 );
 
 export const IfElseLogo = ({ className }: LogoProps) => (
-  <Image src={ifElse} alt="If/Else" className={className} width={32} height={32} />
+  <Image
+    src={ifElse}
+    alt="If/Else"
+    className={className}
+    width={32}
+    height={32}
+  />
+);
+
+export const SwitchLogo = ({ className }: LogoProps) => (
+  <Image
+    src={switchIcon}
+    alt="Switch"
+    className={className}
+    width={32}
+    height={32}
+  />
 );

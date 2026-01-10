@@ -10,6 +10,7 @@ import { BaseNode } from "./nodes/BaseNode";
 import { WalletNode } from "./nodes/WalletNode";
 import { StartNode } from "./nodes/StartNode";
 import { IfNode } from "./nodes/IfNode";
+import { SwitchNode } from "./nodes/SwitchNode";
 
 /**
  * Default configuration for node handles
@@ -50,6 +51,12 @@ const IfNodeWrapper: React.FC<NodeProps> = (props) => (
 );
 IfNodeWrapper.displayName = "IfNodeWrapper";
 
+// Switch node wrapper - specialized for multi-branch routing
+const SwitchNodeWrapper: React.FC<NodeProps> = (props) => (
+  <SwitchNode {...props} {...DEFAULT_HANDLE_CONFIG} />
+);
+SwitchNodeWrapper.displayName = "SwitchNodeWrapper";
+
 /**
  * Node type registry
  * Maps node type strings to React components
@@ -68,6 +75,7 @@ export const nodeTypes: NodeTypes = {
 
   // Control flow nodes
   if: IfNodeWrapper,
+  switch: SwitchNodeWrapper,
 
   // Social/messaging nodes (all use base node for now)
   telegram: BaseNodeWrapper,

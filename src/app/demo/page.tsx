@@ -158,28 +158,27 @@ function WorkflowPageInner() {
 
           alert(
             `Workflow executed successfully!\n\n` +
-              `Workflow ID: ${result.workflowId}\n` +
-              `Execution ID: ${result.executionId}\n` +
-              `Status: ${result.data?.status || "PENDING"}\n\n` +
-              `Check backend logs for execution trace.`
+            `Workflow ID: ${result.workflowId}\n` +
+            `Execution ID: ${result.executionId}\n` +
+            `Status: ${result.data?.status || "PENDING"}\n\n` +
+            `Check backend logs for execution trace.`
           );
         } else {
           console.error("Workflow execution failed:", result.error);
 
           alert(
             `Workflow execution failed!\n\n` +
-              `Error: ${result.error?.message || "Unknown error"}\n\n` +
-              `Make sure the backend is running`
+            `Error: ${result.error?.message || "Unknown error"}\n\n` +
+            `Make sure the backend is running`
           );
         }
       } catch (error) {
         console.error("Failed to execute workflow:", error);
         alert(
           `Failed to execute workflow!\n\n` +
-            `Error: ${
-              error instanceof Error ? error.message : String(error)
-            }\n\n` +
-            `Is the backend running?`
+          `Error: ${error instanceof Error ? error.message : String(error)
+          }\n\n` +
+          `Is the backend running?`
         );
       }
     };
@@ -343,8 +342,10 @@ function WorkflowPageInner() {
           animated: true,
         };
 
-        // If the source is an If node, add a label based on the sourceHandle
+        // Get the source node for conditional handling
         const sourceNode = nodes.find((n) => n.id === connection.source);
+
+        // If the source is an If node, add a label based on the sourceHandle
         if (
           sourceNode &&
           (sourceNode.type === "if" || sourceNode.data?.blockId === "if")
@@ -368,6 +369,48 @@ function WorkflowPageInner() {
                 labelStyle: { fill: "#ef4444", fontWeight: 600, fontSize: 12 },
                 labelBgStyle: { fill: "#7f1d1d", fillOpacity: 0.8 },
                 style: { stroke: "#ef4444", strokeWidth: 2 },
+              } as any,
+              eds
+            );
+          }
+        }
+
+        // If the source is a Switch node, add label based on the case
+        if (
+          sourceNode &&
+          (sourceNode.type === "switch" || sourceNode.data?.blockId === "switch")
+        ) {
+          const cases = sourceNode.data?.cases as Array<{
+            id: string;
+            label: string;
+            isDefault?: boolean;
+          }> || [];
+
+          const matchedCase = cases.find(c => c.id === connection.sourceHandle);
+
+          if (matchedCase) {
+            // Color mapping for switch cases
+            const caseColors = [
+              { stroke: "#3b82f6", fill: "#1e40af" }, // blue
+              { stroke: "#22c55e", fill: "#166534" }, // green
+              { stroke: "#eab308", fill: "#854d0e" }, // yellow
+              { stroke: "#a855f7", fill: "#6b21a8" }, // purple
+            ];
+
+            const caseIndex = cases.filter(c => !c.isDefault).findIndex(c => c.id === matchedCase.id);
+            const isDefault = matchedCase.isDefault;
+
+            const color = isDefault
+              ? { stroke: "#6b7280", fill: "#374151" } // gray for default
+              : caseColors[caseIndex % caseColors.length];
+
+            return addEdge(
+              {
+                ...baseEdge,
+                label: matchedCase.label,
+                labelStyle: { fill: color.stroke, fontWeight: 600, fontSize: 11 },
+                labelBgStyle: { fill: color.fill, fillOpacity: 0.8 },
+                style: { stroke: color.stroke, strokeWidth: 2 },
               } as any,
               eds
             );
@@ -475,12 +518,12 @@ function WorkflowPageInner() {
         const updatedNodes = nds.map((node) =>
           node.id === nodeId
             ? {
-                ...node,
-                data: {
-                  ...node.data,
-                  ...data,
-                },
-              }
+              ...node,
+              data: {
+                ...node.data,
+                ...data,
+              },
+            }
             : node
         );
 
@@ -757,9 +800,9 @@ function WorkflowPageInner() {
                     <span className="hidden sm:inline">
                       {lastSaved
                         ? `Saved ${lastSaved.toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}`
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}`
                         : "Not saved"}
                     </span>
                     <span className="sm:hidden">

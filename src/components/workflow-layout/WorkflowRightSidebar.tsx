@@ -31,6 +31,7 @@ import { SlackNodeConfiguration } from "./slack";
 import { TelegramNodeConfiguration } from "./telegram";
 import { EmailNodeConfiguration } from "./email";
 import { IfNodeConfiguration } from "./if";
+import { SwitchNodeConfiguration } from "./switch";
 
 interface WorkflowRightSidebarProps {
   selectedNode: Node | null;
@@ -114,6 +115,9 @@ export function WorkflowRightSidebar({
 
   // Check if this is an If node
   const isIfNode = nodeType === "if" || blockId === "if";
+
+  // Check if this is a Switch node
+  const isSwitchNode = nodeType === "switch" || blockId === "switch";
 
   // Check if this is the Start node (cannot be deleted)
   const isStartNode = nodeType === "start" || blockId === "start";
@@ -476,12 +480,12 @@ export function WorkflowRightSidebar({
                 {(creation.createError ||
                   creation.signError ||
                   creation.enableError) && (
-                  <div className="text-xs text-destructive mt-2">
-                    {creation.createError ||
-                      creation.signError ||
-                      creation.enableError}
-                  </div>
-                )}
+                    <div className="text-xs text-destructive mt-2">
+                      {creation.createError ||
+                        creation.signError ||
+                        creation.enableError}
+                    </div>
+                  )}
               </Card>
             )}
           </div>
@@ -512,6 +516,12 @@ export function WorkflowRightSidebar({
         ) : isIfNode ? (
           /* If Node Configuration */
           <IfNodeConfiguration
+            nodeData={nodeData}
+            handleDataChange={handleBatchDataChange}
+          />
+        ) : isSwitchNode ? (
+          /* Switch Node Configuration */
+          <SwitchNodeConfiguration
             nodeData={nodeData}
             handleDataChange={handleBatchDataChange}
           />

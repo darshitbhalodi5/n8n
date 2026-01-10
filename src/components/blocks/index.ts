@@ -16,6 +16,7 @@ import {
   SlackLogo,
   StartLogo,
   IfElseLogo,
+  SwitchLogo,
 } from "./logos";
 
 // Re-export types
@@ -23,6 +24,14 @@ export type { BlockDefinition, CategoryDefinition, IconRegistry };
 
 // Re-export startBlock for initial node setup
 export { startBlock };
+
+// Re-export Switch utilities for the configuration component
+export {
+  MAX_SWITCH_CASES,
+  createDefaultCase,
+  createNewCase,
+  type SwitchCaseData,
+} from "./control";
 
 // Icon registry - maps icon names to actual components (logos and icons)
 export const iconRegistry: IconRegistry = {
@@ -32,6 +41,7 @@ export const iconRegistry: IconRegistry = {
   SlackLogo,
   StartLogo,
   IfElseLogo,
+  SwitchLogo,
   Share2, // Keep for category icon
   Play,   // For triggers category
   GitBranch, // For control category icon
