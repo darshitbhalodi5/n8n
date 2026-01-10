@@ -23,6 +23,15 @@ export const API_CONFIG = {
             TEST: "/integrations/email/test",
             SEND: "/integrations/email/send",
         },
+        WORKFLOWS: {
+            CREATE: "/workflows",
+            LIST: "/workflows",
+            GET: "/workflows/:id",
+            UPDATE: "/workflows/:id",
+            DELETE: "/workflows/:id",
+            EXECUTE: "/workflows/:id/execute",
+            EXECUTION_STATUS: "/workflows/executions/:executionId",
+        },
     },
 
     // OAuth polling configuration

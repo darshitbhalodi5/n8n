@@ -130,9 +130,62 @@ function WorkflowPageInner() {
   }, [nodes, edges]);
 
   const handleRun = useCallback(() => {
-    // TODO: Implement workflow execution
-    console.log("Running workflow...");
-  }, []);
+    const executeWorkflow = async () => {
+      try {
+        console.log("Running workflow...", { nodes, edges });
+
+        // Import the workflow API
+        const { saveAndExecuteWorkflow } = await import("@/utils/workflow-api");
+
+        // In production, get this from auth context
+        const userId = "demo-user-" + Date.now();
+
+        // Save and execute the workflow
+        const result = await saveAndExecuteWorkflow({
+          userId,
+          workflowName: `Workflow ${new Date().toLocaleDateString()}`,
+          nodes,
+          edges,
+          initialInput: {
+            amount: 150,
+            status: "active",
+            email: "test@example.com",
+          },
+        });
+
+        if (result.success) {
+          console.log("Workflow executed successfully!", result);
+
+          alert(
+            `Workflow executed successfully!\n\n` +
+              `Workflow ID: ${result.workflowId}\n` +
+              `Execution ID: ${result.executionId}\n` +
+              `Status: ${result.data?.status || "PENDING"}\n\n` +
+              `Check backend logs for execution trace.`
+          );
+        } else {
+          console.error("Workflow execution failed:", result.error);
+
+          alert(
+            `Workflow execution failed!\n\n` +
+              `Error: ${result.error?.message || "Unknown error"}\n\n` +
+              `Make sure the backend is running`
+          );
+        }
+      } catch (error) {
+        console.error("Failed to execute workflow:", error);
+        alert(
+          `Failed to execute workflow!\n\n` +
+            `Error: ${
+              error instanceof Error ? error.message : String(error)
+            }\n\n` +
+            `Is the backend running?`
+        );
+      }
+    };
+
+    executeWorkflow();
+  }, [nodes, edges]);
 
   /**
    * Check if a node is protected from deletion (e.g., Start node)
