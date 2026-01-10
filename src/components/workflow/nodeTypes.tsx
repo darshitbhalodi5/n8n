@@ -9,6 +9,7 @@ import type { NodeProps } from "reactflow";
 import { BaseNode } from "./nodes/BaseNode";
 import { WalletNode } from "./nodes/WalletNode";
 import { StartNode } from "./nodes/StartNode";
+import { IfNode } from "./nodes/IfNode";
 
 /**
  * Default configuration for node handles
@@ -43,6 +44,12 @@ const StartNodeWrapper: React.FC<NodeProps> = (props) => (
 );
 StartNodeWrapper.displayName = "StartNodeWrapper";
 
+// If node wrapper - specialized for conditional branching
+const IfNodeWrapper: React.FC<NodeProps> = (props) => (
+  <IfNode {...props} {...DEFAULT_HANDLE_CONFIG} />
+);
+IfNodeWrapper.displayName = "IfNodeWrapper";
+
 /**
  * Node type registry
  * Maps node type strings to React components
@@ -58,6 +65,9 @@ export const nodeTypes: NodeTypes = {
 
   // Generic base node
   base: BaseNodeWrapper,
+
+  // Control flow nodes
+  if: IfNodeWrapper,
 
   // Social/messaging nodes (all use base node for now)
   telegram: BaseNodeWrapper,

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React, {
@@ -159,11 +160,15 @@ function WorkflowPageInner() {
       setEdges((eds) =>
         eds.filter(
           (edge) =>
-            !deletableIds.includes(edge.source) && !deletableIds.includes(edge.target)
+            !deletableIds.includes(edge.source) &&
+            !deletableIds.includes(edge.target)
         )
       );
       // Clear selection if the selected node was deleted
-      if (selectedNodeIdRef.current && deletableIds.includes(selectedNodeIdRef.current)) {
+      if (
+        selectedNodeIdRef.current &&
+        deletableIds.includes(selectedNodeIdRef.current)
+      ) {
         setSelectedNode(null);
       }
     },
@@ -276,9 +281,50 @@ function WorkflowPageInner() {
   );
 
   const onConnect = useCallback(
-    (connection: Parameters<typeof addEdge>[0]) =>
-      setEdges((eds) => addEdge(connection, eds)),
-    [setEdges]
+    (connection: Parameters<typeof addEdge>[0]) => {
+      setEdges((eds) => {
+        // Create the new edge with proper typing
+        const baseEdge = {
+          ...connection,
+          type: "smoothstep",
+          animated: true,
+        };
+
+        // If the source is an If node, add a label based on the sourceHandle
+        const sourceNode = nodes.find((n) => n.id === connection.source);
+        if (
+          sourceNode &&
+          (sourceNode.type === "if" || sourceNode.data?.blockId === "if")
+        ) {
+          if (connection.sourceHandle === "true") {
+            return addEdge(
+              {
+                ...baseEdge,
+                label: "True",
+                labelStyle: { fill: "#10b981", fontWeight: 600, fontSize: 12 },
+                labelBgStyle: { fill: "#064e3b", fillOpacity: 0.8 },
+                style: { stroke: "#10b981", strokeWidth: 2 },
+              } as any,
+              eds
+            );
+          } else if (connection.sourceHandle === "false") {
+            return addEdge(
+              {
+                ...baseEdge,
+                label: "False",
+                labelStyle: { fill: "#ef4444", fontWeight: 600, fontSize: 12 },
+                labelBgStyle: { fill: "#7f1d1d", fillOpacity: 0.8 },
+                style: { stroke: "#ef4444", strokeWidth: 2 },
+              } as any,
+              eds
+            );
+          }
+        }
+
+        return addEdge(baseEdge, eds);
+      });
+    },
+    [setEdges, nodes]
   );
 
   // Handle block drag and drop to canvas
@@ -376,12 +422,12 @@ function WorkflowPageInner() {
         const updatedNodes = nds.map((node) =>
           node.id === nodeId
             ? {
-              ...node,
-              data: {
-                ...node.data,
-                ...data,
-              },
-            }
+                ...node,
+                data: {
+                  ...node.data,
+                  ...data,
+                },
+              }
             : node
         );
 
@@ -521,7 +567,10 @@ function WorkflowPageInner() {
                   aria-atomic="true"
                 >
                   <div className="flex items-center gap-1.5 md:gap-2">
-                    <div className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-success animate-pulse" aria-hidden="true" />
+                    <div
+                      className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-success animate-pulse"
+                      aria-hidden="true"
+                    />
                     <span className="text-[10px] md:text-xs font-medium text-muted-foreground whitespace-nowrap">
                       {nodes.length} {nodes.length === 1 ? "node" : "nodes"}
                     </span>
@@ -608,7 +657,6 @@ function WorkflowPageInner() {
                     </span>
                   </Button>
                 </div>
-
               </div>
             </div>
 
@@ -649,13 +697,16 @@ function WorkflowPageInner() {
                     aria-live="polite"
                     aria-atomic="true"
                   >
-                    <Clock className="w-3 h-3 md:w-3.5 md:h-3.5" aria-hidden="true" />
+                    <Clock
+                      className="w-3 h-3 md:w-3.5 md:h-3.5"
+                      aria-hidden="true"
+                    />
                     <span className="hidden sm:inline">
                       {lastSaved
                         ? `Saved ${lastSaved.toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}`
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}`
                         : "Not saved"}
                     </span>
                     <span className="sm:hidden">

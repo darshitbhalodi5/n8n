@@ -17,6 +17,9 @@ export type { WalletNodeData, WalletNodeProps } from "./nodes/WalletNode";
 export { StartNode } from "./nodes/StartNode";
 export type { StartNodeData, StartNodeProps } from "./nodes/StartNode";
 
+export { IfNode } from "./nodes/IfNode";
+export type { IfNodeData, IfNodeProps } from "./nodes/IfNode";
+
 export {
   nodeTypes,
   NODE_TYPE_KEYS,

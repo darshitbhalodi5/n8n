@@ -30,6 +30,7 @@ import {
 import { SlackNodeConfiguration } from "./slack";
 import { TelegramNodeConfiguration } from "./telegram";
 import { EmailNodeConfiguration } from "./email";
+import { IfNodeConfiguration } from "./if";
 
 interface WorkflowRightSidebarProps {
   selectedNode: Node | null;
@@ -110,6 +111,9 @@ export function WorkflowRightSidebar({
 
   // Check if this is a Telegram node
   const isTelegramNode = nodeType === "telegram" || blockId === "telegram";
+
+  // Check if this is an If node
+  const isIfNode = nodeType === "if" || blockId === "if";
 
   // Check if this is the Start node (cannot be deleted)
   const isStartNode = nodeType === "start" || blockId === "start";
@@ -504,6 +508,12 @@ export function WorkflowRightSidebar({
             handleDataChange={handleBatchDataChange}
             authenticated={authenticated}
             login={login}
+          />
+        ) : isIfNode ? (
+          /* If Node Configuration */
+          <IfNodeConfiguration
+            nodeData={nodeData}
+            handleDataChange={handleBatchDataChange}
           />
         ) : (
           /* Other Node Types - Basic Configuration */

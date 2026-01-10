@@ -4,6 +4,7 @@ import mail from "@/assets/blocks/Mail.svg";
 import wallet from "@/assets/blocks/Wallet.svg";
 import slack from "@/assets/blocks/Slack.svg";
 import start from "@/assets/blocks/Start.svg";
+import ifElse from "@/assets/blocks/IfElse.svg";
 
 interface LogoProps {
   className?: string;
@@ -42,4 +43,8 @@ export const SlackLogo = ({ className }: LogoProps) => (
 
 export const StartLogo = ({ className }: LogoProps) => (
   <Image src={start} alt="Start" className={className} width={32} height={32} />
+);
+
+export const IfElseLogo = ({ className }: LogoProps) => (
+  <Image src={ifElse} alt="If/Else" className={className} width={32} height={32} />
 );

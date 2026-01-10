@@ -7,13 +7,15 @@ import type { BlockDefinition, CategoryDefinition, IconRegistry } from "./types"
 import { socialBlocks } from "./social";
 import { walletBlocks } from "./wallet";
 import { triggerBlocks, startBlock } from "./triggers";
-import { Share2, Play } from "lucide-react";
+import { controlBlocks } from "./control";
+import { Share2, Play, GitBranch } from "lucide-react";
 import {
   TelegramLogo,
   MailLogo,
   WalletLogo,
   SlackLogo,
   StartLogo,
+  IfElseLogo,
 } from "./logos";
 
 // Re-export types
@@ -29,8 +31,10 @@ export const iconRegistry: IconRegistry = {
   WalletLogo,
   SlackLogo,
   StartLogo,
+  IfElseLogo,
   Share2, // Keep for category icon
   Play,   // For triggers category
+  GitBranch, // For control category icon
 };
 
 /**
@@ -39,6 +43,12 @@ export const iconRegistry: IconRegistry = {
  * Note: Triggers category is internal-only (Start block is default and not user-addable)
  */
 export const blockCategories: CategoryDefinition[] = [
+  {
+    id: "control",
+    label: "Control",
+    iconName: "GitBranch",
+    blocks: controlBlocks,
+  },
   {
     id: "social",
     label: "Social",

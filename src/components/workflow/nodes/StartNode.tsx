@@ -5,7 +5,6 @@ import { Handle, Position, NodeProps } from "reactflow";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/Card";
 import { iconRegistry } from "@/components/blocks";
-import { Icon } from "lucide-react";
 
 export interface StartNodeData {
   label: string;
