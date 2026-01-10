@@ -7,7 +7,6 @@ import {
   getAllBlocks,
   type BlockDefinition,
 } from "@/components/blocks";
-
 interface WorkflowSidebarProps {
   activeCategory: string;
   onBlockDragStart?: (block: BlockDefinition, event: React.DragEvent) => void;
@@ -40,15 +39,20 @@ export function WorkflowSidebar({
           </Typography>
           {/* Responsive Grid: 3 cols on mobile (wider drawer), 2 cols on desktop */}
           <div className="grid grid-cols-3 md:grid-cols-2 gap-2 md:gap-1 lg:gap-1.5">
-            {blocks.map((block) => (
-              <DraggableBlock
-                key={block.id}
-                block={block}
-                onDragStart={onBlockDragStart}
-                onClick={onBlockClick}
-                disabled={isBlockDisabled?.(block.id) ?? false}
-              />
-            ))}
+            {blocks.map((block) => {
+              // Check if block should be disabled
+              const disabled = isBlockDisabled?.(block.id) ?? false;
+              
+              return (
+                <DraggableBlock
+                  key={block.id}
+                  block={block}
+                  onDragStart={onBlockDragStart}
+                  onClick={onBlockClick}
+                  disabled={disabled}
+                />
+              );
+            })}
           </div>
         </div>
       )}

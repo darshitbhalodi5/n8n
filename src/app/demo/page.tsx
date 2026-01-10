@@ -44,6 +44,8 @@ import {
 import { useCanvasDimensions } from "@/hooks/useCanvasDimensions";
 import { calculateCanvasCenter } from "@/utils/canvas";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { usePrivyEmbeddedWallet } from "@/hooks/usePrivyEmbeddedWallet";
+import { arbitrumSepolia, arbitrum } from "viem/chains";
 
 // Define handler types for React Flow events
 type OnNodeClick = (event: React.MouseEvent, node: Node) => void;
@@ -313,15 +315,48 @@ function WorkflowPageInner() {
     // Optional: Add visual feedback or tracking
   }, []);
 
-  // Check if wallet block is disabled (already on canvas)
+  // Get current network from user menu
+  const { chainId } = usePrivyEmbeddedWallet();
+
+  // Check if a swap block is disabled based on network availability
+  const isSwapBlockDisabled = useCallback(
+    (blockId: string): boolean => {
+      const isMainnet = chainId === arbitrum.id;
+      const isSepolia = chainId === arbitrumSepolia.id;
+
+      // Relay is disabled for both networks
+      if (blockId === "relay") {
+        return true;
+      }
+
+      // 1inch is only available on mainnet (disabled on Sepolia)
+      if (blockId === "oneinch") {
+        return !isMainnet; // Disabled if not mainnet (including when chainId is null)
+      }
+
+      // Uniswap is available on both networks
+      if (blockId === "uniswap") {
+        return false; // Always enabled
+      }
+
+      // For non-swap blocks, not disabled by network
+      return false;
+    },
+    [chainId]
+  );
+
+  // Check if block is disabled (wallet already on canvas or network restrictions)
   const isBlockDisabled = useCallback(
     (blockId: string) => {
+      // Check if wallet block is already on canvas
       if (blockId === "wallet") {
         return nodes.some((n) => n.type === "wallet-node");
       }
-      return false;
+
+      // Check network availability for swap blocks
+      return isSwapBlockDisabled(blockId);
     },
-    [nodes]
+    [nodes, isSwapBlockDisabled]
   );
 
   // Handle node click - select node

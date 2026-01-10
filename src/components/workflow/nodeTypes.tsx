@@ -54,6 +54,11 @@ export const nodeTypes: NodeTypes = {
   mail: BaseNodeWrapper,
   slack: BaseNodeWrapper,
 
+  // DeFi / swap nodes (Uniswap, Relay, 1inch) - use base node visuals
+  uniswap: BaseNodeWrapper,
+  relay: BaseNodeWrapper,
+  oneinch: BaseNodeWrapper,
+
   // Wallet node (specialized)
   "wallet-node": WalletNodeWrapper,
 };

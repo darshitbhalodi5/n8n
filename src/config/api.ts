@@ -23,6 +23,12 @@ export const API_CONFIG = {
             TEST: "/integrations/email/test",
             SEND: "/integrations/email/send",
         },
+        SWAP: {
+            QUOTE: "/swaps/quote",
+            BUILD_TRANSACTION: "/swaps/build-transaction",
+            PROVIDERS: "/swaps/providers",
+            EXECUTIONS: "/swaps/executions",
+        },
     },
 
     // OAuth polling configuration

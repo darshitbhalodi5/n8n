@@ -6,12 +6,17 @@
 import type { BlockDefinition, CategoryDefinition, IconRegistry } from "./types";
 import { socialBlocks } from "./social";
 import { walletBlocks } from "./wallet";
-import { Share2 } from "lucide-react";
+import { defiBlocks } from "./defi";
+import { Share2, ArrowRightLeft } from "lucide-react";
 import {
   TelegramLogo,
   MailLogo,
   WalletLogo,
   SlackLogo,
+  SwapLogo,
+  UniswapLogo,
+  RelayLogo,
+  OneInchLogo,
 } from "./logos";
 
 // Re-export types
@@ -23,7 +28,12 @@ export const iconRegistry: IconRegistry = {
   MailLogo,
   WalletLogo,
   SlackLogo,
+  SwapLogo,
+  UniswapLogo,
+  RelayLogo,
+  OneInchLogo,
   Share2, // Keep for category icon
+  ArrowRightLeft, // For DeFi category
 };
 
 /**
@@ -42,6 +52,12 @@ export const blockCategories: CategoryDefinition[] = [
     label: "Wallet",
     iconName: "Wallet",
     blocks: walletBlocks,
+  },
+  {
+    id: "defi",
+    label: "DeFi",
+    iconName: "ArrowRightLeft",
+    blocks: defiBlocks,
   },
 ];
 
@@ -84,4 +100,5 @@ export function getBlockByNodeType(nodeType: string): BlockDefinition | undefine
 export function getCategoryById(categoryId: string): CategoryDefinition | undefined {
   return blockCategories.find((cat) => cat.id === categoryId);
 }
+
 

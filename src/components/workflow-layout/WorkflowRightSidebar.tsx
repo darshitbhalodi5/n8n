@@ -30,6 +30,7 @@ import {
 import { SlackNodeConfiguration } from "./slack";
 import { TelegramNodeConfiguration } from "./telegram";
 import { EmailNodeConfiguration } from "./email";
+import { SwapNodeConfiguration } from "./swap";
 
 interface WorkflowRightSidebarProps {
   selectedNode: Node | null;
@@ -110,6 +111,13 @@ export function WorkflowRightSidebar({
 
   // Check if this is a Telegram node
   const isTelegramNode = nodeType === "telegram" || blockId === "telegram";
+
+  // Check if this is a Swap/DEX node (Uniswap, Relay, or 1inch)
+  const isSwapNode =
+    nodeType === "swap" || blockId === "swap" ||
+    nodeType === "uniswap" || blockId === "uniswap" ||
+    nodeType === "relay" || blockId === "relay" ||
+    nodeType === "oneinch" || blockId === "oneinch";
 
   const handleDeleteClick = () => {
     setShowDeleteDialog(true);
@@ -449,6 +457,14 @@ export function WorkflowRightSidebar({
         ) : isTelegramNode ? (
           /* Telegram Node Configuration */
           <TelegramNodeConfiguration
+            nodeData={nodeData}
+            handleDataChange={handleBatchDataChange}
+            authenticated={authenticated}
+            login={login}
+          />
+        ) : isSwapNode ? (
+          /* Swap Node Configuration */
+          <SwapNodeConfiguration
             nodeData={nodeData}
             handleDataChange={handleBatchDataChange}
             authenticated={authenticated}
