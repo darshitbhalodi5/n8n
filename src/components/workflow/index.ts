@@ -26,3 +26,6 @@ export {
   isValidNodeType,
   DEFAULT_HANDLE_CONFIG,
 } from "./nodeTypes";
+
+export { WorkflowToolbar } from "./WorkflowToolbar";
+export { WorkflowStatusBar } from "./WorkflowStatusBar";

@@ -3,12 +3,16 @@
  * Centralized export for all blocks, categories, and utilities
  */
 
-import type { BlockDefinition, CategoryDefinition, IconRegistry } from "./types";
+import type {
+  BlockDefinition,
+  CategoryDefinition,
+  IconRegistry,
+} from "./types";
 import { socialBlocks } from "./social";
 import { walletBlocks } from "./wallet";
 import { triggerBlocks, startBlock } from "./triggers";
 import { controlBlocks } from "./control";
-import { Share2, Play, GitBranch } from "lucide-react";
+import { Share2, Play, GitBranch, Wallet } from "lucide-react";
 import {
   TelegramLogo,
   MailLogo,
@@ -43,8 +47,9 @@ export const iconRegistry: IconRegistry = {
   IfElseLogo,
   SwitchLogo,
   Share2, // Keep for category icon
-  Play,   // For triggers category
+  Play, // For triggers category
   GitBranch, // For control category icon
+  Wallet, // For wallet category icon
 };
 
 /**
@@ -122,7 +127,9 @@ export function getBlockById(blockId: string): BlockDefinition | undefined {
 /**
  * Get block definition by node type (includes internal blocks)
  */
-export function getBlockByNodeType(nodeType: string): BlockDefinition | undefined {
+export function getBlockByNodeType(
+  nodeType: string
+): BlockDefinition | undefined {
   // Check regular categories first
   const regularBlock = blockCategories
     .flatMap((category) => category.blocks)
@@ -139,7 +146,8 @@ export function getBlockByNodeType(nodeType: string): BlockDefinition | undefine
 /**
  * Get category definition by ID
  */
-export function getCategoryById(categoryId: string): CategoryDefinition | undefined {
+export function getCategoryById(
+  categoryId: string
+): CategoryDefinition | undefined {
   return blockCategories.find((cat) => cat.id === categoryId);
 }
-

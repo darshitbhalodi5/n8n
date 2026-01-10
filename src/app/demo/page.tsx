@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React, {
@@ -8,26 +7,20 @@ import React, {
   useState,
   useEffect,
 } from "react";
-import {
-  CheckSquare,
-  ZoomIn,
-  ZoomOut,
-  Maximize2,
-  Play,
-  Save,
-  Share2,
-  Clock,
-  Menu,
-} from "lucide-react";
+import { CheckSquare } from "lucide-react";
 import {
   WorkflowLayout,
   WorkflowSidebar,
   WorkflowRightSidebar,
 } from "@/components/workflow-layout";
-import { TooltipProvider, Button } from "@/components/ui";
+import { TooltipProvider } from "@/components/ui";
 import { Navbar } from "@/components/layout";
-import { cn } from "@/lib/utils";
-import { WorkflowCanvas, nodeTypes } from "@/components/workflow";
+import {
+  WorkflowCanvas,
+  nodeTypes,
+  WorkflowToolbar,
+  WorkflowStatusBar,
+} from "@/components/workflow";
 import {
   Node,
   Edge,
@@ -43,7 +36,7 @@ import {
   startBlock,
   type BlockDefinition,
 } from "@/components/blocks";
-import { useCanvasDimensions } from "@/hooks/useCanvasDimensions";
+import { useCanvasDimensions, useUnsavedChanges } from "@/hooks";
 import { calculateCanvasCenter } from "@/utils/canvas";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
@@ -105,6 +98,15 @@ function WorkflowPageInner() {
   // Responsive canvas dimensions hook (fixes window.innerWidth in callbacks)
   const canvasDimensions = useCanvasDimensions();
 
+  // Warn users when leaving with unsaved changes
+  const hasUnsavedChanges = useMemo(() => {
+    // Consider having unsaved changes when there are nodes beyond the start node
+    // and the workflow hasn't been saved
+    return nodes.length > 1 && !lastSaved;
+  }, [nodes.length, lastSaved]);
+
+  useUnsavedChanges({ hasUnsavedChanges });
+
   // Canvas control handlers
   const handleZoomIn = useCallback(() => {
     reactFlowInstance.current?.zoomIn();
@@ -158,27 +160,28 @@ function WorkflowPageInner() {
 
           alert(
             `Workflow executed successfully!\n\n` +
-            `Workflow ID: ${result.workflowId}\n` +
-            `Execution ID: ${result.executionId}\n` +
-            `Status: ${result.data?.status || "PENDING"}\n\n` +
-            `Check backend logs for execution trace.`
+              `Workflow ID: ${result.workflowId}\n` +
+              `Execution ID: ${result.executionId}\n` +
+              `Status: ${result.data?.status || "PENDING"}\n\n` +
+              `Check backend logs for execution trace.`
           );
         } else {
           console.error("Workflow execution failed:", result.error);
 
           alert(
             `Workflow execution failed!\n\n` +
-            `Error: ${result.error?.message || "Unknown error"}\n\n` +
-            `Make sure the backend is running`
+              `Error: ${result.error?.message || "Unknown error"}\n\n` +
+              `Make sure the backend is running`
           );
         }
       } catch (error) {
         console.error("Failed to execute workflow:", error);
         alert(
           `Failed to execute workflow!\n\n` +
-          `Error: ${error instanceof Error ? error.message : String(error)
-          }\n\n` +
-          `Is the backend running?`
+            `Error: ${
+              error instanceof Error ? error.message : String(error)
+            }\n\n` +
+            `Is the backend running?`
         );
       }
     };
@@ -358,7 +361,7 @@ function WorkflowPageInner() {
                 labelStyle: { fill: "#10b981", fontWeight: 600, fontSize: 12 },
                 labelBgStyle: { fill: "#064e3b", fillOpacity: 0.8 },
                 style: { stroke: "#10b981", strokeWidth: 2 },
-              } as any,
+              } as Edge,
               eds
             );
           } else if (connection.sourceHandle === "false") {
@@ -369,7 +372,7 @@ function WorkflowPageInner() {
                 labelStyle: { fill: "#ef4444", fontWeight: 600, fontSize: 12 },
                 labelBgStyle: { fill: "#7f1d1d", fillOpacity: 0.8 },
                 style: { stroke: "#ef4444", strokeWidth: 2 },
-              } as any,
+              } as Edge,
               eds
             );
           }
@@ -378,15 +381,19 @@ function WorkflowPageInner() {
         // If the source is a Switch node, add label based on the case
         if (
           sourceNode &&
-          (sourceNode.type === "switch" || sourceNode.data?.blockId === "switch")
+          (sourceNode.type === "switch" ||
+            sourceNode.data?.blockId === "switch")
         ) {
-          const cases = sourceNode.data?.cases as Array<{
-            id: string;
-            label: string;
-            isDefault?: boolean;
-          }> || [];
+          const cases =
+            (sourceNode.data?.cases as Array<{
+              id: string;
+              label: string;
+              isDefault?: boolean;
+            }>) || [];
 
-          const matchedCase = cases.find(c => c.id === connection.sourceHandle);
+          const matchedCase = cases.find(
+            (c) => c.id === connection.sourceHandle
+          );
 
           if (matchedCase) {
             // Color mapping for switch cases
@@ -397,7 +404,9 @@ function WorkflowPageInner() {
               { stroke: "#a855f7", fill: "#6b21a8" }, // purple
             ];
 
-            const caseIndex = cases.filter(c => !c.isDefault).findIndex(c => c.id === matchedCase.id);
+            const caseIndex = cases
+              .filter((c) => !c.isDefault)
+              .findIndex((c) => c.id === matchedCase.id);
             const isDefault = matchedCase.isDefault;
 
             const color = isDefault
@@ -408,10 +417,14 @@ function WorkflowPageInner() {
               {
                 ...baseEdge,
                 label: matchedCase.label,
-                labelStyle: { fill: color.stroke, fontWeight: 600, fontSize: 11 },
+                labelStyle: {
+                  fill: color.stroke,
+                  fontWeight: 600,
+                  fontSize: 11,
+                },
                 labelBgStyle: { fill: color.fill, fillOpacity: 0.8 },
                 style: { stroke: color.stroke, strokeWidth: 2 },
-              } as any,
+              } as Edge,
               eds
             );
           }
@@ -518,12 +531,12 @@ function WorkflowPageInner() {
         const updatedNodes = nds.map((node) =>
           node.id === nodeId
             ? {
-              ...node,
-              data: {
-                ...node.data,
-                ...data,
-              },
-            }
+                ...node,
+                data: {
+                  ...node.data,
+                  ...data,
+                },
+              }
             : node
         );
 
@@ -630,131 +643,18 @@ function WorkflowPageInner() {
           )}
         >
           <div className="h-full bg-background relative">
-            {/* Responsive Floating Toolbar */}
-            <div className="absolute top-2 md:top-3 left-2 md:left-3 right-2 md:right-3 z-10 flex items-center justify-between gap-2">
-              {/* Left Section */}
-              <div className="flex items-center gap-1.5 md:gap-2 flex-1 min-w-0">
-                {/* Mobile Menu Button - Integrated in toolbar */}
-                <button
-                  onClick={() => setMobileMenuOpen(true)}
-                  className={cn(
-                    "md:hidden",
-                    "bg-card/95 backdrop-blur-sm border border-border rounded-lg shadow-lg",
-                    "w-8 h-8 flex items-center justify-center",
-                    "text-muted-foreground hover:text-foreground hover:bg-secondary/50",
-                    "transition-colors duration-200"
-                  )}
-                  aria-label="Open blocks menu"
-                >
-                  <Menu className="w-4 h-4" />
-                </button>
-
-                {/* Workflow Title - Responsive */}
-                <div className="bg-card/95 backdrop-blur-sm border border-border rounded-lg px-2 md:px-4 py-1.5 md:py-2 shadow-lg min-w-0 shrink">
-                  <h2 className="text-xs md:text-sm font-semibold text-foreground truncate">
-                    Untitled Workflow
-                  </h2>
-                </div>
-
-                {/* Node Counter Badge - Hide on mobile, with aria-live for accessibility */}
-                <div
-                  className="hidden sm:flex bg-card/95 backdrop-blur-sm border border-border rounded-lg px-2 md:px-3 py-1.5 md:py-2 shadow-lg"
-                  aria-live="polite"
-                  aria-atomic="true"
-                >
-                  <div className="flex items-center gap-1.5 md:gap-2">
-                    <div
-                      className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-success animate-pulse"
-                      aria-hidden="true"
-                    />
-                    <span className="text-[10px] md:text-xs font-medium text-muted-foreground whitespace-nowrap">
-                      {nodes.length} {nodes.length === 1 ? "node" : "nodes"}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Right Actions - Responsive */}
-              <div className="flex items-center gap-1 md:gap-2">
-                {/* Canvas Controls - Hide zoom on small mobile (xs: requires Tailwind config) */}
-                <div className="hidden sm:flex bg-card/95 backdrop-blur-sm border border-border rounded-lg shadow-lg items-center divide-x divide-border">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleZoomOut}
-                    className="rounded-none rounded-l-lg h-7 md:h-9 px-2 md:px-3 hover:bg-muted"
-                    title="Zoom Out (Ctrl + -)"
-                    aria-label="Zoom out canvas"
-                  >
-                    <ZoomOut className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleZoomIn}
-                    className="rounded-none h-7 md:h-9 px-2 md:px-3 hover:bg-muted"
-                    title="Zoom In (Ctrl + +)"
-                    aria-label="Zoom in canvas"
-                  >
-                    <ZoomIn className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleFitView}
-                    className="rounded-none rounded-r-lg h-7 md:h-9 px-2 md:px-3 hover:bg-muted"
-                    title="Fit View"
-                    aria-label="Fit all nodes into view"
-                  >
-                    <Maximize2 className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                  </Button>
-                </div>
-
-                {/* Workflow Actions - Responsive */}
-                <div className="bg-card/95 backdrop-blur-sm border border-border rounded-lg shadow-lg flex items-center gap-0.5 md:gap-1 px-0.5 md:px-1 py-0.5 md:py-1">
-                  {/* Save - Icon only on mobile */}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleSave}
-                    className="h-7 md:h-8 px-2 md:px-3 hover:bg-muted gap-1.5"
-                    title="Save"
-                  >
-                    <Save className="w-3.5 h-3.5" />
-                    <span className="hidden md:inline text-xs font-medium">
-                      Save
-                    </span>
-                  </Button>
-                  {/* Share - Hide on small screens */}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="hidden sm:flex h-7 md:h-8 px-2 md:px-3 hover:bg-muted gap-1.5"
-                    title="Share"
-                  >
-                    <Share2 className="w-3.5 h-3.5" />
-                    <span className="hidden lg:inline text-xs font-medium">
-                      Share
-                    </span>
-                  </Button>
-                  <div className="hidden sm:block w-px h-4 bg-border" />
-                  {/* Run Button - Always visible, compact on mobile */}
-                  <Button
-                    variant="default"
-                    size="sm"
-                    onClick={handleRun}
-                    disabled={nodes.length === 0}
-                    className="h-7 md:h-8 px-3 md:px-4 gap-1 md:gap-1.5 bg-primary hover:bg-primary/90"
-                    title="Run Workflow"
-                  >
-                    <Play className="w-3 h-3 md:w-3.5 md:h-3.5 fill-current" />
-                    <span className="text-[10px] md:text-xs font-semibold">
-                      Run
-                    </span>
-                  </Button>
-                </div>
-              </div>
-            </div>
+            {/* Floating Toolbar */}
+            <WorkflowToolbar
+              workflowName="Untitled Workflow"
+              nodeCount={nodes.length}
+              canRun={nodes.length > 0}
+              onZoomIn={handleZoomIn}
+              onZoomOut={handleZoomOut}
+              onFitView={handleFitView}
+              onSave={handleSave}
+              onRun={handleRun}
+              onOpenMobileMenu={() => setMobileMenuOpen(true)}
+            />
 
             {/* Workflow Canvas - Full Height */}
             <div
@@ -783,54 +683,12 @@ function WorkflowPageInner() {
               />
             </div>
 
-            {/* Responsive Status Bar with aria-live for save status announcements */}
-            <div className="absolute bottom-2 md:bottom-3 left-2 md:left-3 z-10">
-              <div className="bg-card/95 backdrop-blur-sm border border-border rounded-lg px-2 md:px-4 py-1.5 md:py-2 shadow-lg">
-                <div className="flex items-center gap-2 md:gap-4 text-[10px] md:text-xs text-muted-foreground">
-                  {/* Save Status - aria-live for screen reader announcements */}
-                  <div
-                    className="flex items-center gap-1 md:gap-1.5"
-                    aria-live="polite"
-                    aria-atomic="true"
-                  >
-                    <Clock
-                      className="w-3 h-3 md:w-3.5 md:h-3.5"
-                      aria-hidden="true"
-                    />
-                    <span className="hidden sm:inline">
-                      {lastSaved
-                        ? `Saved ${lastSaved.toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}`
-                        : "Not saved"}
-                    </span>
-                    <span className="sm:hidden">
-                      {lastSaved ? "Saved" : "Unsaved"}
-                    </span>
-                  </div>
-
-                  {/* Connections - Hide on very small screens */}
-                  <div className="hidden sm:flex items-center gap-2">
-                    <div className="w-px h-3 bg-border" />
-                    <span>
-                      {edges.length}{" "}
-                      {edges.length === 1 ? "connection" : "connections"}
-                    </span>
-                  </div>
-
-                  {/* Helper Text - Hide on mobile */}
-                  {nodes.length === 0 && (
-                    <>
-                      <div className="hidden md:block w-px h-3 bg-border" />
-                      <span className="hidden md:inline text-muted-foreground/70">
-                        Drag blocks from sidebar to get started
-                      </span>
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
+            {/* Status Bar */}
+            <WorkflowStatusBar
+              lastSaved={lastSaved}
+              edgeCount={edges.length}
+              nodeCount={nodes.length}
+            />
           </div>
         </WorkflowLayout>
       </TooltipProvider>

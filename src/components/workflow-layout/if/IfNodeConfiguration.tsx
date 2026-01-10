@@ -1,15 +1,16 @@
 "use client";
 
-import React from "react";
+import React, { useCallback } from "react";
 import { GitBranch } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Typography } from "@/components/ui/Typography";
 import { Label } from "@/components/ui/Label";
 import { Input } from "@/components/ui/Input";
+import type { IfNodeData } from "@/types";
 
 interface IfNodeConfigurationProps {
-  nodeData: Record<string, unknown>;
-  handleDataChange: (updates: Record<string, unknown>) => void;
+  nodeData: IfNodeData;
+  handleDataChange: (updates: Partial<IfNodeData>) => void;
 }
 
 const OPERATORS = [
@@ -31,32 +32,41 @@ const OPERATORS = [
  * - operator: comparison operator
  * - rightValue: value to compare against
  */
-export function IfNodeConfiguration({
+export const IfNodeConfiguration = React.memo(function IfNodeConfiguration({
   nodeData,
   handleDataChange,
 }: IfNodeConfigurationProps) {
-  const leftPath = (nodeData.leftPath as string) || "";
-  const operator = (nodeData.operator as string) || "equals";
-  const rightValue = (nodeData.rightValue as string) || "";
+  const leftPath = nodeData.leftPath || "";
+  const operator = nodeData.operator || "equals";
+  const rightValue = nodeData.rightValue || "";
 
-  const handleLeftPathChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    handleDataChange({ leftPath: e.target.value });
-  };
+  const handleLeftPathChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      handleDataChange({ leftPath: e.target.value });
+    },
+    [handleDataChange]
+  );
 
-  const handleOperatorChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    handleDataChange({ operator: e.target.value });
-  };
+  const handleOperatorChange = useCallback(
+    (e: React.ChangeEvent<HTMLSelectElement>) => {
+      handleDataChange({ operator: e.target.value as IfNodeData["operator"] });
+    },
+    [handleDataChange]
+  );
 
-  const handleRightValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    handleDataChange({ rightValue: e.target.value });
-  };
+  const handleRightValueChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      handleDataChange({ rightValue: e.target.value });
+    },
+    [handleDataChange]
+  );
 
   return (
     <div className="space-y-4">
       {/* Condition Configuration Card */}
       <Card className="p-4 space-y-4">
         <div className="flex items-center gap-2">
-          <GitBranch className="w-4 h-4 text-primary" />
+          <GitBranch className="w-4 h-4 text-primary" aria-hidden="true" />
           <Typography
             variant="bodySmall"
             className="font-semibold text-foreground"
@@ -77,8 +87,13 @@ export function IfNodeConfiguration({
               onChange={handleLeftPathChange}
               placeholder="100"
               className="text-sm"
+              aria-describedby="if-left-path-help"
             />
-            <Typography variant="caption" className="text-muted-foreground">
+            <Typography
+              id="if-left-path-help"
+              variant="caption"
+              className="text-muted-foreground"
+            >
               Value to compare
             </Typography>
           </div>
@@ -93,6 +108,7 @@ export function IfNodeConfiguration({
               value={operator}
               onChange={handleOperatorChange}
               className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+              aria-label="Comparison operator"
             >
               {OPERATORS.map((op) => (
                 <option key={op.value} value={op.value}>
@@ -114,8 +130,13 @@ export function IfNodeConfiguration({
                 onChange={handleRightValueChange}
                 placeholder="100"
                 className="text-sm"
+                aria-describedby="if-right-value-help"
               />
-              <Typography variant="caption" className="text-muted-foreground">
+              <Typography
+                id="if-right-value-help"
+                variant="caption"
+                className="text-muted-foreground"
+              >
                 Value to compare against
               </Typography>
             </div>
@@ -124,5 +145,4 @@ export function IfNodeConfiguration({
       </Card>
     </div>
   );
-}
-
+});
