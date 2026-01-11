@@ -19,3 +19,5 @@ export {
 } from "./useAsyncAction";
 
 export { useUnsavedChanges, useWorkflowHistory } from "./useWorkflowState";
+
+export { useSwapNode } from "./useSwapNode";

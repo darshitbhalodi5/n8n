@@ -39,6 +39,8 @@ import {
 import { useCanvasDimensions, useUnsavedChanges } from "@/hooks";
 import { calculateCanvasCenter } from "@/utils/canvas";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { usePrivyEmbeddedWallet } from "@/hooks/usePrivyEmbeddedWallet";
+import { arbitrum } from "viem/chains";
 
 // The Start node ID - used to identify and protect it from deletion
 const START_NODE_ID = "start-node";
@@ -160,28 +162,27 @@ function WorkflowPageInner() {
 
           alert(
             `Workflow executed successfully!\n\n` +
-              `Workflow ID: ${result.workflowId}\n` +
-              `Execution ID: ${result.executionId}\n` +
-              `Status: ${result.data?.status || "PENDING"}\n\n` +
-              `Check backend logs for execution trace.`
+            `Workflow ID: ${result.workflowId}\n` +
+            `Execution ID: ${result.executionId}\n` +
+            `Status: ${result.data?.status || "PENDING"}\n\n` +
+            `Check backend logs for execution trace.`
           );
         } else {
           console.error("Workflow execution failed:", result.error);
 
           alert(
             `Workflow execution failed!\n\n` +
-              `Error: ${result.error?.message || "Unknown error"}\n\n` +
-              `Make sure the backend is running`
+            `Error: ${result.error?.message || "Unknown error"}\n\n` +
+            `Make sure the backend is running`
           );
         }
       } catch (error) {
         console.error("Failed to execute workflow:", error);
         alert(
           `Failed to execute workflow!\n\n` +
-            `Error: ${
-              error instanceof Error ? error.message : String(error)
-            }\n\n` +
-            `Is the backend running?`
+          `Error: ${error instanceof Error ? error.message : String(error)
+          }\n\n` +
+          `Is the backend running?`
         );
       }
     };
@@ -502,15 +503,47 @@ function WorkflowPageInner() {
     // Optional: Add visual feedback or tracking
   }, []);
 
-  // Check if wallet block is disabled (already on canvas)
+  // Get current network from user menu
+  const { chainId } = usePrivyEmbeddedWallet();
+
+  // Check if a swap block is disabled based on network availability
+  const isSwapBlockDisabled = useCallback(
+    (blockId: string): boolean => {
+      const isMainnet = chainId === arbitrum.id;
+
+      // Relay is disabled for both networks
+      if (blockId === "relay") {
+        return true;
+      }
+
+      // 1inch is only available on mainnet (disabled on Sepolia)
+      if (blockId === "oneinch") {
+        return !isMainnet; // Disabled if not mainnet (including when chainId is null)
+      }
+
+      // Uniswap is available on both networks
+      if (blockId === "uniswap") {
+        return false; // Always enabled
+      }
+
+      // For non-swap blocks, not disabled by network
+      return false;
+    },
+    [chainId]
+  );
+
+  // Check if block is disabled (wallet already on canvas or network restrictions)
   const isBlockDisabled = useCallback(
     (blockId: string) => {
+      // Check if wallet block is already on canvas
       if (blockId === "wallet") {
         return nodes.some((n) => n.type === "wallet-node");
       }
-      return false;
+
+      // Check network availability for swap blocks
+      return isSwapBlockDisabled(blockId);
     },
-    [nodes]
+    [nodes, isSwapBlockDisabled]
   );
 
   // Handle node click - select node
@@ -531,12 +564,12 @@ function WorkflowPageInner() {
         const updatedNodes = nds.map((node) =>
           node.id === nodeId
             ? {
-                ...node,
-                data: {
-                  ...node.data,
-                  ...data,
-                },
-              }
+              ...node,
+              data: {
+                ...node.data,
+                ...data,
+              },
+            }
             : node
         );
 

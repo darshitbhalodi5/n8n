@@ -12,7 +12,8 @@ import { socialBlocks } from "./social";
 import { walletBlocks } from "./wallet";
 import { triggerBlocks, startBlock } from "./triggers";
 import { controlBlocks } from "./control";
-import { Share2, Play, GitBranch, Wallet } from "lucide-react";
+import { defiBlocks } from "./defi";
+import { Share2, Play, GitBranch, Wallet, ArrowRightLeft } from "lucide-react";
 import {
   TelegramLogo,
   MailLogo,
@@ -21,6 +22,9 @@ import {
   StartLogo,
   IfElseLogo,
   SwitchLogo,
+  UniswapLogo,
+  RelayLogo,
+  OneInchLogo,
 } from "./logos";
 
 // Re-export types
@@ -46,10 +50,14 @@ export const iconRegistry: IconRegistry = {
   StartLogo,
   IfElseLogo,
   SwitchLogo,
+  UniswapLogo,
+  RelayLogo,
+  OneInchLogo,
   Share2, // Keep for category icon
   Play, // For triggers category
   GitBranch, // For control category icon
   Wallet, // For wallet category icon
+  ArrowRightLeft, // For DeFi category
 };
 
 /**
@@ -75,6 +83,12 @@ export const blockCategories: CategoryDefinition[] = [
     label: "Wallet",
     iconName: "Wallet",
     blocks: walletBlocks,
+  },
+  {
+    id: "defi",
+    label: "DeFi",
+    iconName: "ArrowRightLeft",
+    blocks: defiBlocks,
   },
   // Note: triggers category intentionally excluded from sidebar
   // Start block is auto-added and cannot be manually placed
@@ -151,3 +165,4 @@ export function getCategoryById(
 ): CategoryDefinition | undefined {
   return blockCategories.find((cat) => cat.id === categoryId);
 }
+

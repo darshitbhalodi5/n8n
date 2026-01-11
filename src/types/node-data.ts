@@ -77,6 +77,30 @@ export interface WalletNodeData extends BaseNodeData {
 // Start Node Data (type alias since it has no additional fields)
 export type StartNodeData = BaseNodeData;
 
+// Swap Node Data (for Uniswap, Relay, 1inch blocks)
+export interface SwapNodeData extends BaseNodeData {
+  swapProvider?: "UNISWAP" | "RELAY" | "ONEINCH";
+  swapChain?: "ARBITRUM" | "ARBITRUM_SEPOLIA";
+  swapType?: "EXACT_INPUT" | "EXACT_OUTPUT";
+  sourceTokenAddress?: string;
+  sourceTokenSymbol?: string;
+  sourceTokenDecimals?: number;
+  destinationTokenAddress?: string;
+  destinationTokenSymbol?: string;
+  destinationTokenDecimals?: number;
+  swapAmount?: string;
+  walletAddress?: string;
+  simulateFirst?: boolean;
+  autoRetryOnFailure?: boolean;
+  maxRetries?: number;
+  hasQuote?: boolean;
+  quoteAmountOut?: string;
+  quotePriceImpact?: string;
+  quoteGasEstimate?: string;
+  lastTxHash?: string;
+  lastExecutedAt?: string;
+}
+
 // Discriminated union for all node types
 export type WorkflowNodeData =
   | ({ nodeType: "slack" } & SlackNodeData)
@@ -86,6 +110,9 @@ export type WorkflowNodeData =
   | ({ nodeType: "switch" } & SwitchNodeData)
   | ({ nodeType: "wallet-node" } & WalletNodeData)
   | ({ nodeType: "start" } & StartNodeData)
+  | ({ nodeType: "uniswap" } & SwapNodeData)
+  | ({ nodeType: "relay" } & SwapNodeData)
+  | ({ nodeType: "oneinch" } & SwapNodeData)
   | ({ nodeType: "base" } & BaseNodeData);
 
 // Type guard functions
@@ -126,5 +153,13 @@ export function isSwitchNodeData(data: unknown): data is SwitchNodeData {
     typeof data === "object" &&
     data !== null &&
     ("valuePath" in data || "cases" in data)
+  );
+}
+
+export function isSwapNodeData(data: unknown): data is SwapNodeData {
+  return (
+    typeof data === "object" &&
+    data !== null &&
+    ("swapProvider" in data || "sourceTokenAddress" in data || "swapAmount" in data)
   );
 }

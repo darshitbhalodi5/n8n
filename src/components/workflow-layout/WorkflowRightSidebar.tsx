@@ -32,6 +32,7 @@ import { TelegramNodeConfiguration } from "./telegram";
 import { EmailNodeConfiguration } from "./email";
 import { IfNodeConfiguration } from "./if";
 import { SwitchNodeConfiguration } from "./switch";
+import { SwapNodeConfiguration } from "./swap";
 
 interface WorkflowRightSidebarProps {
   selectedNode: Node | null;
@@ -121,6 +122,13 @@ export function WorkflowRightSidebar({
 
   // Check if this is the Start node (cannot be deleted)
   const isStartNode = nodeType === "start" || blockId === "start";
+
+  // Check if this is a Swap/DEX node (Uniswap, Relay, or 1inch)
+  const isSwapNode =
+    nodeType === "swap" || blockId === "swap" ||
+    nodeType === "uniswap" || blockId === "uniswap" ||
+    nodeType === "relay" || blockId === "relay" ||
+    nodeType === "oneinch" || blockId === "oneinch";
 
   const handleDeleteClick = () => {
     setShowDeleteDialog(true);
@@ -524,6 +532,14 @@ export function WorkflowRightSidebar({
           <SwitchNodeConfiguration
             nodeData={nodeData}
             handleDataChange={handleBatchDataChange}
+          />
+        ) : isSwapNode ? (
+          /* Swap Node Configuration */
+          <SwapNodeConfiguration
+            nodeData={nodeData}
+            handleDataChange={handleBatchDataChange}
+            authenticated={authenticated}
+            login={login}
           />
         ) : (
           /* Other Node Types - Basic Configuration */

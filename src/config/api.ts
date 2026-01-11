@@ -32,6 +32,12 @@ export const API_CONFIG = {
             EXECUTE: "/workflows/:id/execute",
             EXECUTION_STATUS: "/workflows/executions/:executionId",
         },
+        SWAP: {
+            QUOTE: "/swaps/quote",
+            BUILD_TRANSACTION: "/swaps/build-transaction",
+            PROVIDERS: "/swaps/providers",
+            EXECUTIONS: "/swaps/executions",
+        },
     },
 
     // OAuth polling configuration
