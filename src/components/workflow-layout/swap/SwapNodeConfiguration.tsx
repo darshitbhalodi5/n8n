@@ -7,13 +7,9 @@ import { Button } from "@/components/ui/Button";
 import {
     Loader2,
     RefreshCw,
-    ChevronDown,
-    ChevronUp,
     AlertCircle,
     CheckCircle2,
     LogIn,
-    ArrowRightLeft,
-    Info,
     Copy,
     Check,
     Search,
@@ -147,7 +143,6 @@ export function SwapNodeConfiguration({
     const swapChain = chainId ? getChainFromChainId(chainId) : SupportedChain.ARBITRUM;
 
     // Local state for advanced options visibility
-    const [showAdvanced, setShowAdvanced] = useState(false);
     const [quoteState, setQuoteState] = useState<QuoteState>({
         loading: false,
         error: null,
@@ -162,6 +157,8 @@ export function SwapNodeConfiguration({
         step: 'idle',
     });
     const [copied, setCopied] = useState(false);
+    const [copiedSourceToken, setCopiedSourceToken] = useState(false);
+    const [copiedDestToken, setCopiedDestToken] = useState(false);
 
     // Custom token input state (for mainnet only)
     const [showCustomSourceToken, setShowCustomSourceToken] = useState(false);
@@ -190,7 +187,6 @@ export function SwapNodeConfiguration({
     const destinationTokenSymbol = (nodeData.destinationTokenSymbol as string) || "";
     const destinationTokenDecimals = (nodeData.destinationTokenDecimals as number) || 18;
     const swapAmount = (nodeData.swapAmount as string) || "";
-    const simulateFirst = (nodeData.simulateFirst as boolean) ?? true;
 
     // Get the wallet address to use (Safe or EOA)
     const effectiveWalletAddress = selectedSafe || walletAddress;
@@ -367,22 +363,6 @@ export function SwapNodeConfiguration({
     }, [handleDataChange, availableTokens]);
 
 
-    // Swap tokens (flip source and destination)
-    const handleSwapTokens = useCallback(() => {
-        handleDataChange({
-            sourceTokenAddress: destinationTokenAddress,
-            sourceTokenSymbol: destinationTokenSymbol,
-            sourceTokenDecimals: destinationTokenDecimals,
-            destinationTokenAddress: sourceTokenAddress,
-            destinationTokenSymbol: sourceTokenSymbol,
-            destinationTokenDecimals: sourceTokenDecimals,
-            hasQuote: false,
-        });
-    }, [
-        handleDataChange,
-        sourceTokenAddress, sourceTokenSymbol, sourceTokenDecimals,
-        destinationTokenAddress, destinationTokenSymbol, destinationTokenDecimals,
-    ]);
 
     // Check if configuration is valid for getting a quote
     const isValidForQuote = useMemo(() => {
@@ -772,12 +752,10 @@ export function SwapNodeConfiguration({
                             {copied ? (
                                 <>
                                     <Check className="w-3.5 h-3.5 text-success" />
-                                    <span className="text-xs">Copied</span>
                                 </>
                             ) : (
                                 <>
                                     <Copy className="w-3.5 h-3.5" />
-                                    <span className="text-xs">Copy</span>
                                 </>
                             )}
                         </Button>
@@ -799,10 +777,10 @@ export function SwapNodeConfiguration({
                     </span>
                 </div>
 
-                {/* Source Token */}
-                <div className="space-y-2">
+                {/* Source Token (From) */}
+                <div className="space-y-1.5">
                     <Typography variant="caption" className="text-muted-foreground">
-                        From Token
+                        From
                     </Typography>
 
                     {showCustomSourceToken ? (
@@ -813,7 +791,7 @@ export function SwapNodeConfiguration({
                                     type="text"
                                     value={customTokenAddress}
                                     onChange={(e) => setCustomTokenAddress(e.target.value)}
-                                    placeholder="Enter token contract address (0x...)"
+                                    placeholder="Enter token address (0x...)"
                                     className="flex-1 px-3 py-2 text-sm border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary font-mono"
                                 />
                                 <Button
@@ -847,44 +825,52 @@ export function SwapNodeConfiguration({
                             </Button>
                         </div>
                     ) : (
-                        /* Token Dropdown */
-                        <select
-                            value={sourceTokenAddress}
-                            onChange={(e) => handleSourceTokenChange(e.target.value)}
-                            className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                        >
-                            <option value="">Select token...</option>
-                            {availableTokens.map((token: TokenInfo) => (
-                                <option key={token.address} value={token.address}>
-                                    {token.symbol} - {token.name}
-                                </option>
-                            ))}
-                            {canUseCustomTokens && (
-                                <option value={CUSTOM_TOKEN_OPTION}>
-                                    ➕ Use another token...
-                                </option>
+                        /* Token Dropdown with Copy Button */
+                        <div className="flex items-center gap-2">
+                            <select
+                                value={sourceTokenAddress}
+                                onChange={(e) => handleSourceTokenChange(e.target.value)}
+                                className="flex-1 px-3 py-2 text-sm border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                            >
+                                <option value="">Select token...</option>
+                                {availableTokens.map((token: TokenInfo) => (
+                                    <option key={token.address} value={token.address}>
+                                        {token.symbol}
+                                    </option>
+                                ))}
+                                {canUseCustomTokens && (
+                                    <option value={CUSTOM_TOKEN_OPTION}>
+                                        + Custom...
+                                    </option>
+                                )}
+                            </select>
+                            {sourceTokenAddress && sourceTokenAddress !== CUSTOM_TOKEN_OPTION && (
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={async () => {
+                                        await navigator.clipboard.writeText(sourceTokenAddress);
+                                        setCopiedSourceToken(true);
+                                        setTimeout(() => setCopiedSourceToken(false), 2000);
+                                    }}
+                                    className="shrink-0 p-2 h-auto"
+                                    title="Copy token address"
+                                >
+                                    {copiedSourceToken ? (
+                                        <Check className="w-4 h-4 text-success" />
+                                    ) : (
+                                        <Copy className="w-4 h-4 text-muted-foreground" />
+                                    )}
+                                </Button>
                             )}
-                        </select>
+                        </div>
                     )}
                 </div>
 
-                {/* Swap Direction Button */}
-                <div className="flex justify-center">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleSwapTokens}
-                        className="rounded-full p-2"
-                        disabled={!sourceTokenAddress && !destinationTokenAddress}
-                    >
-                        <ArrowRightLeft className="w-4 h-4 rotate-90" />
-                    </Button>
-                </div>
-
-                {/* Destination Token */}
-                <div className="space-y-2">
+                {/* Destination Token (To) */}
+                <div className="space-y-1.5">
                     <Typography variant="caption" className="text-muted-foreground">
-                        To Token
+                        To
                     </Typography>
 
                     {showCustomDestToken ? (
@@ -895,7 +881,7 @@ export function SwapNodeConfiguration({
                                     type="text"
                                     value={customTokenAddress}
                                     onChange={(e) => setCustomTokenAddress(e.target.value)}
-                                    placeholder="Enter token contract address (0x...)"
+                                    placeholder="Enter token address (0x...)"
                                     className="flex-1 px-3 py-2 text-sm border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary font-mono"
                                 />
                                 <Button
@@ -929,127 +915,87 @@ export function SwapNodeConfiguration({
                             </Button>
                         </div>
                     ) : (
-                        /* Token Dropdown */
-                        <select
-                            value={destinationTokenAddress}
-                            onChange={(e) => handleDestinationTokenChange(e.target.value)}
-                            className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                        >
-                            <option value="">Select token...</option>
-                            {availableTokens
-                                .filter((t: TokenInfo) => t.address !== sourceTokenAddress)
-                                .map((token: TokenInfo) => (
-                                    <option key={token.address} value={token.address}>
-                                        {token.symbol} - {token.name}
+                        /* Token Dropdown with Copy Button */
+                        <div className="flex items-center gap-2">
+                            <select
+                                value={destinationTokenAddress}
+                                onChange={(e) => handleDestinationTokenChange(e.target.value)}
+                                className="flex-1 px-3 py-2 text-sm border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                            >
+                                <option value="">Select token...</option>
+                                {availableTokens
+                                    .filter((t: TokenInfo) => t.address !== sourceTokenAddress)
+                                    .map((token: TokenInfo) => (
+                                        <option key={token.address} value={token.address}>
+                                            {token.symbol}
+                                        </option>
+                                    ))}
+                                {canUseCustomTokens && (
+                                    <option value={CUSTOM_TOKEN_OPTION}>
+                                        + Custom...
                                     </option>
-                                ))}
-                            {canUseCustomTokens && (
-                                <option value={CUSTOM_TOKEN_OPTION}>
-                                    ➕ Use another token...
-                                </option>
+                                )}
+                            </select>
+                            {destinationTokenAddress && destinationTokenAddress !== CUSTOM_TOKEN_OPTION && (
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={async () => {
+                                        await navigator.clipboard.writeText(destinationTokenAddress);
+                                        setCopiedDestToken(true);
+                                        setTimeout(() => setCopiedDestToken(false), 2000);
+                                    }}
+                                    className="shrink-0 p-2 h-auto"
+                                    title="Copy token address"
+                                >
+                                    {copiedDestToken ? (
+                                        <Check className="w-4 h-4 text-success" />
+                                    ) : (
+                                        <Copy className="w-4 h-4 text-muted-foreground" />
+                                    )}
+                                </Button>
                             )}
-                        </select>
+                        </div>
                     )}
                 </div>
-
-                {/* Testnet notice */}
-                {swapChain === SupportedChain.ARBITRUM_SEPOLIA && (
-                    <div className="flex items-start gap-2 p-2 rounded-lg bg-warning/10 border border-warning/20">
-                        <Info className="w-4 h-4 text-warning mt-0.5 flex-shrink-0" />
-                        <Typography variant="caption" className="text-warning">
-                            Using Arbitrum Sepolia testnet. Only tokens with verified Uniswap pools are available.
-                        </Typography>
-                    </div>
-                )}
             </Card>
 
             {/* Section 2: Enter Amount */}
             <Card className="p-4 space-y-3">
                 <Typography variant="bodySmall" className="font-semibold text-foreground">
-                    2. Enter Token Amount
+                    2. <Typography variant="caption" className="text-muted-foreground">
+                        {sourceTokenSymbol
+                            ? `Enter ${sourceTokenSymbol} Amount`
+                            : "Enter Token Amount"
+                        }
+                    </Typography>
                 </Typography>
 
                 {/* Amount Input */}
-                <div className="space-y-1">
-                    <Typography variant="caption" className="text-muted-foreground">
-                        {sourceTokenSymbol
-                            ? `Enter amount of ${sourceTokenSymbol} to swap`
-                            : "Enter token amount for selected token to swap"
-                        }
-                    </Typography>
-                    <div className="relative">
-                        <input
-                            type="text"
-                            value={swapAmount}
-                            onChange={(e) => {
-                                // Only allow numbers and decimal point
-                                const value = e.target.value.replace(/[^0-9.]/g, "");
-                                handleDataChange({ swapAmount: value, hasQuote: false });
-                            }}
-                            placeholder="0.0"
-                            className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                        />
-                        {sourceTokenSymbol && (
-                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
-                                {sourceTokenSymbol}
-                            </span>
-                        )}
-                    </div>
+                <div className="flex items-center gap-2 px-3 py-2 border border-border rounded-lg bg-background">
+                    <input
+                        type="text"
+                        value={swapAmount}
+                        onChange={(e) => {
+                            const value = e.target.value.replace(/[^0-9.]/g, "");
+                            handleDataChange({ swapAmount: value, hasQuote: false });
+                        }}
+                        placeholder="0.0"
+                        className="flex-1 text-sm bg-transparent text-foreground focus:outline-none"
+                    />
                     {sourceTokenSymbol && (
-                        <Typography variant="caption" className="text-muted-foreground text-xs">
-                            Enter the amount of {sourceTokenSymbol} you want to swap
-                        </Typography>
+                        <span className="text-sm font-medium text-foreground">
+                            {sourceTokenSymbol}
+                        </span>
                     )}
                 </div>
-            </Card>
-
-            {/* Section 3: Advanced Options */}
-            <Card className="p-4 space-y-3">
-                <button
-                    onClick={() => setShowAdvanced(!showAdvanced)}
-                    className="flex items-center justify-between w-full text-left"
-                >
-                    <Typography variant="bodySmall" className="font-semibold text-foreground">
-                        Advanced Options
-                    </Typography>
-                    {showAdvanced ? (
-                        <ChevronUp className="w-4 h-4 text-muted-foreground" />
-                    ) : (
-                        <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                    )}
-                </button>
-
-                {showAdvanced && (
-                    <div className="space-y-3 pt-2 border-t border-border">
-                        {/* Simulate First */}
-                        <label className="flex items-center gap-2 cursor-pointer">
-                            <input
-                                type="checkbox"
-                                checked={simulateFirst}
-                                onChange={(e) => handleDataChange({ simulateFirst: e.target.checked })}
-                                className="w-4 h-4 rounded border-border text-primary focus:ring-primary"
-                            />
-                            <Typography variant="caption" className="text-foreground">
-                                Simulate before executing
-                            </Typography>
-                        </label>
-
-                        {/* Info about simulation */}
-                        <div className="flex items-start gap-2 p-2 rounded-lg bg-info/10 border border-info/20">
-                            <Info className="w-4 h-4 text-info mt-0.5 flex-shrink-0" />
-                            <Typography variant="caption" className="text-info">
-                                Simulation helps prevent failed transactions by testing the swap before execution.
-                            </Typography>
-                        </div>
-                    </div>
-                )}
             </Card>
 
             {/* Section 4: Quote Preview */}
             <Card className="p-4 space-y-3">
                 <div className="flex items-center justify-between">
                     <Typography variant="bodySmall" className="font-semibold text-foreground">
-                        Quote Preview
+                        Swap Preview
                     </Typography>
                     <Button
                         variant="outline"
@@ -1061,22 +1007,16 @@ export function SwapNodeConfiguration({
                         {quoteState.loading ? (
                             <>
                                 <Loader2 className="w-3 h-3 animate-spin" />
-                                Getting Quote...
+                                Getting Data...
                             </>
                         ) : (
                             <>
                                 <RefreshCw className="w-3 h-3" />
-                                Get Quote
+                                Get Data
                             </>
                         )}
                     </Button>
                 </div>
-
-                {!isValidForQuote && (
-                    <div className="text-sm text-muted-foreground">
-                        Select tokens and enter an amount to get a quote.
-                    </div>
-                )}
 
                 {quoteState.error && (
                     <div className="flex items-start gap-2 p-2 rounded-lg bg-destructive/10 border border-destructive/20">
@@ -1090,9 +1030,9 @@ export function SwapNodeConfiguration({
                 {quoteState.data && (
                     <div className="space-y-2 p-3 rounded-lg bg-secondary/30">
                         <div className="flex justify-between items-center">
-                            <span className="text-sm text-muted-foreground">You will receive:</span>
+                            <span className="text-sm text-muted-foreground">Est. Receive:</span>
                             <span className="text-sm font-medium text-foreground">
-                                ~{quoteState.data.amountOut} {destinationTokenSymbol}
+                                {parseFloat(quoteState.data.amountOut).toFixed(3)} {destinationTokenSymbol}
                             </span>
                         </div>
                         <div className="flex justify-between items-center">
@@ -1102,12 +1042,6 @@ export function SwapNodeConfiguration({
                                 : "text-foreground"
                                 }`}>
                                 {quoteState.data.priceImpact}%
-                            </span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                            <span className="text-sm text-muted-foreground">Est. Gas:</span>
-                            <span className="text-sm font-medium text-foreground">
-                                {parseInt(quoteState.data.gasEstimate).toLocaleString()} gas
                             </span>
                         </div>
                     </div>
@@ -1212,15 +1146,6 @@ export function SwapNodeConfiguration({
                                         <span className="text-xs">View</span>
                                     </a>
                                 </div>
-                            </div>
-                        )}
-
-                        {swapChain === SupportedChain.ARBITRUM_SEPOLIA && !executionState.loading && (
-                            <div className="flex items-start gap-2 p-2 rounded-lg bg-info/10 border border-info/20">
-                                <Info className="w-4 h-4 text-info mt-0.5 flex-shrink-0" />
-                                <Typography variant="caption" className="text-info">
-                                    This will execute on Arbitrum Sepolia testnet. Make sure you have testnet ETH for gas.
-                                </Typography>
                             </div>
                         )}
                     </div>
