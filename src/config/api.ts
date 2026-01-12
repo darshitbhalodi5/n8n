@@ -38,6 +38,13 @@ export const API_CONFIG = {
             PROVIDERS: "/swaps/providers",
             EXECUTIONS: "/swaps/executions",
         },
+        USERS: {
+            GET_BY_ADDRESS: "/users/address/:address",
+            CREATE: "/users",
+        },
+        RELAY: {
+            CREATE_SAFE: "/relay/create-safe",
+        },
     },
 
     // OAuth polling configuration
