@@ -14,9 +14,36 @@ export const API_CONFIG = {
             SEND: "/integrations/slack/send",
             OAUTH_AUTHORIZE: "/integrations/slack/oauth/authorize",
         },
+        TELEGRAM: {
+            CONNECTIONS: "/integrations/telegram/connections",
+            TEST: "/integrations/telegram/test",
+            SEND: "/integrations/telegram/send",
+        },
         EMAIL: {
             TEST: "/integrations/email/test",
             SEND: "/integrations/email/send",
+        },
+        WORKFLOWS: {
+            CREATE: "/workflows",
+            LIST: "/workflows",
+            GET: "/workflows/:id",
+            UPDATE: "/workflows/:id",
+            DELETE: "/workflows/:id",
+            EXECUTE: "/workflows/:id/execute",
+            EXECUTION_STATUS: "/workflows/executions/:executionId",
+        },
+        SWAP: {
+            QUOTE: "/swaps/quote",
+            BUILD_TRANSACTION: "/swaps/build-transaction",
+            PROVIDERS: "/swaps/providers",
+            EXECUTIONS: "/swaps/executions",
+        },
+        USERS: {
+            GET_BY_ADDRESS: "/users/address/:address",
+            CREATE: "/users",
+        },
+        RELAY: {
+            CREATE_SAFE: "/relay/create-safe",
         },
     },
 

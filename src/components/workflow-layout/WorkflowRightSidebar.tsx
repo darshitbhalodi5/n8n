@@ -28,7 +28,11 @@ import {
   X,
 } from "lucide-react";
 import { SlackNodeConfiguration } from "./slack";
+import { TelegramNodeConfiguration } from "./telegram";
 import { EmailNodeConfiguration } from "./email";
+import { IfNodeConfiguration } from "./if";
+import { SwitchNodeConfiguration } from "./switch";
+import { SwapNodeConfiguration } from "./swap";
 
 interface WorkflowRightSidebarProps {
   selectedNode: Node | null;
@@ -107,6 +111,25 @@ export function WorkflowRightSidebar({
   // Check if this is an Email node
   const isEmailNode = nodeType === "mail" || blockId === "mail";
 
+  // Check if this is a Telegram node
+  const isTelegramNode = nodeType === "telegram" || blockId === "telegram";
+
+  // Check if this is an If node
+  const isIfNode = nodeType === "if" || blockId === "if";
+
+  // Check if this is a Switch node
+  const isSwitchNode = nodeType === "switch" || blockId === "switch";
+
+  // Check if this is the Start node (cannot be deleted)
+  const isStartNode = nodeType === "start" || blockId === "start";
+
+  // Check if this is a Swap/DEX node (Uniswap, Relay, or 1inch)
+  const isSwapNode =
+    nodeType === "swap" || blockId === "swap" ||
+    nodeType === "uniswap" || blockId === "uniswap" ||
+    nodeType === "relay" || blockId === "relay" ||
+    nodeType === "oneinch" || blockId === "oneinch";
+
   const handleDeleteClick = () => {
     setShowDeleteDialog(true);
   };
@@ -150,22 +173,70 @@ export function WorkflowRightSidebar({
                   <X className="w-4 h-4" />
                 </Button>
               )}
-              {/* Delete Button */}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleDeleteClick}
-                className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                aria-label="Delete block"
-              >
-                <Trash2 className="w-4 h-4" />
-              </Button>
+              {/* Delete Button - Hidden for Start node */}
+              {!isStartNode && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDeleteClick}
+                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                  aria-label="Delete block"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Wallet Node Configuration */}
-        {isWalletNode ? (
+        {/* Start Node - Simple info display */}
+        {isStartNode ? (
+          <div className="space-y-4">
+            <Card className="p-4 space-y-3 border-emerald-500/30 bg-emerald-500/5">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-linear-to-br from-emerald-500 to-green-600 flex items-center justify-center shadow-md">
+                  <svg
+                    className="w-5 h-5 text-white ml-0.5"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
+                </div>
+                <div>
+                  <Typography
+                    variant="bodySmall"
+                    className="font-semibold text-emerald-600 dark:text-emerald-400"
+                  >
+                    Workflow Entry Point
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    className="text-muted-foreground"
+                  >
+                    All workflows begin here
+                  </Typography>
+                </div>
+              </div>
+            </Card>
+
+            <Card className="p-4 space-y-3">
+              <Typography
+                variant="bodySmall"
+                className="font-semibold text-foreground"
+              >
+                💡 Getting Started
+              </Typography>
+              <div className="space-y-2 text-sm text-muted-foreground">
+                <p>
+                  Connect other blocks to the Start node to define your
+                  workflow.
+                </p>
+              </div>
+            </Card>
+          </div>
+        ) : isWalletNode ? (
+          /* Wallet Node Configuration */
           <div className="space-y-4">
             {/* Section A: Login */}
             <Card className="p-4 space-y-3">
@@ -437,6 +508,34 @@ export function WorkflowRightSidebar({
         ) : isSlackNode ? (
           /* Slack Node Configuration - Using refactored component with batched updates */
           <SlackNodeConfiguration
+            nodeData={nodeData}
+            handleDataChange={handleBatchDataChange}
+            authenticated={authenticated}
+            login={login}
+          />
+        ) : isTelegramNode ? (
+          /* Telegram Node Configuration */
+          <TelegramNodeConfiguration
+            nodeData={nodeData}
+            handleDataChange={handleBatchDataChange}
+            authenticated={authenticated}
+            login={login}
+          />
+        ) : isIfNode ? (
+          /* If Node Configuration */
+          <IfNodeConfiguration
+            nodeData={nodeData}
+            handleDataChange={handleBatchDataChange}
+          />
+        ) : isSwitchNode ? (
+          /* Switch Node Configuration */
+          <SwitchNodeConfiguration
+            nodeData={nodeData}
+            handleDataChange={handleBatchDataChange}
+          />
+        ) : isSwapNode ? (
+          /* Swap Node Configuration */
+          <SwapNodeConfiguration
             nodeData={nodeData}
             handleDataChange={handleBatchDataChange}
             authenticated={authenticated}

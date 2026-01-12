@@ -14,9 +14,18 @@ export type { BaseNodeData, BaseNodeProps } from "./nodes/BaseNode";
 export { WalletNode } from "./nodes/WalletNode";
 export type { WalletNodeData, WalletNodeProps } from "./nodes/WalletNode";
 
+export { StartNode } from "./nodes/StartNode";
+export type { StartNodeData, StartNodeProps } from "./nodes/StartNode";
+
+export { IfNode } from "./nodes/IfNode";
+export type { IfNodeData, IfNodeProps } from "./nodes/IfNode";
+
 export {
   nodeTypes,
   NODE_TYPE_KEYS,
   isValidNodeType,
   DEFAULT_HANDLE_CONFIG,
 } from "./nodeTypes";
+
+export { WorkflowToolbar } from "./WorkflowToolbar";
+export { WorkflowStatusBar } from "./WorkflowStatusBar";

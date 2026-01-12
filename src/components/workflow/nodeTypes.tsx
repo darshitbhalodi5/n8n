@@ -8,6 +8,9 @@ import { Position, NodeTypes } from "reactflow";
 import type { NodeProps } from "reactflow";
 import { BaseNode } from "./nodes/BaseNode";
 import { WalletNode } from "./nodes/WalletNode";
+import { StartNode } from "./nodes/StartNode";
+import { IfNode } from "./nodes/IfNode";
+import { SwitchNode } from "./nodes/SwitchNode";
 
 /**
  * Default configuration for node handles
@@ -36,6 +39,24 @@ const WalletNodeWrapper: React.FC<NodeProps> = (props) => (
 );
 WalletNodeWrapper.displayName = "WalletNodeWrapper";
 
+// Start node wrapper - specialized for the workflow start point
+const StartNodeWrapper: React.FC<NodeProps> = (props) => (
+  <StartNode {...props} sourcePosition={Position.Right} />
+);
+StartNodeWrapper.displayName = "StartNodeWrapper";
+
+// If node wrapper - specialized for conditional branching
+const IfNodeWrapper: React.FC<NodeProps> = (props) => (
+  <IfNode {...props} {...DEFAULT_HANDLE_CONFIG} />
+);
+IfNodeWrapper.displayName = "IfNodeWrapper";
+
+// Switch node wrapper - specialized for multi-branch routing
+const SwitchNodeWrapper: React.FC<NodeProps> = (props) => (
+  <SwitchNode {...props} {...DEFAULT_HANDLE_CONFIG} />
+);
+SwitchNodeWrapper.displayName = "SwitchNodeWrapper";
+
 /**
  * Node type registry
  * Maps node type strings to React components
@@ -46,13 +67,25 @@ WalletNodeWrapper.displayName = "WalletNodeWrapper";
  * 3. Add the mapping below
  */
 export const nodeTypes: NodeTypes = {
+  // Start node - workflow entry point (special shape)
+  start: StartNodeWrapper,
+
   // Generic base node
   base: BaseNodeWrapper,
+
+  // Control flow nodes
+  if: IfNodeWrapper,
+  switch: SwitchNodeWrapper,
 
   // Social/messaging nodes (all use base node for now)
   telegram: BaseNodeWrapper,
   mail: BaseNodeWrapper,
   slack: BaseNodeWrapper,
+
+  // DeFi / swap nodes (Uniswap, Relay, 1inch) - use base node visuals
+  uniswap: BaseNodeWrapper,
+  relay: BaseNodeWrapper,
+  oneinch: BaseNodeWrapper,
 
   // Wallet node (specialized)
   "wallet-node": WalletNodeWrapper,

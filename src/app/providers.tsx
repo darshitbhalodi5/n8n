@@ -2,6 +2,8 @@
 
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 import { SafeWalletProvider } from "@/contexts/SafeWalletContext";
+import { OnboardingProvider } from "@/contexts/OnboardingContext";
+import { OnboardingSetupModal } from "@/components/onboarding";
 import { useState } from "react";
 import { PrivyProvider } from "@privy-io/react-auth";
 import {
@@ -50,10 +52,14 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         }}
       >
         <QueryClientProvider client={queryClient}>
-          <SafeWalletProvider>{children}</SafeWalletProvider>
-        </QueryClientProvider>
+          <OnboardingProvider>
+          <SafeWalletProvider>
+            {children}
+            <OnboardingSetupModal />
+          </SafeWalletProvider>
+          </OnboardingProvider>
+      </QueryClientProvider>
       </PrivyProvider>
     </LenisProvider>
   );
 }
-
