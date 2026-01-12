@@ -159,11 +159,11 @@ export function Footer() {
 
             {/* Product */}
             <FooterSection title="Product">
-              <FooterLink href="/demo">
+              <FooterLink href="/automation-builder">
                 <Workflow className="w-4 h-4 inline mr-1" />
                 Workflow Builder
               </FooterLink>
-              <FooterLink href="/demo">
+              <FooterLink href="/automation-builder">
                 <Rocket className="w-4 h-4 inline mr-1" />
                 Try Demo
               </FooterLink>

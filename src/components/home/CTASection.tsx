@@ -26,7 +26,7 @@ export function CTASection() {
             coding required.
           </Typography>
           <Stack direction="row" spacing="md" className="pt-4">
-            <Link href="/demo">
+            <Link href="/automation-builder">
               <Button size="lg" className="gap-2 shadow-lg shadow-primary/20">
                 Try Workflow Builder <ArrowRight className="w-4 h-4" />
               </Button>

@@ -8,7 +8,8 @@ import { LogIn, Menu, X, Rocket } from "lucide-react";
 import { UserMenu } from "../user-menu";
 import { Container } from "./Container";
 import { motion, AnimatePresence } from "framer-motion";
-import { Typography } from "@/components/ui";
+import Image from "next/image";
+import logo from "@/assets/logo.svg"; 
 
 export function Navbar() {
   const { ready, authenticated, login } = usePrivy();
@@ -84,21 +85,8 @@ export function Navbar() {
             className="shrink-0"
           >
             <Link href="/" className="group relative">
-              <motion.div className="relative" whileHover={{ x: 2 }}>
-                <Typography
-                  variant="h4"
-                  className="text-white font-bold text-xl md:text-2xl relative"
-                >
-                  FlowForge
-                  <motion.span
-                    className="absolute -bottom-1 left-0 right-0 h-0.5 bg-white rounded-full"
-                    initial={{ scaleX: 0 }}
-                    whileHover={{ scaleX: 1 }}
-                    transition={{ duration: 0.3 }}
-                  />
-                </Typography>
-                {/* Glow effect on hover */}
-                <motion.div className="absolute inset-0 bg-white/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <motion.div className="relative w-[160px] h-max" whileHover={{ x: 2 }}>
+               <Image src={logo} alt="Logo" width={100} height={100} className="w-full h-auto"/>
               </motion.div>
             </Link>
           </motion.div>
@@ -112,7 +100,7 @@ export function Navbar() {
               transition={{ delay: 0.2, duration: 0.5 }}
               className="hidden sm:block"
             >
-              <Link href="/demo" className="block">
+              <Link href="/automation-builder" className="block">
                 <motion.button
                   className="group relative px-6 py-3 font-semibold text-sm overflow-hidden rounded-full"
                   whileHover={{ scale: 1.05 }}
@@ -417,7 +405,7 @@ export function Navbar() {
                   transition={{ delay: 0.1, duration: 0.3 }}
                 >
                   <Link
-                    href="/demo"
+                    href="/automation-builder"
                     onClick={() => setMobileMenuOpen(false)}
                     className="flex items-center gap-3 px-4 py-3 mx-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/50 rounded-lg transition-all duration-300 group"
                   >

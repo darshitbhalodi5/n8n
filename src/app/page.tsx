@@ -7,9 +7,9 @@ import { IntroSection } from "@/components/home/IntroSection";
 import { HomeAnimationWrapper } from "@/components/home/HomeAnimationWrapper";
 
 export const metadata: Metadata = {
-  title: "FlowForge - Web2 + Web3 Automation",
+  title: "FlowForge — Unified Web2 & Web3 Automation Platform",
   description:
-    "Connect everything. Automate anything. From APIs to blockchains, one powerful platform for all your automation needs.",
+    "FlowForge is a powerful automation platform that connects Web2 systems and Web3 blockchains in one visual workflow builder. Build, automate, and scale without code.",
 };
 
 export default function Home() {

@@ -29,7 +29,7 @@ npm start
 ```
 
 Open [http://localhost:3000](http://localhost:3000) to see the app.  
-Visit [http://localhost:3000/demo](http://localhost:3000/demo) to see the workflow builder with wallet integration.
+Visit [http://localhost:3000/automation-builder](http://localhost:3000/automation-builder) to see the workflow builder with wallet integration.
 
 ## ⚙️ Configuration
 

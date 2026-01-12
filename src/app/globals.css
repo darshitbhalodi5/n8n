@@ -18,60 +18,11 @@ body {
   font-feature-settings: "rlig" 1, "calt" 1;
 }
 
-/* Focus styles for accessibility */
-*:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 2px var(--background), 0 0 0 4px var(--ring);
-}
+
 
 :root {
-  /* Dark-only color palette - warm, earthy design */
-  --background: #020203; /* Dark Gray */
-  --foreground: #eae9f7; /* Bright Blue-Purple */
-
-  --card: #1a1829; /* Dark Blue-Purple Gray */
-  --card-foreground: #e8e6f5; /* Light Blue-Purple tinted White */
-
-  --popover: #1a1829; /* Dark Blue-Purple Gray */
-  --popover-foreground: #e8e6f5; /* Light Blue-Purple tinted White */
-
-  --primary: #6366f1; /* Indigo Blue */
-  --primary-foreground: #e8e6f5; /* Light Blue-Purple tinted White */
-
-  --secondary: #2a2540; /* Dark Blue-Purple */
-  --secondary-foreground: #e8e6f5; /* Light Blue-Purple tinted White */
-
-  --muted: #2a2540; /* Dark Blue-Purple */
-  --muted-foreground: #a5a3c4; /* Muted Blue-Purple Gray */
-
-  --accent: #8b5cf6; /* Purple */
-  --accent-foreground: #05021a; /* Deep Black with Blue-Purple tones */
-
-  --destructive: #ef4444; /* Red */
-  --destructive-foreground: #e8e6f5; /* Light Blue-Purple tinted White */
-
-  --success: #10b981; /* Green */
-  --success-foreground: #05021a; /* Deep Black with Blue-Purple tones */
-
-  --warning: #f59e0b; /* Amber */
-  --warning-foreground: #05021a; /* Deep Black with Blue-Purple tones */
-
-  --border: #2a2540; /* Dark Blue-Purple */
-  --input: #2a2540; /* Dark Blue-Purple */
-  --ring: #6366f1; /* Indigo Blue */
-
-  --radius: 0.5rem;
-}
-
-/* Reduced motion for accessibility */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
+  --background: #000000;
+  --foreground: #ffffff;
 }
 
 /* Custom scrollbar for dark theme */

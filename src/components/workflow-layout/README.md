@@ -1,6 +1,6 @@
 # Workflow Layout
 
-Layout components for the workflow builder page (`/demo`).
+Layout components for the workflow builder page (`/automation-builder`).
 
 ## Components
 

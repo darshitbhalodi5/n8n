@@ -14,7 +14,6 @@ import {
   WorkflowRightSidebar,
 } from "@/components/workflow-layout";
 import { TooltipProvider } from "@/components/ui";
-import { Navbar } from "@/components/layout";
 import {
   WorkflowCanvas,
   nodeTypes,
@@ -564,12 +563,12 @@ function WorkflowPageInner() {
         const updatedNodes = nds.map((node) =>
           node.id === nodeId
             ? {
-              ...node,
-              data: {
-                ...node.data,
-                ...data,
-              },
-            }
+                ...node,
+                data: {
+                  ...node.data,
+                  ...data,
+                },
+              }
             : node
         );
 
@@ -729,7 +728,7 @@ function WorkflowPageInner() {
 }
 
 // Wrap with ErrorBoundary for production error handling
-export default function WorkflowPage() {
+export default function WorkflowPageClient() {
   return (
     <ErrorBoundary>
       <WorkflowPageInner />

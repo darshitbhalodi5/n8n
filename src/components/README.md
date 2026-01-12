@@ -10,7 +10,7 @@ Reusable UI components organized by functionality.
 - **ui/** - Base UI primitives (Button, Card, etc.)
 - **layout/** - Layout utilities (Container, Stack, etc.)
 
-## Workflow Builder (`/demo`)
+## Workflow Builder (`/automation-builder`)
 
 The workflow builder consists of:
 

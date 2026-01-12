@@ -105,7 +105,7 @@ Create a policy that sponsors transactions to the TriggerX registry:
 ### 5.1 Test Login
 
 1. Start your development server: `yarn dev`
-2. Navigate to `/demo` page
+2. Navigate to `/automation-builder` page
 3. Click **"Login with Privy"** button
 4. Test Email login method
 5. Verify wallet address is displayed after login
@@ -176,7 +176,7 @@ If deploying to mainnet:
    - Configured to use Arbitrum Sepolia and Arbitrum mainnet
    - Enabled embedded wallets and social logins
 
-2. **`src/app/demo/page.tsx`**
+2. **`src/app/automation-builder/page.tsx`**
    - Added Privy login/logout button
    - Display wallet address when authenticated
    - Integrated `usePrivy` hook
