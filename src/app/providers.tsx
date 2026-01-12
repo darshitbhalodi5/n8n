@@ -10,6 +10,7 @@ import {
   arbitrumSepolia,
   arbitrum,
 } from "viem/chains";
+import { LenisProvider } from "@/components/providers/LenisProvider";
 
 // Supported chains configuration
 const supportedChains = [arbitrumSepolia, arbitrum];
@@ -32,31 +33,33 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   const privyAppId = process.env.NEXT_PUBLIC_PRIVY_APP_ID || "";
 
   return (
-    <PrivyProvider
-      appId={privyAppId}
-      config={{
-        loginMethods: ["email"],
-        embeddedWallets: {
-          ethereum: {
-            createOnLogin: "users-without-wallets",
+    <LenisProvider>
+      <PrivyProvider
+        appId={privyAppId}
+        config={{
+          loginMethods: ["email"],
+          embeddedWallets: {
+            ethereum: {
+              createOnLogin: "users-without-wallets",
+            },
           },
-        },
-        appearance: {
-          theme: "dark",
-          accentColor: "#F8FF7C",
-        },
-        defaultChain: arbitrum,
-        supportedChains: supportedChains,
-      }}
-    >
-      <QueryClientProvider client={queryClient}>
-        <OnboardingProvider>
+          appearance: {
+            theme: "dark",
+            accentColor: "#F8FF7C",
+          },
+          defaultChain: arbitrum,
+          supportedChains: supportedChains,
+        }}
+      >
+        <QueryClientProvider client={queryClient}>
+          <OnboardingProvider>
           <SafeWalletProvider>
             {children}
             <OnboardingSetupModal />
           </SafeWalletProvider>
-        </OnboardingProvider>
+          </OnboardingProvider>
       </QueryClientProvider>
-    </PrivyProvider>
+      </PrivyProvider>
+    </LenisProvider>
   );
 }

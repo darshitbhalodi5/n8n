@@ -639,7 +639,6 @@ function WorkflowPageInner() {
 
   return (
     <div className="h-screen flex flex-col">
-      <Navbar />
       <TooltipProvider>
         <WorkflowLayout
           categories={categories}
