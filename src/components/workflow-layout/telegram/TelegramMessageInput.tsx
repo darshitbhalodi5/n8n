@@ -53,8 +53,6 @@ export const TelegramMessageInput = React.memo(function TelegramMessageInput({
           {stepNumber}. Message Template
         </Typography>
         <Button
-          size="sm"
-          variant="outline"
           onClick={onViewMessages}
           className="gap-1"
         >
@@ -93,8 +91,6 @@ export const TelegramMessageInput = React.memo(function TelegramMessageInput({
       </div>
 
       <Button
-        size="sm"
-        variant="outline"
         onClick={onSendPreview}
         disabled={!canSend}
         className="w-full gap-2"

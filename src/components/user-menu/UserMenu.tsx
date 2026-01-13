@@ -120,8 +120,6 @@ export function UserMenu({ size = "md" }: UserMenuProps) {
           {/* Actions Section */}
           <div className="p-2">
             <Button
-              variant="outline"
-              size="sm"
               onClick={() => {
                 logout();
                 setOpen(false);

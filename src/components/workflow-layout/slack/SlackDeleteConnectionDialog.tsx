@@ -38,10 +38,10 @@ export const SlackDeleteConnectionDialog = React.memo(function SlackDeleteConnec
                     </DialogDescription>
                 </DialogHeader>
                 <DialogFooter>
-                    <Button type="button" variant="outline" onClick={onCancel}>
+                    <Button type="button" onClick={onCancel}>
                         Cancel
                     </Button>
-                    <Button type="button" variant="destructive" onClick={onConfirm}>
+                    <Button type="button" onClick={onConfirm}>
                         Delete
                     </Button>
                 </DialogFooter>

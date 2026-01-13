@@ -84,8 +84,6 @@ export const TelegramChatSelector = React.memo(function TelegramChatSelector({
           {stepNumber}. Select Chat
         </Typography>
         <Button
-          size="sm"
-          variant="outline"
           onClick={onFindChats}
           disabled={loading.chats}
           className="gap-1"
@@ -162,8 +160,6 @@ export const TelegramChatSelector = React.memo(function TelegramChatSelector({
                   <span className="text-sm">{conn.chatTitle}</span>
                 </div>
                 <Button
-                  size="sm"
-                  variant="ghost"
                   onClick={(e) => {
                     e.stopPropagation();
                     onDeleteConnection(conn.id);

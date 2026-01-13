@@ -144,7 +144,6 @@ export const SlackMessageTemplate = React.memo(function SlackMessageTemplate({
                     type="button"
                     onClick={handleSendPreview}
                     disabled={!canSend}
-                    variant="outline"
                     className="w-full gap-2"
                 >
                     {isSending || loading.processing ? (

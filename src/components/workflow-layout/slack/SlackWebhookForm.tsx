@@ -136,9 +136,7 @@ export const SlackWebhookForm = React.memo(function SlackWebhookForm({
                     type="button"
                     onClick={onTest}
                     disabled={!canTest}
-                    variant="outline"
                     className="flex-1 gap-2"
-                    size="sm"
                 >
                     {loading.testing ? (
                         <>
@@ -157,7 +155,6 @@ export const SlackWebhookForm = React.memo(function SlackWebhookForm({
                     onClick={onSave}
                     disabled={!canSave}
                     className="flex-1 gap-2"
-                    size="sm"
                     title={!isTestSuccessful ? "Please test the webhook first" : ""}
                 >
                     {loading.saving ? (

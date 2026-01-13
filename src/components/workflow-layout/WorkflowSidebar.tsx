@@ -5,21 +5,21 @@ import { DraggableBlock } from "./DraggableBlock";
 import {
   getBlocksByCategory,
   getAllBlocks,
-  type BlockDefinition,
 } from "@/components/blocks";
+import { useWorkflow } from "@/contexts/WorkflowContext";
+
 interface WorkflowSidebarProps {
   activeCategory: string;
-  onBlockDragStart?: (block: BlockDefinition, event: React.DragEvent) => void;
-  onBlockClick?: (block: BlockDefinition) => void;
-  isBlockDisabled?: (blockId: string) => boolean;
 }
 
 export function WorkflowSidebar({
   activeCategory,
-  onBlockDragStart,
-  onBlockClick,
-  isBlockDisabled,
 }: WorkflowSidebarProps) {
+  const {
+    handleBlockDragStart,
+    handleBlockClick,
+    isBlockDisabled,
+  } = useWorkflow();
   // Get blocks for the active category
   const blocks =
     activeCategory === "all"
@@ -41,14 +41,14 @@ export function WorkflowSidebar({
           <div className="grid grid-cols-3 md:grid-cols-2 gap-2 md:gap-1 lg:gap-1.5">
             {blocks.map((block) => {
               // Check if block should be disabled
-              const disabled = isBlockDisabled?.(block.id) ?? false;
+              const disabled = isBlockDisabled(block.id);
               
               return (
                 <DraggableBlock
                   key={block.id}
                   block={block}
-                  onDragStart={onBlockDragStart}
-                  onClick={onBlockClick}
+                  onDragStart={handleBlockDragStart}
+                  onClick={handleBlockClick}
                   disabled={disabled}
                 />
               );

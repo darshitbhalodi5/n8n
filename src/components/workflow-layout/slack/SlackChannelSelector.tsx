@@ -120,8 +120,6 @@ export const SlackChannelSelector = React.memo(function SlackChannelSelector({
                 </Typography>
                 <Button
                     type="button"
-                    size="sm"
-                    variant="outline"
                     onClick={() => onReloadChannels(connectionId)}
                     className="w-full gap-2 text-xs"
                 >
@@ -160,8 +158,6 @@ export const SlackChannelSelector = React.memo(function SlackChannelSelector({
                 <div className="space-y-2">
                     <Button
                         type="button"
-                        size="sm"
-                        variant="outline"
                         onClick={() => onTestConnection(connectionId, selectedChannelId)}
                         disabled={loading.processing}
                         className="w-full gap-2 text-xs"

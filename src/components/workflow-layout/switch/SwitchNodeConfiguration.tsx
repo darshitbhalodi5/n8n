@@ -200,8 +200,6 @@ export const SwitchNodeConfiguration = React.memo(
             </div>
 
             <Button
-              variant="outline"
-              size="sm"
               onClick={handleAddCase}
               disabled={!canAddCase}
               className="h-7 text-xs gap-1"
@@ -250,8 +248,6 @@ export const SwitchNodeConfiguration = React.memo(
                       />
                     </div>
                     <Button
-                      variant="ghost"
-                      size="sm"
                       onClick={() => handleRemoveCase(switchCase.id)}
                       className="h-7 w-7 p-0 text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
                       aria-label={`Remove ${switchCase.label}`}

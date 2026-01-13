@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import { Node } from "reactflow";
 import { Typography } from "@/components/ui/Typography";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -15,6 +14,7 @@ import {
 } from "@/components/ui/Dialog";
 import { usePrivy, useWallets } from "@privy-io/react-auth";
 import { useSafeWalletContext } from "@/contexts/SafeWalletContext";
+import { useWorkflow } from "@/contexts/WorkflowContext";
 import { getBlockById, getBlockByNodeType } from "@/components/blocks";
 import type { BlockDefinition } from "@/components/blocks";
 import {
@@ -34,19 +34,13 @@ import { IfNodeConfiguration } from "./if";
 import { SwitchNodeConfiguration } from "./switch";
 import { SwapNodeConfiguration } from "./swap";
 
-interface WorkflowRightSidebarProps {
-  selectedNode: Node | null;
-  onNodeDataChange?: (nodeId: string, data: Record<string, unknown>) => void;
-  onNodeDelete?: (nodeId: string) => void;
-  onClose?: () => void;
-}
-
-export function WorkflowRightSidebar({
-  selectedNode,
-  onNodeDataChange,
-  onNodeDelete,
-  onClose,
-}: WorkflowRightSidebarProps) {
+export function WorkflowRightSidebar() {
+  const {
+    selectedNode,
+    handleNodeDataChange,
+    deleteNodes,
+    setSelectedNode,
+  } = useWorkflow();
   const { authenticated, login } = usePrivy();
   const { wallets } = useWallets();
   const embeddedWallet = wallets.find((w) => w.walletClientType === "privy");
@@ -84,8 +78,8 @@ export function WorkflowRightSidebar({
 
   // Single-key data change handler (for general node types)
   const handleDataChange = (key: string, value: unknown) => {
-    if (onNodeDataChange && selectedNode.id) {
-      onNodeDataChange(selectedNode.id, {
+    if (selectedNode?.id) {
+      handleNodeDataChange(selectedNode.id, {
         ...nodeData,
         [key]: value,
       });
@@ -94,8 +88,8 @@ export function WorkflowRightSidebar({
 
   // Batched data change handler (for Slack - prevents UI flicker)
   const handleBatchDataChange = (updates: Record<string, unknown>) => {
-    if (onNodeDataChange && selectedNode.id) {
-      onNodeDataChange(selectedNode.id, {
+    if (selectedNode?.id) {
+      handleNodeDataChange(selectedNode.id, {
         ...nodeData,
         ...updates,
       });
@@ -135,8 +129,8 @@ export function WorkflowRightSidebar({
   };
 
   const handleDeleteConfirm = () => {
-    if (selectedNode?.id && onNodeDelete) {
-      onNodeDelete(selectedNode.id);
+    if (selectedNode?.id) {
+      deleteNodes([selectedNode.id]);
       setShowDeleteDialog(false);
     }
   };
@@ -162,22 +156,16 @@ export function WorkflowRightSidebar({
             </div>
             <div className="flex items-center gap-1">
               {/* Mobile Close Button - Next to Delete */}
-              {onClose && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={onClose}
-                  className="md:hidden text-muted-foreground hover:text-foreground hover:bg-secondary/50"
-                  aria-label="Close settings"
-                >
-                  <X className="w-4 h-4" />
-                </Button>
-              )}
+              <Button
+                onClick={() => setSelectedNode(null)}
+                className="md:hidden text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                aria-label="Close settings"
+              >
+                <X className="w-4 h-4" />
+              </Button>
               {/* Delete Button - Hidden for Start node */}
               {!isStartNode && (
                 <Button
-                  variant="outline"
-                  size="sm"
                   onClick={handleDeleteClick}
                   className="text-destructive hover:text-destructive hover:bg-destructive/10"
                   aria-label="Delete block"
@@ -317,8 +305,6 @@ export function WorkflowRightSidebar({
                     {/* Action buttons */}
                     <div className="flex gap-2">
                       <Button
-                        size="sm"
-                        variant="outline"
                         onClick={selection.refreshSafeList}
                         className="flex-1"
                       >
@@ -327,8 +313,6 @@ export function WorkflowRightSidebar({
                       </Button>
                       {selection.safeWallets.length === 0 && (
                         <Button
-                          size="sm"
-                          variant="default"
                           onClick={creation.handleCreateNewSafe}
                           disabled={creation.isCreating}
                           className="flex-1"
@@ -404,8 +388,6 @@ export function WorkflowRightSidebar({
                     {/* Action buttons */}
                     <div className="flex gap-2">
                       <Button
-                        size="sm"
-                        variant="outline"
                         onClick={moduleControl.handleManualModuleRefresh}
                         className="flex-1"
                       >
@@ -414,8 +396,6 @@ export function WorkflowRightSidebar({
                       </Button>
                       {selection.moduleEnabled === false && (
                         <Button
-                          size="sm"
-                          variant="default"
                           onClick={moduleControl.handleEnableModule}
                           className="flex-1"
                         >
@@ -648,10 +628,10 @@ export function WorkflowRightSidebar({
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={handleDeleteCancel}>
+            <Button onClick={handleDeleteCancel}>
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleDeleteConfirm}>
+            <Button onClick={handleDeleteConfirm}>
               Delete
             </Button>
           </DialogFooter>

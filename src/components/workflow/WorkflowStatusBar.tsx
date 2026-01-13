@@ -3,14 +3,9 @@
 import React, { useMemo } from "react";
 import { Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useWorkflow } from "@/contexts/WorkflowContext";
 
 interface WorkflowStatusBarProps {
-  /** Last saved timestamp */
-  lastSaved: Date | null;
-  /** Number of edges/connections */
-  edgeCount: number;
-  /** Number of nodes */
-  nodeCount: number;
   /** Additional class name */
   className?: string;
 }
@@ -24,11 +19,12 @@ interface WorkflowStatusBarProps {
  * - Accessibility with aria-live
  */
 export const WorkflowStatusBar = React.memo(function WorkflowStatusBar({
-  lastSaved,
-  edgeCount,
-  nodeCount,
   className,
 }: WorkflowStatusBarProps) {
+  const { lastSaved, edges, nodes } = useWorkflow();
+  
+  const edgeCount = edges.length;
+  const nodeCount = nodes.length;
   // Memoize date formatting to prevent recalculation on every render
   const formattedTime = useMemo(() => {
     if (!lastSaved) return null;

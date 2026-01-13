@@ -92,7 +92,6 @@ export function EmailForm({
         onClick={onSendTest}
         disabled={loading || !emailTo || !emailSubject || !emailBody}
         className="w-full"
-        variant="secondary"
       >
         {loading ? (
           <>Sending Test...</>

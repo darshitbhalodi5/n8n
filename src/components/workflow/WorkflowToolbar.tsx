@@ -12,28 +12,13 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui";
 import { cn } from "@/lib/utils";
+import { useWorkflow } from "@/contexts/WorkflowContext";
 
 interface WorkflowToolbarProps {
   /** Workflow name to display */
   workflowName: string;
-  /** Number of nodes on canvas */
-  nodeCount: number;
-  /** Whether the run button should be disabled */
-  canRun: boolean;
-  /** Called when zoom in is clicked */
-  onZoomIn: () => void;
-  /** Called when zoom out is clicked */
-  onZoomOut: () => void;
-  /** Called when fit view is clicked */
-  onFitView: () => void;
-  /** Called when save is clicked */
-  onSave: () => void;
-  /** Called when run is clicked */
-  onRun: () => void;
   /** Called when share is clicked */
   onShare?: () => void;
-  /** Called when mobile menu button is clicked */
-  onOpenMobileMenu: () => void;
   /** Additional class name */
   className?: string;
 }
@@ -50,17 +35,21 @@ interface WorkflowToolbarProps {
  */
 export const WorkflowToolbar = React.memo(function WorkflowToolbar({
   workflowName,
-  nodeCount,
-  canRun,
-  onZoomIn,
-  onZoomOut,
-  onFitView,
-  onSave,
-  onRun,
   onShare,
-  onOpenMobileMenu,
   className,
 }: WorkflowToolbarProps) {
+  const {
+    nodes,
+    handleZoomIn,
+    handleZoomOut,
+    handleFitView,
+    handleSave,
+    handleRun,
+    setMobileMenuOpen,
+  } = useWorkflow();
+
+  const nodeCount = nodes.length;
+  const canRun = nodes.length > 0;
   return (
     <div
       className={cn(
@@ -74,7 +63,7 @@ export const WorkflowToolbar = React.memo(function WorkflowToolbar({
         {/* Mobile Menu Button */}
         <button
           type="button"
-          onClick={onOpenMobileMenu}
+          onClick={() => setMobileMenuOpen(true)}
           className={cn(
             "md:hidden",
             "bg-card/95 backdrop-blur-sm border border-border rounded-lg shadow-lg",
@@ -118,9 +107,7 @@ export const WorkflowToolbar = React.memo(function WorkflowToolbar({
         {/* Canvas Controls */}
         <div className="hidden sm:flex bg-card/95 backdrop-blur-sm border border-border rounded-lg shadow-lg items-center divide-x divide-border">
           <Button
-            variant="ghost"
-            size="sm"
-            onClick={onZoomOut}
+            onClick={handleZoomOut}
             className="rounded-none rounded-l-lg h-7 md:h-9 px-2 md:px-3 hover:bg-muted"
             title="Zoom Out (Ctrl + -)"
             aria-label="Zoom out canvas"
@@ -128,9 +115,7 @@ export const WorkflowToolbar = React.memo(function WorkflowToolbar({
             <ZoomOut className="w-3.5 h-3.5 md:w-4 md:h-4" aria-hidden="true" />
           </Button>
           <Button
-            variant="ghost"
-            size="sm"
-            onClick={onZoomIn}
+            onClick={handleZoomIn}
             className="rounded-none h-7 md:h-9 px-2 md:px-3 hover:bg-muted"
             title="Zoom In (Ctrl + +)"
             aria-label="Zoom in canvas"
@@ -138,9 +123,7 @@ export const WorkflowToolbar = React.memo(function WorkflowToolbar({
             <ZoomIn className="w-3.5 h-3.5 md:w-4 md:h-4" aria-hidden="true" />
           </Button>
           <Button
-            variant="ghost"
-            size="sm"
-            onClick={onFitView}
+            onClick={handleFitView}
             className="rounded-none rounded-r-lg h-7 md:h-9 px-2 md:px-3 hover:bg-muted"
             title="Fit View"
             aria-label="Fit all nodes into view"
@@ -156,9 +139,7 @@ export const WorkflowToolbar = React.memo(function WorkflowToolbar({
         <div className="bg-card/95 backdrop-blur-sm border border-border rounded-lg shadow-lg flex items-center gap-0.5 md:gap-1 px-0.5 md:px-1 py-0.5 md:py-1">
           {/* Save Button */}
           <Button
-            variant="ghost"
-            size="sm"
-            onClick={onSave}
+            onClick={handleSave}
             className="h-7 md:h-8 px-2 md:px-3 hover:bg-muted gap-1.5"
             title="Save (Ctrl + S)"
           >
@@ -169,8 +150,6 @@ export const WorkflowToolbar = React.memo(function WorkflowToolbar({
           {/* Share Button */}
           {onShare && (
             <Button
-              variant="ghost"
-              size="sm"
               onClick={onShare}
               className="hidden sm:flex h-7 md:h-8 px-2 md:px-3 hover:bg-muted gap-1.5"
               title="Share"
@@ -189,9 +168,7 @@ export const WorkflowToolbar = React.memo(function WorkflowToolbar({
 
           {/* Run Button */}
           <Button
-            variant="default"
-            size="sm"
-            onClick={onRun}
+            onClick={handleRun}
             disabled={!canRun}
             className="h-7 md:h-8 px-3 md:px-4 gap-1 md:gap-1.5 bg-primary hover:bg-primary/90"
             title="Run Workflow (Ctrl + Enter)"

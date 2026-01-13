@@ -70,7 +70,6 @@ export class ErrorBoundary extends Component<
               <Button
                 onClick={this.handleReset}
                 className="w-full gap-2"
-                variant="default"
               >
                 <RefreshCw className="w-4 h-4" />
                 Try Again

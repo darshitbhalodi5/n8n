@@ -6,8 +6,8 @@ import { HeroSection } from "./HeroSection";
 import { IntroSection } from "./IntroSection";
 
 interface HomeAnimationWrapperProps {
-  hero: React.ReactNode;
-  intro: React.ReactNode;
+  hero?: React.ReactNode;
+  intro?: React.ReactNode;
 }
 
 export function HomeAnimationWrapper({ hero = <HeroSection />, intro = <IntroSection /> }: HomeAnimationWrapperProps) {

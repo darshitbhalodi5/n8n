@@ -72,8 +72,6 @@ function SlackNodeConfigurationInner({
                     </Typography>
                     <Button
                         type="button"
-                        size="sm"
-                        variant="outline"
                         onClick={() => slack.actions.setShowCreateForm(!slack.showCreateForm)}
                         className="gap-1"
                     >
@@ -214,7 +212,7 @@ export function SlackNodeConfiguration(props: SlackNodeConfigurationProps) {
                     <Typography variant="caption" className="text-destructive">
                         {error.message}
                     </Typography>
-                    <Button type="button" variant="outline" onClick={reset} className="w-full">
+                    <Button type="button" onClick={reset} className="w-full">
                         Try Again
                     </Button>
                 </Card>

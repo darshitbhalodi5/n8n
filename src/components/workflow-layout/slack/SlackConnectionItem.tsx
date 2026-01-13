@@ -91,8 +91,6 @@ export const SlackConnectionItem = React.memo(function SlackConnectionItem({
                 </button>
                 <Button
                     type="button"
-                    size="sm"
-                    variant="ghost"
                     onClick={() => onDelete(connection.id)}
                     disabled={loading.processing}
                     className="text-destructive hover:text-destructive hover:bg-destructive/10"

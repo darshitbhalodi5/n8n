@@ -743,8 +743,6 @@ export function SwapNodeConfiguration({
                             </div>
                         </div>
                         <Button
-                            variant="outline"
-                            size="sm"
                             onClick={handleCopyAddress}
                             className="shrink-0 gap-1.5"
                             title="Copy address"
@@ -795,8 +793,6 @@ export function SwapNodeConfiguration({
                                     className="flex-1 px-3 py-2 text-sm border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary font-mono"
                                 />
                                 <Button
-                                    variant="default"
-                                    size="sm"
                                     onClick={() => fetchTokenInfo(customTokenAddress, true)}
                                     disabled={customTokenLoading || !customTokenAddress}
                                     className="gap-1"
@@ -816,8 +812,6 @@ export function SwapNodeConfiguration({
                                 </div>
                             )}
                             <Button
-                                variant="ghost"
-                                size="sm"
                                 onClick={() => setShowCustomSourceToken(false)}
                                 className="text-xs"
                             >
@@ -846,8 +840,6 @@ export function SwapNodeConfiguration({
                             </select>
                             {sourceTokenAddress && sourceTokenAddress !== CUSTOM_TOKEN_OPTION && (
                                 <Button
-                                    variant="ghost"
-                                    size="sm"
                                     onClick={async () => {
                                         await navigator.clipboard.writeText(sourceTokenAddress);
                                         setCopiedSourceToken(true);
@@ -885,8 +877,6 @@ export function SwapNodeConfiguration({
                                     className="flex-1 px-3 py-2 text-sm border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary font-mono"
                                 />
                                 <Button
-                                    variant="default"
-                                    size="sm"
                                     onClick={() => fetchTokenInfo(customTokenAddress, false)}
                                     disabled={customTokenLoading || !customTokenAddress}
                                     className="gap-1"
@@ -906,8 +896,6 @@ export function SwapNodeConfiguration({
                                 </div>
                             )}
                             <Button
-                                variant="ghost"
-                                size="sm"
                                 onClick={() => setShowCustomDestToken(false)}
                                 className="text-xs"
                             >
@@ -938,8 +926,6 @@ export function SwapNodeConfiguration({
                             </select>
                             {destinationTokenAddress && destinationTokenAddress !== CUSTOM_TOKEN_OPTION && (
                                 <Button
-                                    variant="ghost"
-                                    size="sm"
                                     onClick={async () => {
                                         await navigator.clipboard.writeText(destinationTokenAddress);
                                         setCopiedDestToken(true);
@@ -998,8 +984,6 @@ export function SwapNodeConfiguration({
                         Swap Preview
                     </Typography>
                     <Button
-                        variant="outline"
-                        size="sm"
                         onClick={handleGetQuote}
                         disabled={!isValidForQuote || quoteState.loading}
                         className="gap-1"
@@ -1057,8 +1041,6 @@ export function SwapNodeConfiguration({
 
                     <div className="space-y-3">
                         <Button
-                            variant="default"
-                            size="default"
                             onClick={handleExecuteSwap}
                             disabled={!quoteState.data || executionState.loading || !embeddedWallet}
                             className="w-full gap-2"

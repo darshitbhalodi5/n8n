@@ -38,10 +38,10 @@ export function DeleteConfirmDialog({
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <Button variant="outline" onClick={onCancel}>
+          <Button onClick={onCancel}>
             Cancel
           </Button>
-          <Button variant="destructive" onClick={onConfirm}>
+          <Button onClick={onConfirm}>
             Delete
           </Button>
         </DialogFooter>

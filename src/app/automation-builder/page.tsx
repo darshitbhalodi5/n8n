@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import WorkflowPageClient from "../../components/workflow/WorkflowPageClient";
+import { WorkflowProvider } from "../../contexts/WorkflowContext";
 
 export const metadata: Metadata = {
   title: "Automation Builder - FlowForge",
@@ -8,5 +9,9 @@ export const metadata: Metadata = {
 };
 
 export default function WorkflowPage() {
-  return <WorkflowPageClient />;
+  return (
+    <WorkflowProvider>
+      <WorkflowPageClient />
+    </WorkflowProvider>
+  );
 }

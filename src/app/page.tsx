@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import NavBar from "@/components/layout/Navbar";
 import { ProblemSolutionHorizontal } from "@/components/home/ProblemSolutionHorizontal";
-import { Footer } from "@/components/home/Footer";
+import { Footer } from "@/components/layout/Footer";
 import { HomeAnimationWrapper } from "@/components/home/HomeAnimationWrapper";
 
 export const metadata: Metadata = {

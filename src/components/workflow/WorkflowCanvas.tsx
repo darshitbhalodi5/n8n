@@ -5,83 +5,64 @@ import {
   ReactFlow,
   Background,
   MiniMap,
-  Node,
-  Edge,
   OnNodesChange,
   OnEdgesChange,
   OnConnect,
-  OnNodesDelete,
-  NodeTypes,
   ReactFlowProvider,
   BackgroundVariant,
   ConnectionMode,
-  ReactFlowInstance,
 } from "reactflow";
-
-// Define handler types for React Flow events
-type OnNodeClick = (event: React.MouseEvent, node: Node) => void;
-type OnPaneClick = (event: React.MouseEvent) => void;
 import "reactflow/dist/style.css";
 import { cn } from "@/lib/utils";
+import { useWorkflow } from "@/contexts/WorkflowContext";
+import { nodeTypes as importedNodeTypes } from "./nodeTypes";
 
 export interface WorkflowCanvasProps {
-  nodes: Node[];
-  edges: Edge[];
-  onNodesChange?: OnNodesChange;
-  onEdgesChange?: OnEdgesChange;
-  onConnect?: OnConnect;
-  onNodesDelete?: OnNodesDelete;
-  nodeTypes?: NodeTypes;
   className?: string;
   showBackground?: boolean;
   showMiniMap?: boolean;
   backgroundVariant?: BackgroundVariant;
   fitView?: boolean;
-  onInit?: (instance: ReactFlowInstance) => void;
-  onNodeClick?: OnNodeClick;
-  onPaneClick?: OnPaneClick;
 }
 
 function WorkflowCanvasInner({
-  nodes,
-  edges,
-  onNodesChange,
-  onEdgesChange,
-  onConnect,
-  onNodesDelete,
-  nodeTypes,
   className,
   showBackground = true,
   showMiniMap = false,
   backgroundVariant = BackgroundVariant.Dots,
   fitView = true,
-  onInit,
-  onNodeClick,
-  onPaneClick,
 }: WorkflowCanvasProps) {
+  const {
+    nodes,
+    edges,
+    onNodesChange,
+    onEdgesChange,
+    onConnect,
+    onNodesDelete,
+    handleNodeClick,
+    handlePaneClick,
+    handleReactFlowInit,
+  } = useWorkflow();
+
+  const nodeTypes = importedNodeTypes;
+
   const handleNodesChange = useCallback<OnNodesChange>(
     (changes) => {
-      if (onNodesChange) {
-        onNodesChange(changes);
-      }
+      onNodesChange(changes);
     },
     [onNodesChange]
   );
 
   const handleEdgesChange = useCallback<OnEdgesChange>(
     (changes) => {
-      if (onEdgesChange) {
-        onEdgesChange(changes);
-      }
+      onEdgesChange(changes);
     },
     [onEdgesChange]
   );
 
   const handleConnect = useCallback<OnConnect>(
     (connection) => {
-      if (onConnect) {
-        onConnect(connection);
-      }
+      onConnect(connection);
     },
     [onConnect]
   );
@@ -103,9 +84,9 @@ function WorkflowCanvasInner({
         nodeTypes={nodeTypes}
         fitView={fitView}
         connectionMode={ConnectionMode.Loose}
-        onInit={onInit}
-        onNodeClick={onNodeClick}
-        onPaneClick={onPaneClick}
+        onInit={handleReactFlowInit}
+        onNodeClick={handleNodeClick}
+        onPaneClick={handlePaneClick}
         nodesDraggable={true}
         nodesConnectable={true}
         elementsSelectable={true}

@@ -39,8 +39,6 @@ export function SidebarHeader({
           {/* Mobile Close Button - Next to Delete */}
           {showCloseButton && onClose && (
             <Button
-              variant="outline"
-              size="sm"
               onClick={onClose}
               className="md:hidden text-muted-foreground hover:text-foreground hover:bg-secondary/50"
               aria-label="Close settings"
@@ -50,8 +48,6 @@ export function SidebarHeader({
           )}
           {/* Delete Button */}
           <Button
-            variant="outline"
-            size="sm"
             onClick={onDelete}
             className="text-destructive hover:text-destructive hover:bg-destructive/10"
             aria-label="Delete block"

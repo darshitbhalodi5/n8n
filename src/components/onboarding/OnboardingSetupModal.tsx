@@ -100,8 +100,6 @@ const ChainProgressCard: React.FC<ChainProgressCardProps> = ({
                 </div>
                 {hasError && (
                     <Button
-                        variant="ghost"
-                        size="sm"
                         onClick={onRetry}
                         className="h-7 px-2 gap-1 text-xs"
                     >

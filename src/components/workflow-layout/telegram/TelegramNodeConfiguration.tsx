@@ -152,8 +152,6 @@ function TelegramNodeConfigurationInner({
                         2. Select Chat
                     </Typography>
                     <Button
-                        size="sm"
-                        variant="outline"
                         onClick={actions.loadChats}
                         disabled={loading.chats}
                         className="gap-1"
@@ -209,8 +207,6 @@ function TelegramNodeConfigurationInner({
                                     <span className="text-sm">{conn.chatTitle}</span>
                                 </div>
                                 <Button
-                                    size="sm"
-                                    variant="ghost"
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         actions.deleteConnection(conn.id);
@@ -240,8 +236,6 @@ function TelegramNodeConfigurationInner({
                             3. Message Template
                         </Typography>
                         <Button
-                            size="sm"
-                            variant="outline"
                             onClick={openMessageViewer}
                             className="gap-1"
                         >
@@ -263,8 +257,6 @@ function TelegramNodeConfigurationInner({
                     />
 
                     <Button
-                        size="sm"
-                        variant="outline"
                         onClick={actions.sendPreviewMessage}
                         disabled={!telegramMessage.trim() || loading.sending}
                         className="w-full gap-2"
@@ -293,8 +285,6 @@ function TelegramNodeConfigurationInner({
                             </div>
                             <div className="flex items-center gap-2">
                                 <Button
-                                    size="sm"
-                                    variant="ghost"
                                     onClick={loadMessages}
                                     disabled={loadingMessages}
                                     className="p-1 h-auto"
@@ -306,8 +296,6 @@ function TelegramNodeConfigurationInner({
                                     )}
                                 </Button>
                                 <Button
-                                    size="sm"
-                                    variant="ghost"
                                     onClick={() => setShowMessages(false)}
                                     className="p-1 h-auto"
                                 >
@@ -383,7 +371,7 @@ export function TelegramNodeConfiguration(props: TelegramNodeConfigurationProps)
                     <Typography variant="caption" className="text-destructive">
                         {error.message}
                     </Typography>
-                    <Button type="button" variant="outline" onClick={reset} className="w-full">
+                    <Button type="button" onClick={reset} className="w-full">
                         Try Again
                     </Button>
                 </Card>

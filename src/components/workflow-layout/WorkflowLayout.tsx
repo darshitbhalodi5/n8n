@@ -2,40 +2,34 @@
 
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import type { Node } from "reactflow";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui";
 import { X } from "lucide-react";
+import { useWorkflow } from "@/contexts/WorkflowContext";
+import { WorkflowSidebar } from "./WorkflowSidebar";
+import { WorkflowRightSidebar } from "./WorkflowRightSidebar";
+import {
+  WorkflowCanvas,
+  WorkflowToolbar,
+  WorkflowStatusBar,
+} from "@/components/workflow";
 
 interface WorkflowLayoutProps {
-  children: React.ReactNode;
-  sidebar: (activeCategory: string) => React.ReactNode;
-  rightSidebar?: (selectedNode: Node | null) => React.ReactNode;
-  selectedNode?: Node | null;
-  categories?: Array<{
-    id: string;
-    label: string;
-    icon?: React.ReactNode;
-  }>;
-  defaultCategory?: string;
   onCategoryChange?: (categoryId: string) => void;
-  mobileMenuOpen?: boolean;
-  onMobileMenuOpenChange?: (open: boolean) => void;
-  onMobileConfigClose?: () => void;
 }
 
 export function WorkflowLayout({
-  children,
-  sidebar,
-  rightSidebar,
-  selectedNode,
-  categories = [],
-  defaultCategory = "all",
   onCategoryChange,
-  mobileMenuOpen = false,
-  onMobileMenuOpenChange,
-  onMobileConfigClose,
 }: WorkflowLayoutProps) {
-  const [activeCategory, setActiveCategory] = useState(defaultCategory);
+  const {
+    selectedNode,
+    mobileMenuOpen,
+    setMobileMenuOpen,
+    setSelectedNode,
+    categories,
+    onDragOver,
+    onDrop,
+  } = useWorkflow();
+  const [activeCategory, setActiveCategory] = useState("all");
 
   const handleCategoryChange = (categoryId: string) => {
     setActiveCategory(categoryId);
@@ -45,15 +39,13 @@ export function WorkflowLayout({
   };
 
   const handleMobileMenuClose = () => {
-    if (onMobileMenuOpenChange) {
-      onMobileMenuOpenChange(false);
-    }
+    setMobileMenuOpen(false);
   };
 
   const showRightSidebar = selectedNode !== null && selectedNode !== undefined;
 
   return (
-    <div className="flex flex-1 overflow-hidden bg-background relative">
+    <div className="flex overflow-hidden bg-background relative min-h-screen">
       {/* Mobile Backdrop Overlay */}
       {mobileMenuOpen && (
         <div
@@ -118,7 +110,7 @@ export function WorkflowLayout({
 
         {/* Mobile Blocks Panel */}
         <div className="flex-1 overflow-y-auto scrollbar-thin">
-          {sidebar(activeCategory)}
+          <WorkflowSidebar activeCategory={activeCategory} />
         </div>
       </div>
 
@@ -167,26 +159,44 @@ export function WorkflowLayout({
           "md:w-[140px] lg:w-[160px] xl:w-[170px]"
         )}
       >
-        {sidebar(activeCategory)}
+        <WorkflowSidebar activeCategory={activeCategory} />
       </aside>
 
       {/* Canvas area */}
       <main
         className={cn("flex-1 overflow-auto", "max-w-[2400px] mx-auto w-full")}
       >
-        {children}
+        <div className="h-full bg-background relative">
+          {/* Floating Toolbar */}
+          <WorkflowToolbar workflowName="Untitled Workflow" />
+
+          {/* Workflow Canvas - Full Height */}
+          <div
+            className="h-full w-full"
+            onDragOver={onDragOver}
+            onDrop={onDrop}
+            onClick={(e) => {
+              e.stopPropagation();
+            }}
+            role="application"
+            aria-label="Workflow canvas - drag blocks here to build your workflow"
+          >
+            <WorkflowCanvas showBackground className="h-full" />
+          </div>
+
+          {/* Status Bar */}
+          <WorkflowStatusBar />
+        </div>
       </main>
 
       {/* Mobile: Right Sidebar Overlay (Config Panel) */}
-      {rightSidebar && showRightSidebar && (
+      {showRightSidebar && (
         <>
           {/* Mobile Backdrop */}
           <div
             className="md:hidden fixed top-16 inset-x-0 bottom-0 bg-background/80 backdrop-blur-sm z-40"
             onClick={() => {
-              if (onMobileConfigClose) {
-                onMobileConfigClose();
-              }
+              setSelectedNode(null);
             }}
             aria-hidden="true"
           />
@@ -202,23 +212,21 @@ export function WorkflowLayout({
               "translate-x-0"
             )}
           >
-            {rightSidebar(selectedNode)}
+            <WorkflowRightSidebar />
           </aside>
         </>
       )}
 
       {/* Desktop: Right Sidebar - Configuration Panel */}
-      {rightSidebar && (
-        <aside
-          className={cn(
-            "hidden border-l border-border bg-card overflow-y-auto scrollbar-thin transition-all duration-200",
-            showRightSidebar ? "md:block" : "hidden",
-            "md:w-[280px] lg:w-[300px] xl:w-[320px]"
-          )}
-        >
-          {showRightSidebar && rightSidebar(selectedNode)}
-        </aside>
-      )}
+      <aside
+        className={cn(
+          "hidden border-l border-border bg-card overflow-y-auto scrollbar-thin transition-all duration-200",
+          showRightSidebar ? "md:block" : "hidden",
+          "md:w-[280px] lg:w-[300px] xl:w-[320px]"
+        )}
+      >
+        {showRightSidebar && <WorkflowRightSidebar />}
+      </aside>
     </div>
   );
 }

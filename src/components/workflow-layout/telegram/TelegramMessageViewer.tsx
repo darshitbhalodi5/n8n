@@ -88,8 +88,6 @@ export const TelegramMessageViewer = React.memo(function TelegramMessageViewer({
           </div>
           <div className="flex items-center gap-2">
             <Button
-              size="sm"
-              variant="ghost"
               onClick={onRefresh}
               disabled={isLoading}
               className="p-1 h-auto"
@@ -103,8 +101,6 @@ export const TelegramMessageViewer = React.memo(function TelegramMessageViewer({
             </Button>
             <Button
               ref={closeButtonRef}
-              size="sm"
-              variant="ghost"
               onClick={onClose}
               className="p-1 h-auto"
               aria-label="Close message viewer"
