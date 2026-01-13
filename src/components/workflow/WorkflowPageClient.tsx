@@ -16,7 +16,7 @@ import {
 import { TooltipProvider } from "@/components/ui";
 import {
   WorkflowCanvas,
-  nodeTypes,
+  nodeTypes as importedNodeTypes,
   WorkflowToolbar,
   WorkflowStatusBar,
 } from "@/components/workflow";
@@ -70,6 +70,9 @@ const initialEdges: Edge[] = [];
 function WorkflowPageInner() {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+
+  // Memoize nodeTypes to ensure React Flow doesn't detect it as a new object on each render
+  const nodeTypes = useMemo(() => importedNodeTypes, []);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const reactFlowInstance = useRef<ReactFlowInstance | null>(null);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
@@ -563,12 +566,12 @@ function WorkflowPageInner() {
         const updatedNodes = nds.map((node) =>
           node.id === nodeId
             ? {
-                ...node,
-                data: {
-                  ...node.data,
-                  ...data,
-                },
-              }
+              ...node,
+              data: {
+                ...node.data,
+                ...data,
+              },
+            }
             : node
         );
 

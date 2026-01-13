@@ -58,15 +58,17 @@ export const BaseNode = React.memo(function BaseNode({
             type="target"
             position={targetPosition}
             className="react-flow-handle"
+            isConnectable={true}
             style={{
               left: targetPosition === Position.Left ? "-8px" : undefined,
-              right: targetPosition === Position.Right ? undefined : undefined,
+              right: targetPosition === Position.Right ? "8px" : undefined,
             }}
           />
           <Handle
             type="source"
             position={sourcePosition}
             className="react-flow-handle"
+            isConnectable={true}
             style={{
               left: sourcePosition === Position.Left ? "-8px" : undefined,
               right: sourcePosition === Position.Right ? "-8px" : undefined,

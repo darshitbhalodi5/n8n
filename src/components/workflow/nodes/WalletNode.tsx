@@ -57,6 +57,7 @@ export const WalletNode = React.memo(function WalletNode({
             type="target"
             position={targetPosition}
             className="react-flow-handle"
+            isConnectable={true}
             style={{
               left: targetPosition === Position.Left ? "-8px" : undefined,
             }}
@@ -65,6 +66,7 @@ export const WalletNode = React.memo(function WalletNode({
             type="source"
             position={sourcePosition}
             className="react-flow-handle"
+            isConnectable={true}
             style={{
               right: sourcePosition === Position.Right ? "-8px" : undefined,
             }}

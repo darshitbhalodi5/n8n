@@ -8,29 +8,129 @@ import type { Node, Edge } from "reactflow";
 import { buildApiUrl } from "@/config/api";
 
 /**
+ * Normalize frontend node type to backend NodeType enum
+ * Maps frontend types to backend processor types
+ */
+function normalizeNodeType(frontendType: string): string {
+  const typeMap: Record<string, string> = {
+    start: "START", // Start node
+    if: "IF", // IF node
+    switch: "SWITCH", // Switch node
+    slack: "SLACK", // Slack node (has dedicated processor)
+    telegram: "TELEGRAM", // Telegram node (has dedicated processor)
+    mail: "EMAIL", // Email node (has dedicated processor)
+    uniswap: "SWAP", // Uniswap is a swap
+    relay: "SWAP", // Relay is a swap
+    oneinch: "SWAP", // 1inch is a swap
+    "wallet-node": "WALLET", // Wallet node
+  };
+  // Default to the uppercase version if not in map, or TRIGGER as fallback
+  return typeMap[frontendType] || frontendType.toUpperCase() || "TRIGGER";
+}
+
+/**
+ * Extract node-specific configuration from node data
+ */
+function extractNodeConfig(node: Node): any {
+  const data = node.data || {};
+  const type = node.type;
+
+  switch (type) {
+    case "slack":
+      return {
+        connectionId: data.slackConnectionId,
+        message: data.testMessage || data.slackMessage || "",
+        connectionType: data.slackConnectionType || "webhook",
+        channelId: data.slackChannelId,
+      };
+
+    case "telegram":
+      return {
+        connectionId: data.telegramConnectionId,
+        chatId: data.telegramChatId,
+        message: data.telegramMessage || "",
+      };
+
+    case "uniswap":
+    case "relay":
+    case "oneinch":
+      return {
+        provider: data.swapProvider,
+        chain: data.swapChain,
+        inputConfig: {
+          sourceToken: {
+            address: data.sourceTokenAddress,
+            symbol: data.sourceTokenSymbol,
+            decimals: data.sourceTokenDecimals || 18,
+          },
+          destinationToken: {
+            address: data.destinationTokenAddress,
+            symbol: data.destinationTokenSymbol,
+            decimals: data.destinationTokenDecimals || 18,
+          },
+          amount: data.swapAmount,
+          swapType: data.swapType || "EXACT_INPUT",
+          walletAddress: data.walletAddress,
+        },
+        simulateFirst: data.simulateFirst ?? true,
+        autoRetryOnFailure: data.autoRetryOnFailure ?? true,
+        maxRetries: data.maxRetries ?? 3,
+      };
+
+    case "if":
+      return {
+        leftPath: data.leftPath,
+        operator: data.operator,
+        rightValue: data.rightValue,
+      };
+
+    case "switch":
+      return {
+        cases: data.cases || [],
+        defaultCaseId: data.defaultCaseId,
+      };
+
+    case "mail":
+      return {
+        to: data.emailTo,
+        subject: data.emailSubject,
+        body: data.emailBody,
+      };
+
+    case "start":
+      return {};
+
+    case "wallet-node":
+      return {};
+
+    default:
+      // Fallback: extract common fields
+      return {
+        ...(data.leftPath && { leftPath: data.leftPath }),
+        ...(data.operator && { operator: data.operator }),
+        ...(data.rightValue && { rightValue: data.rightValue }),
+      };
+  }
+}
+
+/**
  * Transform React Flow nodes to backend format
  */
 function transformNodeToBackend(node: Node) {
+  const backendType = normalizeNodeType(node.type || "base");
+
   return {
     id: node.id,
-    type: node.type || "base",
+    type: backendType,
     name: node.data?.label || node.id,
     description: node.data?.description || "",
-    config: {
-      // Extract configuration from node data
-      ...(node.data?.leftPath && { leftPath: node.data.leftPath }),
-      ...(node.data?.operator && { operator: node.data.operator }),
-      ...(node.data?.rightValue && { rightValue: node.data.rightValue }),
-      ...(node.data?.emailTo && { to: node.data.emailTo }),
-      ...(node.data?.emailSubject && { subject: node.data.emailSubject }),
-      ...(node.data?.emailBody && { body: node.data.emailBody }),
-      // Add other node-specific config here
-    },
+    config: extractNodeConfig(node),
     position: node.position,
     metadata: {
       blockId: node.data?.blockId,
       iconName: node.data?.iconName,
       status: node.data?.status,
+      frontendType: node.type, // Preserve original frontend type
     },
   };
 }
@@ -254,4 +354,3 @@ export async function saveAndExecuteWorkflow(params: {
     data: executeResult.data,
   };
 }
-
