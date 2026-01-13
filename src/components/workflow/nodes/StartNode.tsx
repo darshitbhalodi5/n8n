@@ -41,6 +41,7 @@ export const StartNode = React.memo(function StartNode({
         type="source"
         position={sourcePosition}
         className="react-flow-handle"
+        isConnectable={true}
         style={{
           right: sourcePosition === Position.Right ? "-8px" : undefined,
         }}

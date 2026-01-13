@@ -7,6 +7,7 @@ import React, {
     useCallback,
     useEffect,
     useMemo,
+    useRef,
 } from "react";
 import { usePrivy } from "@privy-io/react-auth";
 import { usePrivyEmbeddedWallet } from "@/hooks/usePrivyEmbeddedWallet";
@@ -114,7 +115,6 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({
     // Chains to setup based on environment
     const chainsToSetup = useMemo(() => getChainsToSetup(), []);
 
-    // State
     const [userData, setUserData] = useState<UserData | null>(null);
     const [isCheckingUser, setIsCheckingUser] = useState(false);
     const [needsOnboarding, setNeedsOnboarding] = useState(false);
@@ -123,6 +123,12 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({
         initializeProgress(chainsToSetup)
     );
     const [currentSigningChain, setCurrentSigningChain] = useState<string | null>(null);
+
+    // Track if we've already shown onboarding
+    const hasShownOnboardingRef = useRef(false);
+
+    // Local storage key for tracking onboarding shown state (persists forever)
+    const ONBOARDING_SHOWN_KEY = "onboarding_popup_shown";
 
     // Fetch user data by wallet address
     const fetchUserData = useCallback(async (): Promise<UserData | null> => {
@@ -283,6 +289,19 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({
             return;
         }
 
+        // Check if we've already shown the onboarding popup ever (persists in localStorage)
+        const hasShownEver = localStorage.getItem(ONBOARDING_SHOWN_KEY) === "true";
+
+        // If already shown ever, don't show again
+        if (hasShownEver) {
+            hasShownOnboardingRef.current = true;
+            // Still fetch user data to update context, but don't show popup
+            fetchUserData().then((user) => {
+                setUserData(user);
+            });
+            return;
+        }
+
         const checkUser = async () => {
             setIsCheckingUser(true);
             try {
@@ -301,7 +320,12 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({
                 });
 
                 if (chainsNeedingSetup.length > 0) {
-                    setNeedsOnboarding(true);
+                    // Only show the popup if we haven't shown it in this session
+                    if (!hasShownOnboardingRef.current) {
+                        setNeedsOnboarding(true);
+                        hasShownOnboardingRef.current = true;
+                        localStorage.setItem(ONBOARDING_SHOWN_KEY, "true");
+                    }
                     // Pre-fill progress for existing wallets
                     setProgress((prev) => {
                         const updated = { ...prev };
@@ -325,14 +349,19 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({
                 }
             } catch (error) {
                 console.error("Error checking user:", error);
-                setNeedsOnboarding(true);
+                // Only show error popup if we haven't shown anything yet
+                if (!hasShownOnboardingRef.current) {
+                    setNeedsOnboarding(true);
+                    hasShownOnboardingRef.current = true;
+                    localStorage.setItem(ONBOARDING_SHOWN_KEY, "true");
+                }
             } finally {
                 setIsCheckingUser(false);
             }
         };
 
         checkUser();
-    }, [ready, authenticated, walletAddress, fetchUserData, chainsToSetup]);
+    }, [ready, authenticated, walletAddress, fetchUserData, chainsToSetup, ONBOARDING_SHOWN_KEY]);
 
     // Start the onboarding process
     const startOnboarding = useCallback(async () => {
@@ -396,7 +425,10 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({
     const skipOnboarding = useCallback(() => {
         setNeedsOnboarding(false);
         setIsOnboarding(false);
-    }, []);
+        // Mark as shown so it never reappears
+        hasShownOnboardingRef.current = true;
+        localStorage.setItem(ONBOARDING_SHOWN_KEY, "true");
+    }, [ONBOARDING_SHOWN_KEY]);
 
     const contextValue = useMemo<OnboardingContextType>(
         () => ({

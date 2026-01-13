@@ -59,6 +59,7 @@ export const IfNode = React.memo(function IfNode({
             type="target"
             position={targetPosition}
             className="react-flow-handle"
+            isConnectable={true}
             style={{
               left: targetPosition === Position.Left ? "-8px" : undefined,
               top: "50%",
@@ -72,6 +73,7 @@ export const IfNode = React.memo(function IfNode({
             position={sourcePosition}
             id="true"
             className="react-flow-handle bg-green-500!"
+            isConnectable={true}
             style={{
               right: sourcePosition === Position.Right ? "-8px" : undefined,
               top: "25%",
@@ -85,6 +87,7 @@ export const IfNode = React.memo(function IfNode({
             position={sourcePosition}
             id="false"
             className="react-flow-handle bg-red-500!"
+            isConnectable={true}
             style={{
               right: sourcePosition === Position.Right ? "-8px" : undefined,
               top: "75%",

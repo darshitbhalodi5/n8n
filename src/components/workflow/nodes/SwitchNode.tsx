@@ -83,6 +83,7 @@ export const SwitchNode = React.memo(function SwitchNode({
             type="target"
             position={targetPosition}
             className="react-flow-handle"
+            isConnectable={true}
             style={{
               left: targetPosition === Position.Left ? "-8px" : undefined,
               top: "50%",
@@ -101,6 +102,7 @@ export const SwitchNode = React.memo(function SwitchNode({
                 "react-flow-handle",
                 getCaseColor(!!switchCase.isDefault, index)
               )}
+              isConnectable={true}
               style={{
                 right: sourcePosition === Position.Right ? "-8px" : undefined,
                 top: getHandleTopPosition(index, caseCount),
@@ -118,6 +120,7 @@ export const SwitchNode = React.memo(function SwitchNode({
               position={sourcePosition}
               id="default"
               className="react-flow-handle bg-gray-400"
+              isConnectable={true}
               style={{
                 right: sourcePosition === Position.Right ? "-8px" : undefined,
                 top: "50%",
