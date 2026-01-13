@@ -102,7 +102,7 @@ export function Footer() {
   return (
     <footer 
       ref={ref}
-      className="relative border-t border-border bg-card overflow-hidden"
+      className="relative border-t border-border bg-black overflow-hidden z-20"
     >
       {/* Animated background dot grid */}
       <div

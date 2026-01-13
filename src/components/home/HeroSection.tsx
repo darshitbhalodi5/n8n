@@ -13,14 +13,15 @@ interface HeroSectionProps {
 export function HeroSection({ gapAnimation }: HeroSectionProps) {
   return (
     <section className="relative h-screen w-full flex items-center justify-center overflow-hidden bg-black">
-      {/* --- BACKGROUND LAYER 1: Dot Grid --- */}
+      {/* --- BACKGROUND LAYER 1: Gradient, Dot Grid --- */}
+      <div className="absolute inset-0 bg-linear-to-b from-black/30 via-[#0B192C]/40 to-black/30" />
       <div
         className="absolute inset-0 opacity-20 z-0"
         style={{
           backgroundImage: "radial-gradient(#6f6f6f 1px, transparent 1px)",
           backgroundSize: "30px 30px",
           maskImage:
-            "radial-gradient(ellipse at center, black 40%, transparent 90%)",
+            "radial-gradient(ellipse at center, black 40%, transparent 80%)",
         }}
       />
 
@@ -29,17 +30,31 @@ export function HeroSection({ gapAnimation }: HeroSectionProps) {
 
       {/* --- FOREGROUND CONTENT --- */}
         <motion.div 
-          className="w-full flex flex-col items-center justify-center"
+          className="relative z-10 w-full flex flex-col items-center justify-center"
           style={gapAnimation ? { gap: gapAnimation } : { gap: "0.5rem" }}
         >
-          <Typography variant="h1" className="flex items-center justify-center gap-3">
-            THE CREATIVE <AiOutlineNodeIndex /> PLACE
-            FOR
-          </Typography>
+          <motion.div
+            initial={{ clipPath: "inset(0 100% 0 0)" }}
+            animate={{ clipPath: "inset(0 0% 0 0)" }}
+            transition={{ duration: 1.2, ease: "easeInOut" }}
+            className="flex items-center justify-center gap-3"
+          >
+            <Typography variant="h1" className="flex items-center justify-center gap-3">
+              THE CREATIVE <AiOutlineNodeIndex /> PLACE
+              FOR
+            </Typography>
+          </motion.div>
 
-          <Typography variant="h1">
-            <MdCropSquare className="w-7 h-7 mb-8 inline"/> WEB2 <span className="mx-3">&</span> WEB3 AUTOMATION
-          </Typography>
+          <motion.div
+            initial={{ clipPath: "inset(0 100% 0 0)" }}
+            animate={{ clipPath: "inset(0 0% 0 0)" }}
+            transition={{ duration: 1.2, ease: "easeInOut", delay: 0.3 }}
+            className="flex items-center justify-center"
+          >
+            <Typography variant="h1">
+              <MdCropSquare className="w-7 h-7 mb-8 inline"/> WEB2 <span className="mx-3">&</span> WEB3 AUTOMATION
+            </Typography>
+          </motion.div>
         </motion.div>
     </section>
   );

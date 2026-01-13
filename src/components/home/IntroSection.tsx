@@ -40,7 +40,7 @@ export function IntroSection({ scrollProgress }: IntroSectionProps) {
 
   return (
     // Added w-full h-full to ensure it fills the wrapper
-    <div className="h-full w-full flex flex-col gap-3 items-center justify-center bg-[#10091d]">
+    <div className="h-full w-full flex flex-col gap-3 items-center justify-center bg-[#0B192C]">
       <motion.h1
         className="text-white text-[14vw] font-bold tracking-tighter"
         style={{ 

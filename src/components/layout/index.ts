@@ -16,6 +16,3 @@ export type { SectionProps } from "./Section";
 
 export { Stack, stackVariants } from "./Stack";
 export type { StackProps } from "./Stack";
-
-export { Navbar } from "./Navbar";
-

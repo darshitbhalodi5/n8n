@@ -2,13 +2,15 @@
 
 import { useRef, cloneElement, isValidElement } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
+import { HeroSection } from "./HeroSection";
+import { IntroSection } from "./IntroSection";
 
 interface HomeAnimationWrapperProps {
   hero: React.ReactNode;
   intro: React.ReactNode;
 }
 
-export function HomeAnimationWrapper({ hero, intro }: HomeAnimationWrapperProps) {
+export function HomeAnimationWrapper({ hero = <HeroSection />, intro = <IntroSection /> }: HomeAnimationWrapperProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   const { scrollYProgress } = useScroll({
@@ -19,17 +21,13 @@ export function HomeAnimationWrapper({ hero, intro }: HomeAnimationWrapperProps)
   // Map scroll progress to gap spacing between headers
   const gapAnimation = useTransform(
     scrollYProgress,
-    [0, 0.1], // Gap animation completes in first 40% of scroll
-    ["0.5rem", "3.3125rem"] // From 8px to 53px (8px + 45px)
+    [0, 0.1], 
+    ["0.5rem", "3.3125rem"] 
   );
 
-  // Map scroll progress to clip-path inset
-  // Initial: 50% from top, 50% from bottom (effectively a line in the center)
-  // Final: 0% from top, 0% from bottom (fully revealed)
-  // Happens after gap: from 0.4 to 0.8 (after gap is complete)
   const clipPathAnimation = useTransform(
     scrollYProgress,
-    [0.05, 0.4], // Clipping starts after gap animation completes, finishes at 80%
+    [0.05, 0.3], 
     ["inset(50% 0 50% 0)", "inset(0% 0 0% 0)"]
   );
 

@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
-import { Navbar } from "@/components/layout";
-import { HeroSection } from "@/components/home/HeroSection";
+import NavBar from "@/components/layout/Navbar";
 import { ProblemSolutionHorizontal } from "@/components/home/ProblemSolutionHorizontal";
 import { Footer } from "@/components/home/Footer";
-import { IntroSection } from "@/components/home/IntroSection";
 import { HomeAnimationWrapper } from "@/components/home/HomeAnimationWrapper";
 
 export const metadata: Metadata = {
@@ -15,12 +13,10 @@ export const metadata: Metadata = {
 export default function Home() {
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
-      <HomeAnimationWrapper hero={<HeroSection />} intro={<IntroSection />} />
+      <NavBar />
+      <HomeAnimationWrapper />
       <ProblemSolutionHorizontal />
-      <div className="relative z-20 bg-black">
-        <Footer />
-      </div>
+      <Footer />
     </div>
   );
 }

@@ -35,31 +35,31 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   return (
     <LenisProvider>
       <PrivyProvider
-        appId={privyAppId}
-        config={{
-          loginMethods: ["email"],
-          embeddedWallets: {
-            ethereum: {
-              createOnLogin: "users-without-wallets",
-            },
+      appId={privyAppId}
+      config={{
+        loginMethods: ["email"],
+        embeddedWallets: {
+          ethereum: {
+            createOnLogin: "users-without-wallets",
           },
-          appearance: {
-            theme: "dark",
-            accentColor: "#F8FF7C",
-          },
-          defaultChain: arbitrum,
-          supportedChains: supportedChains,
-        }}
-      >
-        <QueryClientProvider client={queryClient}>
-          <OnboardingProvider>
+        },
+        appearance: {
+          theme: "dark",
+          accentColor: "#F8FF7C",
+        },
+        defaultChain: arbitrum,
+        supportedChains: supportedChains,
+      }}
+    >
+      <QueryClientProvider client={queryClient}>
+        <OnboardingProvider>
           <SafeWalletProvider>
             {children}
             <OnboardingSetupModal />
-          </SafeWalletProvider>
-          </OnboardingProvider>
+            </SafeWalletProvider>
+        </OnboardingProvider>
       </QueryClientProvider>
-      </PrivyProvider>
+    </PrivyProvider>
     </LenisProvider>
   );
 }
