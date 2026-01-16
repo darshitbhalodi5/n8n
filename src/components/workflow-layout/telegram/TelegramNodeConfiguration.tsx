@@ -9,7 +9,7 @@ import { useTelegramConnection } from "@/hooks/useTelegramConnection";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { usePrivyWallet } from "@/hooks/usePrivyWallet";
 import { API_CONFIG, buildApiUrl } from "@/config/api";
-import type { TelegramChat, TelegramConnection } from "@/types/telegram";
+import type { TelegramConnection } from "@/types/telegram";
 
 interface TelegramMessage {
     updateId: number;
@@ -36,7 +36,7 @@ function TelegramNodeConfigurationInner({
     const {
         botInfo,
         connections,
-        chats,
+        // chats,
         loading,
         notification,
         selectedConnection,

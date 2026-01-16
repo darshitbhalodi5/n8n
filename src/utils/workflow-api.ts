@@ -208,13 +208,38 @@ export async function createWorkflow(params: {
 }
 
 /**
+ * Execute workflow response data
+ */
+export interface ExecuteWorkflowResponseData {
+  executionId: string;
+  status: string;
+  message: string;
+  subscriptionToken: string; // Token for SSE subscription
+}
+
+/**
+ * API error response
+ */
+export interface ApiError {
+  message: string;
+  code?: string;
+  details?: Array<{ field: string; message: string }>;
+  retryAfter?: number; // For rate limit errors (ms)
+}
+
+/**
  * Execute a workflow
  */
 export async function executeWorkflow(params: {
   workflowId: string;
   accessToken: string;
   initialInput?: Record<string, any>;
-}): Promise<{ success: boolean; data?: any; error?: any }> {
+}): Promise<{
+  success: boolean;
+  data?: ExecuteWorkflowResponseData;
+  error?: ApiError;
+  statusCode?: number;
+}> {
   try {
     const response = await fetch(
       buildApiUrl(`/workflows/${params.workflowId}/execute`),
@@ -233,15 +258,42 @@ export async function executeWorkflow(params: {
     const result = await response.json();
 
     if (!response.ok) {
+      // Handle specific error codes
+      const error: ApiError = {
+        message: result.error?.message || "Failed to execute workflow",
+        code: result.error?.code,
+        details: result.error?.details,
+      };
+
+      // Handle rate limiting (429)
+      if (response.status === 429) {
+        error.code = "RATE_LIMIT_EXCEEDED";
+        error.retryAfter = result.retryAfter;
+        error.message = `Rate limit exceeded. Please try again ${result.retryAfter
+          ? `in ${Math.ceil(result.retryAfter / 1000)} seconds`
+          : "later"
+          }.`;
+      }
+
+      // Handle validation errors (400)
+      if (response.status === 400 && result.error?.code === "VALIDATION_ERROR") {
+        error.code = "VALIDATION_ERROR";
+        error.details = result.error?.details;
+        error.message = "Validation failed: " +
+          (result.error?.details?.map((d: { message: string }) => d.message).join(", ") || result.error?.message);
+      }
+
       return {
         success: false,
-        error: result.error || { message: "Failed to execute workflow" },
+        error,
+        statusCode: response.status,
       };
     }
 
     return {
       success: true,
       data: result.data,
+      statusCode: response.status,
     };
   } catch (error) {
     console.error("Error executing workflow:", error);
@@ -350,7 +402,7 @@ export async function saveAndExecuteWorkflow(params: {
   return {
     success: true,
     workflowId,
-    executionId: executeResult.data.executionId,
+    executionId: executeResult.data?.executionId,
     data: executeResult.data,
   };
 }
