@@ -1,6 +1,6 @@
 "use client";
 
-import { WorkflowLayout } from "@/components/workflow-layout";
+import { WorkflowLayout } from "@/components/workflow/WorkflowLayout";
 import { TooltipProvider } from "@/components/ui";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 

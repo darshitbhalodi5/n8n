@@ -1,25 +1,27 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui";
 import { X } from "lucide-react";
 import { useWorkflow } from "@/contexts/WorkflowContext";
-import { WorkflowSidebar } from "./WorkflowSidebar";
-import { WorkflowRightSidebar } from "./WorkflowRightSidebar";
+import logo from "@/assets/logo.svg";
 import {
   WorkflowCanvas,
   WorkflowToolbar,
   WorkflowStatusBar,
 } from "@/components/workflow";
+import { WorkflowSidebar } from "./workflow-layout/WorkflowSidebar";
+import { WorkflowRightSidebar } from "./workflow-layout/WorkflowRightSidebar";
+import { CategoryDropdown } from "./workflow-layout/CategoryDropdown";
 
 interface WorkflowLayoutProps {
   onCategoryChange?: (categoryId: string) => void;
 }
 
-export function WorkflowLayout({
-  onCategoryChange,
-}: WorkflowLayoutProps) {
+export function WorkflowLayout({ onCategoryChange }: WorkflowLayoutProps) {
   const {
     selectedNode,
     mobileMenuOpen,
@@ -114,58 +116,36 @@ export function WorkflowLayout({
         </div>
       </div>
 
-      {/* Desktop: Vertical Category Strip */}
-      <aside
-        className={cn(
-          "hidden md:flex flex-col border-r border-border bg-card/80 backdrop-blur-sm",
-          "md:w-12 lg:w-14"
-        )}
-      >
-        <div className="flex-1 flex flex-col items-center gap-1 py-3">
-          {categories.map((category) => (
-            <Tooltip key={category.id}>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={() => handleCategoryChange(category.id)}
-                  className={cn(
-                    "relative rounded-lg flex items-center justify-center",
-                    "transition-all duration-200 group",
-                    "w-8 h-8 md:w-9 md:h-9 lg:w-10 lg:h-10",
-                    activeCategory === category.id
-                      ? "bg-primary/15 text-primary shadow-sm"
-                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
-                  )}
-                >
-                  <div className="md:scale-90 lg:scale-100">
-                    {category.icon}
-                  </div>
-                  {activeCategory === category.id && (
-                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full" />
-                  )}
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="right" sideOffset={8}>
-                <p className="font-medium">{category.label}</p>
-              </TooltipContent>
-            </Tooltip>
-          ))}
+      {/* Desktop: Single Sidebar with Logo, Dropdown, and Blocks */}
+      <aside className="max-h-screen hidden md:flex flex-col overflow-auto md:w-[200px] lg:w-[220px] xl:w-[240px] p-4 gap-6 bg-background">
+        {/* Logo Section */}
+        <Link href="/">
+        <div className="w-[120px] sm:w-[160px] h-max">
+          <Image
+            src={logo}
+            alt="Logo"
+            width={100}
+            height={100}
+            className="w-full h-auto"
+          />
+        </div>
+      </Link>
+
+        {/* Category Dropdown */}
+        <CategoryDropdown
+          categories={categories}
+          activeCategory={activeCategory}
+          onCategoryChange={handleCategoryChange}
+        />
+
+        {/* Blocks Panel */}
+        <div className="flex-1 overflow-y-auto scrollbar-thin">
+          <WorkflowSidebar activeCategory={activeCategory} />
         </div>
       </aside>
 
-      {/* Desktop: Blocks Panel */}
-      <aside
-        className={cn(
-          "hidden md:block border-r border-border bg-card overflow-y-auto scrollbar-thin",
-          "md:w-[140px] lg:w-[160px] xl:w-[170px]"
-        )}
-      >
-        <WorkflowSidebar activeCategory={activeCategory} />
-      </aside>
-
       {/* Canvas area */}
-      <main
-        className={cn("flex-1 overflow-auto", "max-w-[2400px] mx-auto w-full")}
-      >
+      <main className="flex-1 overflow-auto max-w-[2400px] mx-auto w-full">
         <div className="h-full bg-background relative">
           {/* Floating Toolbar */}
           <WorkflowToolbar workflowName="Untitled Workflow" />

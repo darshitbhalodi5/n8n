@@ -21,6 +21,9 @@ export {
 } from "./Card";
 export type { CardProps } from "./Card";
 
+export { SimpleCard } from "./SimpleCard";
+export type { SimpleCardProps } from "./SimpleCard";
+
 export {
   Dialog,
   DialogPortal,
@@ -55,8 +58,6 @@ export {
 export { Typography } from "./Typography";
 export type { TypographyProps } from "./Typography";
 
-export { Popover, PopoverTrigger, PopoverContent } from "./Popover";
-
 export { FormField, FormInput, FormTextarea, FormSelect } from "./FormField";
 export type {
   FormFieldProps,
@@ -75,3 +76,9 @@ export {
   TelegramAuthCard,
   EmailAuthCard,
 } from "./AuthenticationRequired";
+
+export {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "./Popover";
