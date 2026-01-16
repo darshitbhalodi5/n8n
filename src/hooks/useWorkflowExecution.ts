@@ -6,7 +6,7 @@
  */
 
 import { useState, useCallback, useRef, useEffect } from "react";
-import { executeWorkflow as executeWorkflowApi } from "@/utils/workflow-api";
+import { executeWorkflow as executeWorkflowApi, ApiError } from "@/utils/workflow-api";
 import { API_CONFIG } from "@/config/api";
 
 /**
@@ -57,6 +57,8 @@ export interface UseWorkflowExecutionReturn {
   nodeStatuses: Map<string, NodeExecutionStatus>;
   /** Error message if any */
   error: string | null;
+  /** Structured API error (includes rate limit info, validation details) */
+  apiError: ApiError | null;
   /** Reset execution state */
   reset: () => void;
 }
@@ -77,8 +79,10 @@ export function useWorkflowExecution(
     Map<string, NodeExecutionStatus>
   >(new Map());
   const [error, setError] = useState<string | null>(null);
+  const [apiError, setApiError] = useState<ApiError | null>(null);
 
   const eventSourceRef = useRef<EventSource | null>(null);
+  const subscriptionTokenRef = useRef<string | null>(null);
 
   /**
    * Reset execution state
@@ -89,6 +93,8 @@ export function useWorkflowExecution(
     setExecutionStatus(null);
     setNodeStatuses(new Map());
     setError(null);
+    setApiError(null);
+    subscriptionTokenRef.current = null;
 
     if (eventSourceRef.current) {
       eventSourceRef.current.close();
@@ -98,11 +104,13 @@ export function useWorkflowExecution(
 
   /**
    * Subscribe to execution updates via SSE
+   * Now requires a subscription token for authentication
    */
-  const subscribeToUpdates = useCallback((execId: string) => {
-    const url = `${API_CONFIG.BASE_URL}/workflows/executions/${execId}/subscribe`;
+  const subscribeToUpdates = useCallback((execId: string, token: string) => {
+    // Build URL with subscription token as query parameter
+    const url = `${API_CONFIG.BASE_URL}/workflows/executions/${execId}/subscribe?token=${encodeURIComponent(token)}`;
 
-    console.log("[SSE] Connecting to:", url);
+    console.log("[SSE] Connecting to execution updates...");
 
     const eventSource = new EventSource(url);
     eventSourceRef.current = eventSource;
@@ -113,9 +121,16 @@ export function useWorkflowExecution(
 
     eventSource.onerror = (err) => {
       console.error("[SSE] Connection error:", err);
-      // Don't set error for normal connection closure
+
+      // Check if connection was closed due to auth error
       if (eventSource.readyState === EventSource.CLOSED) {
-        console.log("[SSE] Connection closed normally");
+        // Attempt to determine if it was an auth failure
+        console.log("[SSE] Connection closed - may be due to expired/invalid token");
+
+        // Set error state if execution hasn't completed
+        if (executionStatus === "running" || executionStatus === "pending") {
+          setError("Lost connection to execution updates. The subscription token may have expired.");
+        }
       }
     };
 
@@ -220,7 +235,7 @@ export function useWorkflowExecution(
     eventSource.onmessage = (event) => {
       console.log("[SSE] Generic message:", event.data);
     };
-  }, []);
+  }, [executionStatus]);
 
   /**
    * Execute the workflow
@@ -240,6 +255,7 @@ export function useWorkflowExecution(
       // Reset state
       setIsExecuting(true);
       setError(null);
+      setApiError(null);
       setNodeStatuses(new Map());
       setExecutionStatus("pending");
 
@@ -258,14 +274,29 @@ export function useWorkflowExecution(
 
         if (result.success && result.data?.executionId) {
           const execId = result.data.executionId;
+          const subscriptionToken = result.data.subscriptionToken;
+
           setExecutionId(execId);
           setExecutionStatus("running");
 
-          // Subscribe to real-time updates
-          subscribeToUpdates(execId);
+          // Store the token for potential reconnection
+          subscriptionTokenRef.current = subscriptionToken;
+
+          // Subscribe to real-time updates with the authentication token
+          if (subscriptionToken) {
+            subscribeToUpdates(execId, subscriptionToken);
+          } else {
+            console.warn("[SSE] No subscription token received - SSE updates may not work");
+            // Still set as running, just won't have real-time updates
+          }
 
           return execId;
         } else {
+          // Store structured error for detailed error handling
+          if (result.error) {
+            setApiError(result.error);
+          }
+
           setError(result.error?.message || "Failed to start execution");
           setIsExecuting(false);
           setExecutionStatus("failed");
@@ -299,6 +330,7 @@ export function useWorkflowExecution(
     executionStatus,
     nodeStatuses,
     error,
+    apiError,
     reset,
   };
 }
