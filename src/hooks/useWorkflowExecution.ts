@@ -66,7 +66,7 @@ export interface UseWorkflowExecutionReturn {
  */
 export function useWorkflowExecution(
   workflowId: string | null,
-  userId: string
+  accessToken: string | null
 ): UseWorkflowExecutionReturn {
   const [isExecuting, setIsExecuting] = useState(false);
   const [executionId, setExecutionId] = useState<string | null>(null);
@@ -232,6 +232,11 @@ export function useWorkflowExecution(
         return null;
       }
 
+      if (!accessToken) {
+        setError("Not authenticated");
+        return null;
+      }
+
       // Reset state
       setIsExecuting(true);
       setError(null);
@@ -247,7 +252,7 @@ export function useWorkflowExecution(
       try {
         const result = await executeWorkflowApi({
           workflowId,
-          userId,
+          accessToken,
           initialInput,
         });
 
@@ -275,7 +280,7 @@ export function useWorkflowExecution(
         return null;
       }
     },
-    [workflowId, userId, subscribeToUpdates]
+    [workflowId, accessToken, subscribeToUpdates]
   );
 
   // Cleanup on unmount
