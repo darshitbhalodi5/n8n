@@ -1,21 +1,22 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
-import Image from "next/image";
+import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui";
 import { X } from "lucide-react";
 import { useWorkflow } from "@/contexts/WorkflowContext";
-import logo from "@/assets/logo.svg";
 import {
   WorkflowCanvas,
   WorkflowToolbar,
-  WorkflowStatusBar,
 } from "@/components/workflow";
-import { WorkflowSidebar } from "./workflow-layout/WorkflowSidebar";
+import { WorkflowBlockList } from "./workflow-layout/WorkflowBlockList";
 import { WorkflowRightSidebar } from "./workflow-layout/WorkflowRightSidebar";
-import { CategoryDropdown } from "./workflow-layout/CategoryDropdown";
+import { CategoryDropdown } from "@/components/ui/CategoryDropdown";
+import { CanvasControls } from "./workflow-layout/CanvasControls";
 
 interface WorkflowLayoutProps {
   onCategoryChange?: (categoryId: string) => void;
@@ -30,8 +31,12 @@ export function WorkflowLayout({ onCategoryChange }: WorkflowLayoutProps) {
     categories,
     onDragOver,
     onDrop,
+    handleZoomIn,
+    handleZoomOut,
+    handleFitView,
   } = useWorkflow();
   const [activeCategory, setActiveCategory] = useState("all");
+  const canvasContainerRef = useRef<HTMLDivElement>(null);
 
   const handleCategoryChange = (categoryId: string) => {
     setActiveCategory(categoryId);
@@ -43,6 +48,65 @@ export function WorkflowLayout({ onCategoryChange }: WorkflowLayoutProps) {
   const handleMobileMenuClose = () => {
     setMobileMenuOpen(false);
   };
+
+  // Handle keyboard shortcuts only when cursor is in workspace
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Check if the event target is within the canvas container
+      if (
+        !canvasContainerRef.current ||
+        !canvasContainerRef.current.contains(event.target as Node)
+      ) {
+        return;
+      }
+
+      // Check if user is typing in an input/textarea
+      const target = event.target as HTMLElement;
+      if (
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.isContentEditable
+      ) {
+        return;
+      }
+
+      const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0;
+      const modifierKey = isMac ? event.metaKey : event.ctrlKey;
+
+      // Zoom in: Ctrl/Cmd + Plus/Equal
+      if (modifierKey && (event.key === "+" || event.key === "=")) {
+        event.preventDefault();
+        handleZoomIn();
+        return;
+      }
+
+      // Zoom out: Ctrl/Cmd + Minus
+      if (modifierKey && event.key === "-") {
+        event.preventDefault();
+        handleZoomOut();
+        return;
+      }
+
+      // Zoom to fit: D
+      if (event.key === "d" || event.key === "D") {
+        event.preventDefault();
+        handleFitView();
+        return;
+      }
+
+      // Zoom to selection: F (disabled for now)
+      // if (event.key === "f" || event.key === "F") {
+      //   event.preventDefault();
+      //   // handleZoomToSelection();
+      //   return;
+      // }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [handleZoomIn, handleZoomOut, handleFitView]);
 
   const showRightSidebar = selectedNode !== null && selectedNode !== undefined;
 
@@ -112,25 +176,12 @@ export function WorkflowLayout({ onCategoryChange }: WorkflowLayoutProps) {
 
         {/* Mobile Blocks Panel */}
         <div className="flex-1 overflow-y-auto scrollbar-thin">
-          <WorkflowSidebar activeCategory={activeCategory} />
+          <WorkflowBlockList activeCategory={activeCategory} />
         </div>
       </div>
 
       {/* Desktop: Single Sidebar with Logo, Dropdown, and Blocks */}
-      <aside className="max-h-screen hidden md:flex flex-col overflow-auto md:w-[200px] lg:w-[220px] xl:w-[240px] p-4 gap-6 bg-background">
-        {/* Logo Section */}
-        <Link href="/">
-        <div className="w-[120px] sm:w-[160px] h-max">
-          <Image
-            src={logo}
-            alt="Logo"
-            width={100}
-            height={100}
-            className="w-full h-auto"
-          />
-        </div>
-      </Link>
-
+      <aside className="max-h-screen hidden md:flex flex-col overflow-hidden md:w-[200px] lg:w-[220px] xl:w-[240px] p-4 bg-white/5">
         {/* Category Dropdown */}
         <CategoryDropdown
           categories={categories}
@@ -139,34 +190,35 @@ export function WorkflowLayout({ onCategoryChange }: WorkflowLayoutProps) {
         />
 
         {/* Blocks Panel */}
-        <div className="flex-1 overflow-y-auto scrollbar-thin">
-          <WorkflowSidebar activeCategory={activeCategory} />
-        </div>
+        <WorkflowBlockList activeCategory={activeCategory} />
       </aside>
 
       {/* Canvas area */}
-      <main className="flex-1 overflow-auto max-w-[2400px] mx-auto w-full">
-        <div className="h-full bg-background relative">
-          {/* Floating Toolbar */}
-          <WorkflowToolbar workflowName="Untitled Workflow" />
+      <main className="flex-1 max-w-[2400px] mx-auto w-full flex flex-col bg-background px-3">
+        {/* Toolbar */}
+        <WorkflowToolbar />
 
-          {/* Workflow Canvas - Full Height */}
-          <div
-            className="h-full w-full"
-            onDragOver={onDragOver}
-            onDrop={onDrop}
-            onClick={(e) => {
-              e.stopPropagation();
-            }}
-            role="application"
-            aria-label="Workflow canvas - drag blocks here to build your workflow"
-          >
-            <WorkflowCanvas showBackground className="h-full" />
-          </div>
+        {/* Workflow Canvas - 90vh Height */}
+        <div
+          ref={canvasContainerRef}
+          className="h-[88vh] w-full relative"
+          onDragOver={onDragOver}
+          onDrop={onDrop}
+          onClick={(e) => {
+            e.stopPropagation();
+          }}
+          role="application"
+          aria-label="Workflow canvas - drag blocks here to build your workflow"
+          tabIndex={0}
+        >
+          <WorkflowCanvas showBackground className="h-full" />
 
-          {/* Status Bar */}
-          <WorkflowStatusBar />
+          {/* Canvas Controls - Bottom Right */}
+          <CanvasControls />
         </div>
+
+        {/* Status Bar */}
+        {/* <WorkflowStatusBar /> */}
       </main>
 
       {/* Mobile: Right Sidebar Overlay (Config Panel) */}

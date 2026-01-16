@@ -14,7 +14,7 @@ const typographyVariants = cva("", {
       body: "text-base leading-7",
       bodyLarge: "text-lg leading-7",
       bodySmall: "text-sm leading-6",
-      caption: "text-xs text-muted-foreground",
+      caption: "text-xs",
       lead: "text-xl text-muted-foreground leading-7",
       muted: "text-sm text-muted-foreground",
       code: "relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm font-semibold",

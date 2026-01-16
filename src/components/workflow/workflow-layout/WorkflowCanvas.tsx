@@ -8,6 +8,7 @@ import {
   OnNodesChange,
   OnEdgesChange,
   OnConnect,
+  OnMove,
   ReactFlowProvider,
   BackgroundVariant,
   ConnectionMode,
@@ -15,7 +16,7 @@ import {
 import "reactflow/dist/style.css";
 import { cn } from "@/lib/utils";
 import { useWorkflow } from "@/contexts/WorkflowContext";
-import { nodeTypes as importedNodeTypes } from "./nodeTypes";
+import { nodeTypes as importedNodeTypes } from "../nodeTypes";
 
 export interface WorkflowCanvasProps {
   className?: string;
@@ -42,6 +43,7 @@ function WorkflowCanvasInner({
     handleNodeClick,
     handlePaneClick,
     handleReactFlowInit,
+    setZoomLevel,
   } = useWorkflow();
 
   const nodeTypes = importedNodeTypes;
@@ -67,6 +69,13 @@ function WorkflowCanvasInner({
     [onConnect]
   );
 
+  const handleMove = useCallback<OnMove>(
+    (_event, viewport) => {
+      setZoomLevel(Math.round(viewport.zoom * 100));
+    },
+    [setZoomLevel]
+  );
+
   return (
     <div
       className={cn(
@@ -85,6 +94,7 @@ function WorkflowCanvasInner({
         fitView={fitView}
         connectionMode={ConnectionMode.Loose}
         onInit={handleReactFlowInit}
+        onMove={handleMove}
         onNodeClick={handleNodeClick}
         onPaneClick={handlePaneClick}
         nodesDraggable={true}

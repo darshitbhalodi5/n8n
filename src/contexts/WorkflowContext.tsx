@@ -61,6 +61,10 @@ export interface WorkflowContextType {
   selectedNode: Node | null;
   lastSaved: Date | null;
   mobileMenuOpen: boolean;
+  workflowName: string;
+  setWorkflowName: (name: string) => void;
+  zoomLevel: number;
+  setZoomLevel: (level: number) => void;
 
   // Canvas dimensions
   canvasDimensions: ReturnType<typeof useCanvasDimensions>;
@@ -131,6 +135,8 @@ export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({
   const reactFlowInstanceRef = useRef<ReactFlowInstance | null>(null);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [workflowName, setWorkflowName] = useState<string>("Untitled Workflow");
+  const [zoomLevel, setZoomLevel] = useState<number>(100);
 
   // Refs to track the selected node without causing re-renders
   const selectedNodeIdRef = useRef<string | null>(null);
@@ -164,18 +170,44 @@ export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({
   // Canvas control handlers
   const handleZoomIn = useCallback(() => {
     reactFlowInstanceRef.current?.zoomIn();
+    // Update zoom level after zoom
+    setTimeout(() => {
+      const zoom = reactFlowInstanceRef.current?.getZoom();
+      if (zoom !== undefined) {
+        setZoomLevel(Math.round(zoom * 100));
+      }
+    }, 0);
   }, []);
 
   const handleZoomOut = useCallback(() => {
     reactFlowInstanceRef.current?.zoomOut();
+    // Update zoom level after zoom
+    setTimeout(() => {
+      const zoom = reactFlowInstanceRef.current?.getZoom();
+      if (zoom !== undefined) {
+        setZoomLevel(Math.round(zoom * 100));
+      }
+    }, 0);
   }, []);
 
   const handleFitView = useCallback(() => {
     reactFlowInstanceRef.current?.fitView({ padding: 0.2 });
+    // Update zoom level after fit view
+    setTimeout(() => {
+      const zoom = reactFlowInstanceRef.current?.getZoom();
+      if (zoom !== undefined) {
+        setZoomLevel(Math.round(zoom * 100));
+      }
+    }, 100);
   }, []);
 
   const handleReactFlowInit = useCallback((instance: ReactFlowInstance) => {
     reactFlowInstanceRef.current = instance;
+    // Initialize zoom level
+    const zoom = instance.getZoom();
+    if (zoom !== undefined) {
+      setZoomLevel(Math.round(zoom * 100));
+    }
   }, []);
 
   const handleSave = useCallback(() => {
@@ -665,6 +697,10 @@ export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({
       selectedNode,
       lastSaved,
       mobileMenuOpen,
+      workflowName,
+      setWorkflowName,
+      zoomLevel,
+      setZoomLevel,
       canvasDimensions,
       setNodes,
       setEdges,
@@ -700,6 +736,8 @@ export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({
       selectedNode,
       lastSaved,
       mobileMenuOpen,
+      workflowName,
+      zoomLevel,
       canvasDimensions,
       setNodes,
       setEdges,

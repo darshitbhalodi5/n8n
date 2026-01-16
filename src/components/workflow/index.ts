@@ -5,8 +5,8 @@
  * with no business logic, fully token-based styling, and accessible design.
  */
 
-export { WorkflowCanvas } from "./WorkflowCanvas";
-export type { WorkflowCanvasProps } from "./WorkflowCanvas";
+export { WorkflowCanvas } from "./workflow-layout/WorkflowCanvas";
+export type { WorkflowCanvasProps } from "./workflow-layout/WorkflowCanvas";
 
 export { BaseNode } from "./nodes/BaseNode";
 export type { BaseNodeData, BaseNodeProps } from "./nodes/BaseNode";
@@ -27,5 +27,5 @@ export {
   DEFAULT_HANDLE_CONFIG,
 } from "./nodeTypes";
 
-export { WorkflowToolbar } from "./WorkflowToolbar";
-export { WorkflowStatusBar } from "./WorkflowStatusBar";
+export { WorkflowToolbar } from "./workflow-layout/WorkflowToolbar";
+export { WorkflowStatusBar } from "./workflow-layout/WorkflowStatusBar";

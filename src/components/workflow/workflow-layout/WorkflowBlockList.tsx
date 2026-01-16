@@ -8,13 +8,13 @@ import {
 } from "@/components/blocks";
 import { useWorkflow } from "@/contexts/WorkflowContext";
 
-interface WorkflowSidebarProps {
+interface WorkflowBlockListProps {
   activeCategory: string;
 }
 
-export function WorkflowSidebar({
+export function WorkflowBlockList({
   activeCategory,
-}: WorkflowSidebarProps) {
+}: WorkflowBlockListProps) {
   const {
     handleBlockDragStart,
     handleBlockClick,
@@ -27,18 +27,12 @@ export function WorkflowSidebar({
       : getBlocksByCategory(activeCategory);
 
   return (
-    <div className="p-2 md:p-2 space-y-3">
+    <div className="w-[95%] mx-auto h-[80vh] overflow-y-auto scrollbar-hide mt-5">
       {/* Blocks Section - Dynamic based on category */}
       {blocks.length > 0 && (
-        <div className="space-y-2 md:space-y-2">
-          <Typography
-            variant="caption"
-            className="px-1 text-muted-foreground uppercase tracking-wider text-[10px] md:text-[9px] font-semibold"
-          >
-            {activeCategory === "all" ? "Blocks" : activeCategory}
-          </Typography>
-          {/* Responsive Grid: 3 cols on mobile (wider drawer), 2 cols on desktop */}
-          <div className="grid grid-cols-3 md:grid-cols-2 gap-2 md:gap-1 lg:gap-1.5">
+        <div className="space-y-3">
+          {/* Responsive Grid: 2 cols on desktop */}
+          <div className="grid grid-cols-2 gap-2.5">
             {blocks.map((block) => {
               // Check if block should be disabled
               const disabled = isBlockDisabled(block.id);
