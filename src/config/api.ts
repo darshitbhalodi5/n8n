@@ -18,6 +18,11 @@ export const API_CONFIG = {
             CONNECTIONS: "/integrations/telegram/connections",
             TEST: "/integrations/telegram/test",
             SEND: "/integrations/telegram/send",
+            VERIFICATION: {
+                GENERATE: "/integrations/telegram/verification/generate",
+                STATUS: "/integrations/telegram/verification/status",
+                CANCEL: "/integrations/telegram/verification/cancel",
+            },
         },
         EMAIL: {
             TEST: "/integrations/email/test",

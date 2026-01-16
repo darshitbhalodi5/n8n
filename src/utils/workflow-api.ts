@@ -153,7 +153,7 @@ function transformEdgeToBackend(edge: Edge) {
  * Create a new workflow in the backend
  */
 export async function createWorkflow(params: {
-  userId: string;
+  accessToken: string;
   name: string;
   description?: string;
   nodes: Node[];
@@ -169,9 +169,9 @@ export async function createWorkflow(params: {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "Authorization": `Bearer ${params.accessToken}`,
       },
       body: JSON.stringify({
-        userId: params.userId,
         name: params.name,
         description: params.description || "",
         nodes: params.nodes.map(transformNodeToBackend),
@@ -212,7 +212,7 @@ export async function createWorkflow(params: {
  */
 export async function executeWorkflow(params: {
   workflowId: string;
-  userId: string;
+  accessToken: string;
   initialInput?: Record<string, any>;
 }): Promise<{ success: boolean; data?: any; error?: any }> {
   try {
@@ -222,9 +222,9 @@ export async function executeWorkflow(params: {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${params.accessToken}`,
         },
         body: JSON.stringify({
-          userId: params.userId,
           initialInput: params.initialInput || {},
         }),
       }
@@ -260,7 +260,7 @@ export async function executeWorkflow(params: {
  */
 export async function getExecutionStatus(params: {
   executionId: string;
-  userId: string;
+  accessToken: string;
 }): Promise<{ success: boolean; data?: any; error?: any }> {
   try {
     const response = await fetch(
@@ -269,7 +269,7 @@ export async function getExecutionStatus(params: {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          "X-User-Id": params.userId, // Assuming user ID is passed in header
+          "Authorization": `Bearer ${params.accessToken}`,
         },
       }
     );
@@ -303,7 +303,7 @@ export async function getExecutionStatus(params: {
  * Save and execute workflow (convenience function)
  */
 export async function saveAndExecuteWorkflow(params: {
-  userId: string;
+  accessToken: string;
   workflowName: string;
   nodes: Node[];
   edges: Edge[];
@@ -317,7 +317,7 @@ export async function saveAndExecuteWorkflow(params: {
 }> {
   // Step 1: Create workflow
   const createResult = await createWorkflow({
-    userId: params.userId,
+    accessToken: params.accessToken,
     name: params.workflowName,
     nodes: params.nodes,
     edges: params.edges,
@@ -335,7 +335,7 @@ export async function saveAndExecuteWorkflow(params: {
   // Step 2: Execute workflow
   const executeResult = await executeWorkflow({
     workflowId,
-    userId: params.userId,
+    accessToken: params.accessToken,
     initialInput: params.initialInput,
   });
 
@@ -354,3 +354,4 @@ export async function saveAndExecuteWorkflow(params: {
     data: executeResult.data,
   };
 }
+

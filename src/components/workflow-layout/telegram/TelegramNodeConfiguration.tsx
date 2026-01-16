@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useCallback } from "react";
-import { Loader2, RefreshCw, Bot, Send, Trash2, MessageSquare, X } from "lucide-react";
+import { Loader2, RefreshCw, Bot, Send, Trash2, MessageSquare, X, Plus, Copy, Check, CheckCircle } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Typography } from "@/components/ui/Typography";
@@ -41,6 +41,8 @@ function TelegramNodeConfigurationInner({
         notification,
         selectedConnection,
         telegramMessage,
+        verificationCode,
+        verificationStatus,
         actions,
     } = useTelegramConnection({
         nodeData,
@@ -52,6 +54,19 @@ function TelegramNodeConfigurationInner({
     const [showMessages, setShowMessages] = useState(false);
     const [messages, setMessages] = useState<TelegramMessage[]>([]);
     const [loadingMessages, setLoadingMessages] = useState(false);
+    const [copied, setCopied] = useState(false);
+    const [showVerificationFlow, setShowVerificationFlow] = useState(false);
+
+    // Copy verification code to clipboard
+    const copyToClipboard = useCallback(async (text: string) => {
+        try {
+            await navigator.clipboard.writeText(text);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        } catch (err) {
+            console.error('Failed to copy:', err);
+        }
+    }, []);
 
     // Load messages from backend
     const loadMessages = useCallback(async () => {
@@ -149,41 +164,112 @@ function TelegramNodeConfigurationInner({
             <Card className="p-4 space-y-3">
                 <div className="flex items-center justify-between">
                     <Typography variant="bodySmall" className="font-semibold text-foreground">
-                        2. Select Chat
+                        2. Connect a Chat
                     </Typography>
-                    <Button
-                        onClick={actions.loadChats}
-                        disabled={loading.chats}
-                        className="gap-1"
-                    >
-                        {loading.chats ? (
-                            <Loader2 className="w-3 h-3 animate-spin" />
-                        ) : (
-                            <RefreshCw className="w-3 h-3" />
-                        )}
-                        Find Chats
-                    </Button>
+                    <div className="flex gap-2">
+                        <Button
+                            onClick={() => {
+                                setShowVerificationFlow(true);
+                                actions.generateVerificationCode();
+                            }}
+                            disabled={loading.verification}
+                            className="gap-1"
+                        >
+                            {loading.verification ? (
+                                <Loader2 className="w-3 h-3 animate-spin" />
+                            ) : (
+                                <Plus className="w-3 h-3" />
+                            )}
+                            Add New Chat
+                        </Button>
+                        <Button
+                            onClick={actions.loadConnections}
+                            disabled={loading.connections}
+                            className="gap-1"
+                        >
+                            {loading.connections ? (
+                                <Loader2 className="w-3 h-3 animate-spin" />
+                            ) : (
+                                <RefreshCw className="w-3 h-3" />
+                            )}
+                        </Button>
+                    </div>
                 </div>
 
-                {/* Available chats dropdown */}
-                {chats.length > 0 && (
-                    <div className="space-y-2">
-                        <Typography variant="caption" className="text-muted-foreground">
-                            Select a chat to connect:
-                        </Typography>
-                        <div className="space-y-1">
-                            {chats.map((chat: TelegramChat) => (
-                                <button
-                                    key={chat.id}
-                                    onClick={() => actions.saveConnection(chat)}
-                                    disabled={loading.saving}
-                                    className="w-full p-2 text-left rounded-lg border border-border hover:bg-secondary/30 transition-colors text-sm"
-                                >
-                                    {chat.type === "channel" ? "# " : chat.type === "private" ? "@ " : ""}
-                                    {chat.title}
-                                </button>
+                {/* Verification Flow UI */}
+                {showVerificationFlow && verificationCode && (
+                    <div className="p-4 rounded-lg bg-primary/5 border border-primary/20 space-y-4">
+                        <div className="flex items-center justify-between">
+                            <Typography variant="bodySmall" className="font-semibold text-primary">
+                                🔐 Verify Your Chat
+                            </Typography>
+                            <Button
+                                onClick={() => {
+                                    setShowVerificationFlow(false);
+                                    actions.cancelVerificationCode();
+                                }}
+                                className="p-1 h-auto text-muted-foreground hover:text-foreground"
+                            >
+                                <X className="w-4 h-4" />
+                            </Button>
+                        </div>
+
+                        {/* Verification Code Display */}
+                        <div className="flex items-center gap-2">
+                            <div className="flex-1 px-4 py-3 rounded-lg bg-background border border-border font-mono text-lg text-center select-all">
+                                {verificationCode.code}
+                            </div>
+                            <Button
+                                onClick={() => copyToClipboard(verificationCode.code)}
+                                className="px-3"
+                            >
+                                {copied ? (
+                                    <Check className="w-4 h-4 text-green-500" />
+                                ) : (
+                                    <Copy className="w-4 h-4" />
+                                )}
+                            </Button>
+                        </div>
+
+                        {/* Instructions */}
+                        <div className="space-y-2">
+                            {verificationCode.instructions.map((instruction, index) => (
+                                <div key={index} className="flex items-start gap-2 text-sm text-muted-foreground">
+                                    <span className="text-primary font-medium">{index + 1}.</span>
+                                    <span>{instruction.replace(/^\d+\.\s*/, '')}</span>
+                                </div>
                             ))}
                         </div>
+
+                        {/* Expiry Info */}
+                        <div className="text-xs text-muted-foreground text-center">
+                            Code expires in {verificationCode.remainingMinutes} minutes
+                        </div>
+
+                        {/* Check Status Button */}
+                        <div className="flex gap-2">
+                            <Button
+                                onClick={() => {
+                                    actions.checkVerificationStatus();
+                                }}
+                                disabled={loading.verification}
+                                className="flex-1 gap-2"
+                            >
+                                {loading.verification ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                    <CheckCircle className="w-4 h-4" />
+                                )}
+                                Check Verification
+                            </Button>
+                        </div>
+
+                        {/* Status Display */}
+                        {verificationStatus?.status === 'verified' && (
+                            <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20 text-green-600 text-sm text-center">
+                                ✅ Chat &quot;{verificationStatus.chat?.title}&quot; verified successfully!
+                            </div>
+                        )}
                     </div>
                 )}
 
@@ -191,7 +277,7 @@ function TelegramNodeConfigurationInner({
                 {connections.length > 0 && (
                     <div className="space-y-2">
                         <Typography variant="caption" className="text-muted-foreground">
-                            Your connections:
+                            Your connected chats:
                         </Typography>
                         {connections.map((conn: TelegramConnection) => (
                             <div
@@ -220,11 +306,16 @@ function TelegramNodeConfigurationInner({
                     </div>
                 )}
 
-                {/* No connections */}
-                {connections.length === 0 && chats.length === 0 && !loading.chats && (
-                    <Typography variant="caption" className="text-muted-foreground text-center py-2">
-                        Click &quot;Find Chats&quot; after adding the bot to your chat
-                    </Typography>
+                {/* No connections - show helpful message */}
+                {connections.length === 0 && !showVerificationFlow && (
+                    <div className="text-center py-4 space-y-2">
+                        <Typography variant="caption" className="text-muted-foreground block">
+                            No chats connected yet
+                        </Typography>
+                        <Typography variant="caption" className="text-muted-foreground block">
+                            Click &quot;Add New Chat&quot; to securely connect a Telegram chat
+                        </Typography>
+                    </div>
                 )}
             </Card>
 

@@ -50,4 +50,31 @@ export interface TelegramLoadingState {
     connections: boolean;
     saving: boolean;
     sending: boolean;
+    verification: boolean;
 }
+
+// Verification Code Types
+export type VerificationCodeStatus = 'pending' | 'verified' | 'expired';
+
+export interface TelegramVerificationCode {
+    code: string;
+    status: VerificationCodeStatus;
+    expiresAt: string;
+    remainingMinutes: number;
+    instructions: string[];
+}
+
+export interface TelegramVerificationStatus {
+    hasCode: boolean;
+    code?: string;
+    status?: VerificationCodeStatus;
+    expiresAt?: string;
+    verifiedAt?: string;
+    chat?: {
+        id: string;
+        title: string;
+        type: string;
+    } | null;
+    message?: string;
+}
+

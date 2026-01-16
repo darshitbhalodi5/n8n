@@ -27,6 +27,7 @@ import {
 import { useCanvasDimensions, useUnsavedChanges } from "@/hooks";
 import { calculateCanvasCenter } from "@/utils/canvas";
 import { usePrivyEmbeddedWallet } from "@/hooks/usePrivyEmbeddedWallet";
+import { usePrivyWallet } from "@/hooks/usePrivyWallet";
 import { arbitrum } from "viem/chains";
 import { CheckSquare } from "lucide-react";
 
@@ -183,17 +184,31 @@ export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({
     console.log("Saving workflow...", { nodes, edges });
   }, [nodes, edges]);
 
+  // Get Privy access token function
+  const { getPrivyAccessToken, authenticated } = usePrivyWallet();
+
   const handleRun = useCallback(() => {
-    const executeWorkflow = async () => {
+    const executeWorkflowHandler = async () => {
       try {
         console.log("Running workflow...", { nodes, edges });
 
+        // Check if user is authenticated
+        if (!authenticated) {
+          alert("Please log in to run workflows");
+          return;
+        }
+
+        // Get the access token
+        const accessToken = await getPrivyAccessToken();
+        if (!accessToken) {
+          alert("Unable to authenticate. Please try logging in again.");
+          return;
+        }
+
         const { saveAndExecuteWorkflow } = await import("@/utils/workflow-api");
 
-        const userId = "demo-user-" + Date.now();
-
         const result = await saveAndExecuteWorkflow({
-          userId,
+          accessToken,
           workflowName: `Workflow ${new Date().toLocaleDateString()}`,
           nodes,
           edges,
@@ -231,8 +246,8 @@ export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({
       }
     };
 
-    executeWorkflow();
-  }, [nodes, edges]);
+    executeWorkflowHandler();
+  }, [nodes, edges, authenticated, getPrivyAccessToken]);
 
   // Check if a node is protected from deletion
   const isProtectedNode = useCallback((nodeId: string): boolean => {
@@ -578,12 +593,12 @@ export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({
         const updatedNodes = nds.map((node) =>
           node.id === nodeId
             ? {
-                ...node,
-                data: {
-                  ...node.data,
-                  ...data,
-                },
-              }
+              ...node,
+              data: {
+                ...node.data,
+                ...data,
+              },
+            }
             : node
         );
 
