@@ -9,6 +9,8 @@ import type {
     TelegramChat,
     TelegramNotification,
     TelegramLoadingState,
+    TelegramVerificationCode,
+    TelegramVerificationStatus,
 } from "@/types/telegram";
 
 interface UseTelegramConnectionProps {
@@ -31,6 +33,10 @@ interface UseTelegramConnectionReturn {
     // Message
     telegramMessage: string;
 
+    // Verification
+    verificationCode: TelegramVerificationCode | null;
+    verificationStatus: TelegramVerificationStatus | null;
+
     // Actions
     actions: {
         loadBotInfo: () => Promise<void>;
@@ -42,6 +48,10 @@ interface UseTelegramConnectionReturn {
         updateMessage: (message: string) => void;
         selectConnection: (connection: TelegramConnection) => void;
         clearNotification: () => void;
+        // Verification actions
+        generateVerificationCode: () => Promise<void>;
+        checkVerificationStatus: () => Promise<void>;
+        cancelVerificationCode: () => Promise<void>;
     };
 }
 
@@ -70,7 +80,12 @@ export function useTelegramConnection({
         connections: false,
         saving: false,
         sending: false,
+        verification: false,
     });
+
+    // Verification state
+    const [verificationCode, setVerificationCode] = useState<TelegramVerificationCode | null>(null);
+    const [verificationStatus, setVerificationStatus] = useState<TelegramVerificationStatus | null>(null);
 
     const notificationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -344,6 +359,108 @@ export function useTelegramConnection({
         });
     }, [onDataChange]);
 
+    // ============================================
+    // VERIFICATION CODE FUNCTIONS
+    // ============================================
+
+    // Generate a new verification code
+    const generateVerificationCode = useCallback(async () => {
+        setLoading((prev) => ({ ...prev, verification: true }));
+        clearNotification();
+        try {
+            const accessToken = await getPrivyAccessToken();
+            if (!accessToken) {
+                showNotification("error", "Please log in to generate a code");
+                return;
+            }
+
+            const response = await fetch(
+                buildApiUrl(API_CONFIG.ENDPOINTS.TELEGRAM.VERIFICATION.GENERATE),
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${accessToken}`,
+                    },
+                }
+            );
+
+            if (response.ok) {
+                const data = await response.json();
+                setVerificationCode(data.data);
+                showNotification("success", "Verification code generated! Follow the instructions below.");
+            } else {
+                const errData = await response.json().catch(() => ({}));
+                showNotification("error", errData.error?.message || "Failed to generate verification code");
+            }
+        } catch (error) {
+            console.error("Failed to generate verification code:", error);
+            showNotification("error", "Failed to generate verification code");
+        } finally {
+            setLoading((prev) => ({ ...prev, verification: false }));
+        }
+    }, [getPrivyAccessToken, showNotification, clearNotification]);
+
+    // Check verification status
+    const checkVerificationStatus = useCallback(async () => {
+        setLoading((prev) => ({ ...prev, verification: true }));
+        try {
+            const accessToken = await getPrivyAccessToken();
+            if (!accessToken) return;
+
+            const response = await fetch(
+                buildApiUrl(API_CONFIG.ENDPOINTS.TELEGRAM.VERIFICATION.STATUS),
+                { headers: { Authorization: `Bearer ${accessToken}` } }
+            );
+
+            if (response.ok) {
+                const data = await response.json();
+                setVerificationStatus(data.data);
+
+                // If verified, reload connections and show success
+                if (data.data.status === 'verified') {
+                    showNotification("success", `✅ Chat "${data.data.chat?.title}" verified and connected!`);
+                    setVerificationCode(null); // Clear the code display
+                    await loadConnections();
+                } else if (data.data.status === 'expired') {
+                    showNotification("info", "Verification code expired. Generate a new one.");
+                    setVerificationCode(null);
+                }
+            }
+        } catch (error) {
+            console.error("Failed to check verification status:", error);
+        } finally {
+            setLoading((prev) => ({ ...prev, verification: false }));
+        }
+    }, [getPrivyAccessToken, showNotification, loadConnections]);
+
+    // Cancel pending verification code
+    const cancelVerificationCode = useCallback(async () => {
+        setLoading((prev) => ({ ...prev, verification: true }));
+        try {
+            const accessToken = await getPrivyAccessToken();
+            if (!accessToken) return;
+
+            const response = await fetch(
+                buildApiUrl(API_CONFIG.ENDPOINTS.TELEGRAM.VERIFICATION.CANCEL),
+                {
+                    method: "POST",
+                    headers: { Authorization: `Bearer ${accessToken}` },
+                }
+            );
+
+            if (response.ok) {
+                setVerificationCode(null);
+                setVerificationStatus(null);
+                showNotification("info", "Verification cancelled. You can generate a new code.");
+            }
+        } catch (error) {
+            console.error("Failed to cancel verification:", error);
+        } finally {
+            setLoading((prev) => ({ ...prev, verification: false }));
+        }
+    }, [getPrivyAccessToken, showNotification]);
+
     // Load on mount
     useEffect(() => {
         if (authenticated) {
@@ -360,6 +477,8 @@ export function useTelegramConnection({
         notification,
         selectedConnection,
         telegramMessage,
+        verificationCode,
+        verificationStatus,
         actions: {
             loadBotInfo,
             loadChats,
@@ -370,6 +489,11 @@ export function useTelegramConnection({
             updateMessage,
             selectConnection,
             clearNotification,
+            // Verification actions
+            generateVerificationCode,
+            checkVerificationStatus,
+            cancelVerificationCode,
         },
     };
 }
+
