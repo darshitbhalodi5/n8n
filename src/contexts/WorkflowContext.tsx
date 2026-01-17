@@ -66,6 +66,12 @@ export interface WorkflowContextType {
   zoomLevel: number;
   setZoomLevel: (level: number) => void;
 
+  // Workflow management state
+  currentWorkflowId: string | null;
+  setCurrentWorkflowId: (id: string | null) => void;
+  isSaving: boolean;
+  isLoading: boolean;
+
   // Canvas dimensions
   canvasDimensions: ReturnType<typeof useCanvasDimensions>;
 
@@ -88,8 +94,10 @@ export interface WorkflowContextType {
   handleReactFlowInit: (instance: ReactFlowInstance) => void;
 
   // Actions - Workflow operations
-  handleSave: () => void;
+  handleSave: () => Promise<void>;
   handleRun: () => void;
+  loadWorkflow: (workflowId: string) => Promise<boolean>;
+  resetWorkflow: () => void;
 
   // Actions - Block operations
   handleBlockClick: (block: BlockDefinition) => void;
@@ -137,6 +145,11 @@ export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [workflowName, setWorkflowName] = useState<string>("Untitled Workflow");
   const [zoomLevel, setZoomLevel] = useState<number>(100);
+
+  // Workflow management state
+  const [currentWorkflowId, setCurrentWorkflowId] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Refs to track the selected node without causing re-renders
   const selectedNodeIdRef = useRef<string | null>(null);
@@ -210,14 +223,53 @@ export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, []);
 
-  const handleSave = useCallback(() => {
-    setLastSaved(new Date());
-    // TODO: Implement actual save logic
-    console.log("Saving workflow...", { nodes, edges });
-  }, [nodes, edges]);
-
-  // Get Privy access token function
+  // Get Privy access token function (must be declared before handlers that use it)
   const { getPrivyAccessToken, authenticated } = usePrivyWallet();
+
+  const handleSave = useCallback(async () => {
+    // Check if user is authenticated
+    if (!authenticated) {
+      alert("Please log in to save workflows");
+      return;
+    }
+
+    // Get the access token
+    const accessToken = await getPrivyAccessToken();
+    if (!accessToken) {
+      alert("Unable to authenticate. Please try logging in again.");
+      return;
+    }
+
+    setIsSaving(true);
+
+    try {
+      const { saveWorkflow } = await import("@/utils/workflow-api");
+
+      const result = await saveWorkflow({
+        workflowId: currentWorkflowId,
+        accessToken,
+        name: workflowName,
+        nodes,
+        edges,
+      });
+
+      if (result.success) {
+        setLastSaved(new Date());
+        if (result.workflowId && !currentWorkflowId) {
+          setCurrentWorkflowId(result.workflowId);
+        }
+        console.log("Workflow saved successfully!", result);
+      } else {
+        console.error("Failed to save workflow:", result.error);
+        alert(`Failed to save workflow: ${result.error?.message || "Unknown error"}`);
+      }
+    } catch (error) {
+      console.error("Error saving workflow:", error);
+      alert(`Error saving workflow: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      setIsSaving(false);
+    }
+  }, [nodes, edges, workflowName, currentWorkflowId, authenticated, getPrivyAccessToken]);
 
   const handleRun = useCallback(() => {
     const executeWorkflowHandler = async () => {
@@ -280,6 +332,62 @@ export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({
 
     executeWorkflowHandler();
   }, [nodes, edges, authenticated, getPrivyAccessToken]);
+
+  // Load workflow from backend
+  const loadWorkflow = useCallback(async (workflowId: string): Promise<boolean> => {
+    if (!authenticated) {
+      alert("Please log in to load workflows");
+      return false;
+    }
+
+    const accessToken = await getPrivyAccessToken();
+    if (!accessToken) {
+      alert("Unable to authenticate. Please try logging in again.");
+      return false;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const { getWorkflow, transformWorkflowToCanvas } = await import("@/utils/workflow-api");
+
+      const result = await getWorkflow({ workflowId, accessToken });
+
+      if (result.success && result.data) {
+        const { nodes: loadedNodes, edges: loadedEdges } = transformWorkflowToCanvas(result.data);
+
+        setNodes(loadedNodes);
+        setEdges(loadedEdges);
+        setWorkflowName(result.data.name);
+        setCurrentWorkflowId(workflowId);
+        setLastSaved(new Date(result.data.updated_at));
+        setSelectedNode(null);
+
+        console.log("Workflow loaded successfully:", result.data);
+        return true;
+      } else {
+        console.error("Failed to load workflow:", result.error);
+        alert(`Failed to load workflow: ${result.error?.message || "Unknown error"}`);
+        return false;
+      }
+    } catch (error) {
+      console.error("Error loading workflow:", error);
+      alert(`Error loading workflow: ${error instanceof Error ? error.message : String(error)}`);
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [authenticated, getPrivyAccessToken, setNodes, setEdges]);
+
+  // Reset workflow to initial state
+  const resetWorkflow = useCallback(() => {
+    setNodes(initialNodes);
+    setEdges(initialEdges);
+    setCurrentWorkflowId(null);
+    setWorkflowName("Untitled Workflow");
+    setLastSaved(null);
+    setSelectedNode(null);
+  }, [setNodes, setEdges]);
 
   // Check if a node is protected from deletion
   const isProtectedNode = useCallback((nodeId: string): boolean => {
@@ -701,6 +809,11 @@ export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({
       setWorkflowName,
       zoomLevel,
       setZoomLevel,
+      // Workflow management state
+      currentWorkflowId,
+      setCurrentWorkflowId,
+      isSaving,
+      isLoading,
       canvasDimensions,
       setNodes,
       setEdges,
@@ -718,6 +831,8 @@ export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({
       handleReactFlowInit,
       handleSave,
       handleRun,
+      loadWorkflow,
+      resetWorkflow,
       handleBlockClick,
       handleBlockDragStart,
       onDragOver,
@@ -738,6 +853,9 @@ export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({
       mobileMenuOpen,
       workflowName,
       zoomLevel,
+      currentWorkflowId,
+      isSaving,
+      isLoading,
       canvasDimensions,
       setNodes,
       setEdges,
@@ -754,6 +872,8 @@ export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({
       handleReactFlowInit,
       handleSave,
       handleRun,
+      loadWorkflow,
+      resetWorkflow,
       handleBlockClick,
       handleBlockDragStart,
       onDragOver,

@@ -1,11 +1,13 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { Play, Save, Share2, Menu, Pencil, LogIn } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Play, Save, Share2, Menu, Pencil, LogIn, ChevronLeft, Loader2, Check } from "lucide-react";
 import { usePrivy } from "@privy-io/react-auth";
 import { Button } from "@/components/ui";
 import { UserMenu } from "@/components/user-menu";
 import { useWorkflow } from "@/contexts/WorkflowContext";
+import { formatDistanceToNow } from "date-fns";
 
 interface WorkflowToolbarProps {
   onShare?: () => void;
@@ -16,6 +18,7 @@ export const WorkflowToolbar = React.memo(function WorkflowToolbar({
   onShare,
   className,
 }: WorkflowToolbarProps) {
+  const router = useRouter();
   const {
     nodes,
     handleSave,
@@ -23,12 +26,16 @@ export const WorkflowToolbar = React.memo(function WorkflowToolbar({
     setMobileMenuOpen,
     workflowName,
     setWorkflowName,
+    isSaving,
+    lastSaved,
+    currentWorkflowId,
   } = useWorkflow();
 
   const { ready, authenticated, login } = usePrivy();
 
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState(workflowName);
+  const [showSavedIndicator, setShowSavedIndicator] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const canRun = nodes.length > 0;
@@ -43,6 +50,15 @@ export const WorkflowToolbar = React.memo(function WorkflowToolbar({
       inputRef.current.select();
     }
   }, [isEditing]);
+
+  // Show saved indicator briefly after save
+  useEffect(() => {
+    if (lastSaved && !isSaving) {
+      setShowSavedIndicator(true);
+      const timer = setTimeout(() => setShowSavedIndicator(false), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [lastSaved, isSaving]);
 
   const handleStartEdit = () => {
     setIsEditing(true);
@@ -73,14 +89,37 @@ export const WorkflowToolbar = React.memo(function WorkflowToolbar({
     }
   };
 
+  const handleGoBack = () => {
+    router.push("/workflows");
+  };
+
+  const formatLastSaved = () => {
+    if (!lastSaved) return null;
+    try {
+      return formatDistanceToNow(lastSaved, { addSuffix: true });
+    } catch {
+      return null;
+    }
+  };
+
   return (
     <div
-      className={`flex items-center justify-between gap-4 py-4 ${
-        className || ""
-      }`}
+      className={`flex items-center justify-between gap-4 py-4 ${className || ""
+        }`}
     >
       {/* Left Section */}
-      <div className="flex items-center gap-4 flex-1 min-w-0">
+      <div className="flex items-center gap-2 flex-1 min-w-0">
+        {/* Back Button */}
+        <button
+          type="button"
+          onClick={handleGoBack}
+          className="hidden sm:flex w-9 h-9 items-center justify-center rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-amber-600/50"
+          aria-label="Back to workflows"
+          title="Back to workflows"
+        >
+          <ChevronLeft className="w-5 h-5" aria-hidden="true" />
+        </button>
+
         {/* Mobile Menu Button */}
         <button
           type="button"
@@ -94,16 +133,16 @@ export const WorkflowToolbar = React.memo(function WorkflowToolbar({
         {/* Workflow Title - Editable */}
         <div className="relative flex items-center justify-start rounded-full border border-white/20 px-4 h-[44px] group hover:border-white/30 transition-all duration-300 w-[300px]">
           {isEditing ? (
-              <input
-                ref={inputRef}
-                type="text"
-                value={editedName}
-                onChange={(e) => setEditedName(e.target.value)}
-                onBlur={handleSaveName}
-                onKeyDown={handleKeyDown}
-                className="border-none outline-none text-sm font-semibold text-white placeholder:text-white/50"
-                placeholder="Enter workflow name"
-              />
+            <input
+              ref={inputRef}
+              type="text"
+              value={editedName}
+              onChange={(e) => setEditedName(e.target.value)}
+              onBlur={handleSaveName}
+              onKeyDown={handleKeyDown}
+              className="bg-transparent border-none outline-none text-sm font-semibold text-white placeholder:text-white/50 w-full"
+              placeholder="Enter workflow name"
+            />
           ) : (
             <h2 className="text-sm font-semibold text-white truncate min-w-0">
               {workflowName}
@@ -119,6 +158,28 @@ export const WorkflowToolbar = React.memo(function WorkflowToolbar({
             <Pencil className="w-4 h-4" />
           </Button>
         </div>
+
+        {/* Save Status */}
+        <div className="hidden md:flex items-center gap-2 text-xs text-white/50">
+          {isSaving && (
+            <>
+              <Loader2 className="w-3 h-3 animate-spin" />
+              <span>Saving...</span>
+            </>
+          )}
+          {showSavedIndicator && !isSaving && (
+            <>
+              <Check className="w-3 h-3 text-green-400" />
+              <span className="text-green-400">Saved</span>
+            </>
+          )}
+          {lastSaved && !isSaving && !showSavedIndicator && (
+            <span>Saved {formatLastSaved()}</span>
+          )}
+          {currentWorkflowId && !lastSaved && !isSaving && (
+            <span className="text-amber-400">Unsaved changes</span>
+          )}
+        </div>
       </div>
 
       {/* Right Actions */}
@@ -126,11 +187,18 @@ export const WorkflowToolbar = React.memo(function WorkflowToolbar({
         {/* Save Button */}
         <Button
           onClick={handleSave}
-          className="h-9 px-4 bg-black/50 border border-white/20 hover:bg-black/70 hover:border-white/30 text-white gap-2 transition-all"
+          disabled={isSaving}
+          className="h-9 px-4 bg-black/50 border border-white/20 hover:bg-black/70 hover:border-white/30 text-white gap-2 transition-all disabled:opacity-50"
           title="Save (Ctrl + S)"
         >
-          <Save className="w-4 h-4" aria-hidden="true" />
-          <span className="hidden md:inline text-sm font-medium">Save</span>
+          {isSaving ? (
+            <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+          ) : (
+            <Save className="w-4 h-4" aria-hidden="true" />
+          )}
+          <span className="hidden md:inline text-sm font-medium">
+            {isSaving ? "Saving..." : "Save"}
+          </span>
         </Button>
 
         {/* Share Button */}
@@ -180,3 +248,4 @@ export const WorkflowToolbar = React.memo(function WorkflowToolbar({
     </div>
   );
 });
+

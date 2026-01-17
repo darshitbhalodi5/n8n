@@ -6,6 +6,16 @@
 
 import type { Node, Edge } from "reactflow";
 import { api, formatErrorWithRequestId, ApiClientError } from "@/lib/api-client";
+import type {
+  WorkflowListResponse,
+  WorkflowDetailResponse,
+  WorkflowSummary,
+  WorkflowDetail,
+  BackendNode,
+  BackendEdge,
+  ExecutionListResponse,
+  WorkflowExecution,
+} from "@/types/workflow";
 
 /**
  * Normalize frontend node type to backend NodeType enum
@@ -358,3 +368,403 @@ export async function saveAndExecuteWorkflow(params: {
   };
 }
 
+// ===========================================
+// WORKFLOW CRUD OPERATIONS
+// ===========================================
+
+/**
+ * List all workflows for the current user
+ */
+export async function listWorkflows(params: {
+  accessToken: string;
+  limit?: number;
+  offset?: number;
+  category?: string;
+  isActive?: boolean;
+}): Promise<{
+  success: boolean;
+  data?: WorkflowSummary[];
+  total?: number;
+  error?: ApiError;
+  requestId?: string;
+}> {
+  const queryParams = new URLSearchParams();
+  if (params.limit) queryParams.set("limit", params.limit.toString());
+  if (params.offset) queryParams.set("offset", params.offset.toString());
+  if (params.category) queryParams.set("category", params.category);
+  if (params.isActive !== undefined) queryParams.set("isActive", params.isActive.toString());
+
+  const queryString = queryParams.toString();
+  const url = `/workflows${queryString ? `?${queryString}` : ""}`;
+
+  const response = await api.get<WorkflowListResponse>(url, {
+    accessToken: params.accessToken,
+  });
+
+  if (!response.ok) {
+    console.error(
+      `[${response.requestId}] Error listing workflows:`,
+      formatErrorWithRequestId(response.error!)
+    );
+    return {
+      success: false,
+      error: response.error as ApiError,
+      requestId: response.requestId,
+    };
+  }
+
+  return {
+    success: true,
+    data: response.data?.data || [],
+    total: response.data?.meta?.total || 0,
+    requestId: response.requestId,
+  };
+}
+
+/**
+ * Get a single workflow with all nodes and edges
+ */
+export async function getWorkflow(params: {
+  workflowId: string;
+  accessToken: string;
+}): Promise<{
+  success: boolean;
+  data?: WorkflowDetail;
+  error?: ApiError;
+  requestId?: string;
+}> {
+  const response = await api.get<WorkflowDetailResponse>(
+    `/workflows/${params.workflowId}`,
+    { accessToken: params.accessToken }
+  );
+
+  if (!response.ok) {
+    console.error(
+      `[${response.requestId}] Error getting workflow:`,
+      formatErrorWithRequestId(response.error!)
+    );
+    return {
+      success: false,
+      error: response.error as ApiError,
+      requestId: response.requestId,
+    };
+  }
+
+  return {
+    success: true,
+    data: response.data?.data,
+    requestId: response.requestId,
+  };
+}
+
+/**
+ * Full update a workflow (replace all nodes and edges)
+ */
+export async function fullUpdateWorkflow(params: {
+  workflowId: string;
+  accessToken: string;
+  name: string;
+  description?: string;
+  nodes: Node[];
+  edges: Edge[];
+  category?: string;
+  tags?: string[];
+}): Promise<{
+  success: boolean;
+  data?: WorkflowDetail;
+  error?: ApiError;
+  requestId?: string;
+}> {
+  // Find trigger node (start node)
+  const startNode = params.nodes.find(
+    (n) => n.type === "start" || n.id === "start-node"
+  );
+
+  const response = await api.put<WorkflowDetailResponse>(
+    `/workflows/${params.workflowId}/full`,
+    {
+      name: params.name,
+      description: params.description || "",
+      nodes: params.nodes.map(transformNodeToBackend),
+      edges: params.edges.map(transformEdgeToBackend),
+      triggerNodeId: startNode?.id,
+      category: params.category || "automation",
+      tags: params.tags || [],
+    },
+    { accessToken: params.accessToken }
+  );
+
+  if (!response.ok) {
+    console.error(
+      `[${response.requestId}] Error updating workflow:`,
+      formatErrorWithRequestId(response.error!)
+    );
+    return {
+      success: false,
+      error: response.error as ApiError,
+      requestId: response.requestId,
+    };
+  }
+
+  return {
+    success: true,
+    data: response.data?.data,
+    requestId: response.requestId,
+  };
+}
+
+/**
+ * Delete a workflow
+ */
+export async function deleteWorkflow(params: {
+  workflowId: string;
+  accessToken: string;
+}): Promise<{
+  success: boolean;
+  error?: ApiError;
+  requestId?: string;
+}> {
+  const response = await api.delete(
+    `/workflows/${params.workflowId}`,
+    { accessToken: params.accessToken }
+  );
+
+  if (!response.ok) {
+    console.error(
+      `[${response.requestId}] Error deleting workflow:`,
+      formatErrorWithRequestId(response.error!)
+    );
+    return {
+      success: false,
+      error: response.error as ApiError,
+      requestId: response.requestId,
+    };
+  }
+
+  return {
+    success: true,
+    requestId: response.requestId,
+  };
+}
+
+/**
+ * Get workflow execution history
+ */
+export async function getWorkflowExecutions(params: {
+  workflowId: string;
+  accessToken: string;
+  limit?: number;
+  offset?: number;
+}): Promise<{
+  success: boolean;
+  data?: WorkflowExecution[];
+  total?: number;
+  error?: ApiError;
+  requestId?: string;
+}> {
+  const queryParams = new URLSearchParams();
+  if (params.limit) queryParams.set("limit", params.limit.toString());
+  if (params.offset) queryParams.set("offset", params.offset.toString());
+
+  const queryString = queryParams.toString();
+  const url = `/workflows/${params.workflowId}/executions${queryString ? `?${queryString}` : ""}`;
+
+  const response = await api.get<ExecutionListResponse>(url, {
+    accessToken: params.accessToken,
+  });
+
+  if (!response.ok) {
+    console.error(
+      `[${response.requestId}] Error getting workflow executions:`,
+      formatErrorWithRequestId(response.error!)
+    );
+    return {
+      success: false,
+      error: response.error as ApiError,
+      requestId: response.requestId,
+    };
+  }
+
+  return {
+    success: true,
+    data: response.data?.data || [],
+    total: response.data?.meta?.total || 0,
+    requestId: response.requestId,
+  };
+}
+
+// ===========================================
+// CANVAS TRANSFORMATION UTILITIES
+// ===========================================
+
+/**
+ * Transform backend node to React Flow format
+ */
+function transformNodeToCanvas(backendNode: BackendNode): Node {
+  const metadata = backendNode.metadata || {};
+  const config = backendNode.config || {};
+
+  // Determine the frontend node type from metadata or backend type
+  const frontendType = (metadata.frontendType as string) ||
+    backendNode.type.toLowerCase() ||
+    "base";
+
+  // Reconstruct node data from config
+  const nodeData: Record<string, unknown> = {
+    label: backendNode.name || backendNode.id,
+    description: backendNode.description || "",
+    blockId: metadata.blockId,
+    iconName: metadata.iconName,
+    status: metadata.status,
+  };
+
+  // Map config back to frontend data format based on type
+  switch (frontendType) {
+    case "slack":
+      nodeData.slackConnectionId = config.connectionId;
+      nodeData.testMessage = config.message;
+      nodeData.slackMessage = config.message;
+      nodeData.slackConnectionType = config.connectionType;
+      nodeData.slackChannelId = config.channelId;
+      break;
+
+    case "telegram":
+      nodeData.telegramConnectionId = config.connectionId;
+      nodeData.telegramChatId = config.chatId;
+      nodeData.telegramMessage = config.message;
+      break;
+
+    case "uniswap":
+    case "relay":
+    case "oneinch":
+      nodeData.swapProvider = config.provider;
+      nodeData.swapChain = config.chain;
+      if (config.inputConfig) {
+        const inputConfig = config.inputConfig as Record<string, any>;
+        nodeData.sourceTokenAddress = inputConfig.sourceToken?.address;
+        nodeData.sourceTokenSymbol = inputConfig.sourceToken?.symbol;
+        nodeData.sourceTokenDecimals = inputConfig.sourceToken?.decimals;
+        nodeData.destinationTokenAddress = inputConfig.destinationToken?.address;
+        nodeData.destinationTokenSymbol = inputConfig.destinationToken?.symbol;
+        nodeData.destinationTokenDecimals = inputConfig.destinationToken?.decimals;
+        nodeData.swapAmount = inputConfig.amount;
+        nodeData.swapType = inputConfig.swapType;
+        nodeData.walletAddress = inputConfig.walletAddress;
+      }
+      nodeData.simulateFirst = config.simulateFirst;
+      nodeData.autoRetryOnFailure = config.autoRetryOnFailure;
+      nodeData.maxRetries = config.maxRetries;
+      break;
+
+    case "if":
+      nodeData.leftPath = config.leftPath;
+      nodeData.operator = config.operator;
+      nodeData.rightValue = config.rightValue;
+      break;
+
+    case "switch":
+      nodeData.cases = config.cases;
+      nodeData.defaultCaseId = config.defaultCaseId;
+      break;
+
+    case "mail":
+      nodeData.emailTo = config.to;
+      nodeData.emailSubject = config.subject;
+      nodeData.emailBody = config.body;
+      break;
+  }
+
+  return {
+    id: backendNode.id,
+    type: frontendType,
+    position: backendNode.position || { x: 0, y: 0 },
+    data: nodeData,
+    deletable: frontendType !== "start",
+  };
+}
+
+/**
+ * Transform backend edge to React Flow format
+ */
+function transformEdgeToCanvas(backendEdge: BackendEdge): Edge {
+  return {
+    id: backendEdge.id,
+    source: backendEdge.source_node_id,
+    target: backendEdge.target_node_id,
+    sourceHandle: backendEdge.source_handle || undefined,
+    targetHandle: backendEdge.target_handle || undefined,
+    type: "smoothstep",
+    animated: true,
+  };
+}
+
+/**
+ * Transform complete backend workflow to canvas format
+ */
+export function transformWorkflowToCanvas(workflow: WorkflowDetail): {
+  nodes: Node[];
+  edges: Edge[];
+} {
+  return {
+    nodes: workflow.nodes.map(transformNodeToCanvas),
+    edges: workflow.edges.map(transformEdgeToCanvas),
+  };
+}
+
+/**
+ * Save workflow - creates new or updates existing
+ */
+export async function saveWorkflow(params: {
+  workflowId?: string | null;
+  accessToken: string;
+  name: string;
+  description?: string;
+  nodes: Node[];
+  edges: Edge[];
+  category?: string;
+  tags?: string[];
+}): Promise<{
+  success: boolean;
+  workflowId?: string;
+  data?: WorkflowDetail;
+  error?: ApiError;
+  requestId?: string;
+  isNew?: boolean;
+}> {
+  // If we have a workflow ID, update; otherwise create
+  if (params.workflowId) {
+    const result = await fullUpdateWorkflow({
+      workflowId: params.workflowId,
+      accessToken: params.accessToken,
+      name: params.name,
+      description: params.description,
+      nodes: params.nodes,
+      edges: params.edges,
+      category: params.category,
+      tags: params.tags,
+    });
+
+    return {
+      ...result,
+      workflowId: params.workflowId,
+      isNew: false,
+    };
+  } else {
+    const result = await createWorkflow({
+      accessToken: params.accessToken,
+      name: params.name,
+      description: params.description,
+      nodes: params.nodes,
+      edges: params.edges,
+    });
+
+    return {
+      success: result.success,
+      workflowId: result.data?.id,
+      data: result.data,
+      error: result.error,
+      requestId: result.requestId,
+      isNew: true,
+    };
+  }
+}

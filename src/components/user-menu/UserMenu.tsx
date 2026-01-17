@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { usePrivy } from "@privy-io/react-auth";
 import { arbitrumSepolia, arbitrum } from "viem/chains";
 import { usePrivyEmbeddedWallet } from "@/hooks/usePrivyEmbeddedWallet";
@@ -12,7 +13,7 @@ import {
 } from "@/components/ui/Popover";
 import { Button } from "@/components/ui/Button";
 import { Switch } from "@/components/user-menu/Switch";
-import { LogOut, Network } from "lucide-react";
+import { LogOut, Network, LayoutGrid } from "lucide-react";
 import { Typography } from "@/components/ui/Typography";
 
 export interface UserMenuProps {
@@ -112,6 +113,23 @@ export function UserMenu({ size = "md" }: UserMenuProps) {
                 onCheckedChange={handleTestnetToggle}
               />
             </div>
+          </div>
+
+          {/* Divider */}
+          <div className="border-t border-border" />
+
+          {/* Navigation Links */}
+          <div className="p-2">
+            <Link
+              href="/workflows"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-secondary/50 transition-colors"
+            >
+              <LayoutGrid className="w-4 h-4 text-primary" />
+              <Typography variant="bodySmall" className="font-medium text-foreground">
+                My Workflows
+              </Typography>
+            </Link>
           </div>
 
           {/* Divider */}

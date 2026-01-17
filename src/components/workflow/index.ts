@@ -29,3 +29,9 @@ export {
 
 export { WorkflowToolbar } from "./workflow-layout/WorkflowToolbar";
 export { WorkflowStatusBar } from "./workflow-layout/WorkflowStatusBar";
+
+// Workflow management components
+export { WorkflowDashboard } from "./WorkflowDashboard";
+export { WorkflowCard } from "./WorkflowCard";
+export { WorkflowCardSkeleton } from "./WorkflowCardSkeleton";
+export { ExecutionHistoryPanel } from "./ExecutionHistoryPanel";
