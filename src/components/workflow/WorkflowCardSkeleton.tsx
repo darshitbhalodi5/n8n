@@ -1,12 +1,13 @@
 "use client";
 
+import React from "react";
 import { cn } from "@/lib/utils";
 
 interface WorkflowCardSkeletonProps {
     viewMode: "grid" | "list";
 }
 
-export function WorkflowCardSkeleton({ viewMode }: WorkflowCardSkeletonProps) {
+export const WorkflowCardSkeleton = React.memo(function WorkflowCardSkeleton({ viewMode }: WorkflowCardSkeletonProps) {
     if (viewMode === "list") {
         return (
             <div className="flex items-center gap-4 p-4 rounded-lg bg-card/50 border border-border/50 animate-pulse">
@@ -71,4 +72,5 @@ export function WorkflowCardSkeleton({ viewMode }: WorkflowCardSkeletonProps) {
             </div>
         </div>
     );
-}
+});
+

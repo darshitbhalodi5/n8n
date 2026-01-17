@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { usePrivyWallet } from "@/hooks/usePrivyWallet";
 import { WorkflowCard } from "./WorkflowCard";
@@ -9,6 +9,21 @@ import { listWorkflows, deleteWorkflow } from "@/utils/workflow-api";
 import type { WorkflowSummary } from "@/types/workflow";
 import { Plus, Search, LayoutGrid, List, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+// Custom hook for debounced value
+function useDebounce<T>(value: T, delay: number): T {
+    const [debouncedValue, setDebouncedValue] = useState(value);
+
+    useEffect(() => {
+        const timer = setTimeout(() => setDebouncedValue(value), delay);
+        return () => clearTimeout(timer);
+    }, [value, delay]);
+
+    return debouncedValue;
+}
+
+// localStorage key for view mode persistence
+const VIEW_MODE_KEY = "workflow-dashboard-view-mode";
 
 export function WorkflowDashboard() {
     const router = useRouter();
@@ -20,6 +35,23 @@ export function WorkflowDashboard() {
     const [searchQuery, setSearchQuery] = useState("");
     const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
     const [isDeleting, setIsDeleting] = useState<string | null>(null);
+
+    // Debounce search query by 300ms
+    const debouncedSearchQuery = useDebounce(searchQuery, 300);
+
+    // Load view mode from localStorage on mount
+    useEffect(() => {
+        const savedViewMode = localStorage.getItem(VIEW_MODE_KEY);
+        if (savedViewMode === "grid" || savedViewMode === "list") {
+            setViewMode(savedViewMode);
+        }
+    }, []);
+
+    // Persist view mode to localStorage
+    const handleViewModeChange = useCallback((mode: "grid" | "list") => {
+        setViewMode(mode);
+        localStorage.setItem(VIEW_MODE_KEY, mode);
+    }, []);
 
     const fetchWorkflows = useCallback(async () => {
         if (!authenticated) return;
@@ -58,15 +90,15 @@ export function WorkflowDashboard() {
         }
     }, [ready, authenticated, fetchWorkflows]);
 
-    const handleCreateNew = () => {
+    const handleCreateNew = useCallback(() => {
         router.push("/automation-builder");
-    };
+    }, [router]);
 
-    const handleEdit = (workflowId: string) => {
+    const handleEdit = useCallback((workflowId: string) => {
         router.push(`/automation-builder?workflowId=${workflowId}`);
-    };
+    }, [router]);
 
-    const handleDelete = async (workflowId: string) => {
+    const handleDelete = useCallback(async (workflowId: string) => {
         if (!confirm("Are you sure you want to delete this workflow? This action cannot be undone.")) {
             return;
         }
@@ -93,17 +125,22 @@ export function WorkflowDashboard() {
         } finally {
             setIsDeleting(null);
         }
-    };
+    }, [getPrivyAccessToken]);
 
-    const handleRun = (workflowId: string) => {
-        // Navigate to the workflow and trigger execution
+    const handleRun = useCallback((workflowId: string) => {
         router.push(`/automation-builder?workflowId=${workflowId}&autoRun=true`);
-    };
+    }, [router]);
 
-    const filteredWorkflows = workflows.filter((workflow) =>
-        workflow.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        workflow.description?.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    // Memoize filtered workflows to avoid recalculation on every render
+    const filteredWorkflows = useMemo(() => {
+        const query = debouncedSearchQuery.toLowerCase();
+        if (!query) return workflows;
+
+        return workflows.filter((workflow) =>
+            workflow.name.toLowerCase().includes(query) ||
+            workflow.description?.toLowerCase().includes(query)
+        );
+    }, [workflows, debouncedSearchQuery]);
 
     // Show login prompt if not authenticated
     if (ready && !authenticated) {
@@ -147,13 +184,14 @@ export function WorkflowDashboard() {
             {/* Search and View Toggle */}
             <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
                 <div className="relative flex-1 max-w-md">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
                     <input
                         type="text"
                         placeholder="Search workflows..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-card border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors"
+                        aria-label="Search workflows"
                     />
                 </div>
 
@@ -169,7 +207,7 @@ export function WorkflowDashboard() {
 
                     <div className="flex rounded-lg border border-border overflow-hidden">
                         <button
-                            onClick={() => setViewMode("grid")}
+                            onClick={() => handleViewModeChange("grid")}
                             className={cn(
                                 "p-2.5 transition-colors",
                                 viewMode === "grid"
@@ -177,11 +215,13 @@ export function WorkflowDashboard() {
                                     : "hover:bg-secondary/50"
                             )}
                             title="Grid view"
+                            aria-label="Grid view"
+                            aria-pressed={viewMode === "grid"}
                         >
-                            <LayoutGrid className="w-4 h-4" />
+                            <LayoutGrid className="w-4 h-4" aria-hidden="true" />
                         </button>
                         <button
-                            onClick={() => setViewMode("list")}
+                            onClick={() => handleViewModeChange("list")}
                             className={cn(
                                 "p-2.5 transition-colors",
                                 viewMode === "list"
@@ -189,8 +229,10 @@ export function WorkflowDashboard() {
                                     : "hover:bg-secondary/50"
                             )}
                             title="List view"
+                            aria-label="List view"
+                            aria-pressed={viewMode === "list"}
                         >
-                            <List className="w-4 h-4" />
+                            <List className="w-4 h-4" aria-hidden="true" />
                         </button>
                     </div>
                 </div>
