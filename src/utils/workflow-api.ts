@@ -5,7 +5,7 @@
  */
 
 import type { Node, Edge } from "reactflow";
-import { buildApiUrl } from "@/config/api";
+import { api, formatErrorWithRequestId, ApiClientError } from "@/lib/api-client";
 
 /**
  * Normalize frontend node type to backend NodeType enum
@@ -144,8 +144,8 @@ function transformEdgeToBackend(edge: Edge) {
     targetNodeId: edge.target,
     sourceHandle: edge.sourceHandle || null,
     targetHandle: edge.targetHandle || null,
-    condition: null, // For future use
-    dataMapping: null, // For future use
+    condition: {}, // Empty object for future use (backend expects object type)
+    dataMapping: {}, // Empty object for future use (backend expects object type)
   };
 }
 
@@ -158,53 +158,43 @@ export async function createWorkflow(params: {
   description?: string;
   nodes: Node[];
   edges: Edge[];
-}): Promise<{ success: boolean; data?: any; error?: any }> {
-  try {
-    // Find trigger node (start node)
-    const startNode = params.nodes.find(
-      (n) => n.type === "start" || n.id === "start-node"
+}): Promise<{ success: boolean; data?: any; error?: ApiError; requestId?: string }> {
+  // Find trigger node (start node)
+  const startNode = params.nodes.find(
+    (n) => n.type === "start" || n.id === "start-node"
+  );
+
+  const response = await api.post<{ data: any }>(
+    "/workflows",
+    {
+      name: params.name,
+      description: params.description || "",
+      nodes: params.nodes.map(transformNodeToBackend),
+      edges: params.edges.map(transformEdgeToBackend),
+      triggerNodeId: startNode?.id,
+      category: "automation",
+      tags: ["if-else", "conditional"],
+    },
+    { accessToken: params.accessToken }
+  );
+
+  if (!response.ok) {
+    console.error(
+      `[${response.requestId}] Error creating workflow:`,
+      formatErrorWithRequestId(response.error!)
     );
-
-    const response = await fetch(buildApiUrl("/workflows"), {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${params.accessToken}`,
-      },
-      body: JSON.stringify({
-        name: params.name,
-        description: params.description || "",
-        nodes: params.nodes.map(transformNodeToBackend),
-        edges: params.edges.map(transformEdgeToBackend),
-        triggerNodeId: startNode?.id,
-        category: "automation",
-        tags: ["if-else", "conditional"],
-      }),
-    });
-
-    const result = await response.json();
-
-    if (!response.ok) {
-      return {
-        success: false,
-        error: result.error || { message: "Failed to create workflow" },
-      };
-    }
-
-    return {
-      success: true,
-      data: result.data,
-    };
-  } catch (error) {
-    console.error("Error creating workflow:", error);
     return {
       success: false,
-      error: {
-        message: error instanceof Error ? error.message : "Unknown error",
-        code: "NETWORK_ERROR",
-      },
+      error: response.error as ApiError,
+      requestId: response.requestId,
     };
   }
+
+  return {
+    success: true,
+    data: response.data?.data,
+    requestId: response.requestId,
+  };
 }
 
 /**
@@ -218,14 +208,9 @@ export interface ExecuteWorkflowResponseData {
 }
 
 /**
- * API error response
+ * API error response (type alias for ApiClientError for request ID support)
  */
-export interface ApiError {
-  message: string;
-  code?: string;
-  details?: Array<{ field: string; message: string }>;
-  retryAfter?: number; // For rate limit errors (ms)
-}
+export type ApiError = ApiClientError;
 
 /**
  * Execute a workflow
@@ -239,72 +224,51 @@ export async function executeWorkflow(params: {
   data?: ExecuteWorkflowResponseData;
   error?: ApiError;
   statusCode?: number;
+  requestId?: string;
 }> {
-  try {
-    const response = await fetch(
-      buildApiUrl(`/workflows/${params.workflowId}/execute`),
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${params.accessToken}`,
-        },
-        body: JSON.stringify({
-          initialInput: params.initialInput || {},
-        }),
-      }
-    );
+  const response = await api.post<{ data: ExecuteWorkflowResponseData; retryAfter?: number }>(
+    `/workflows/${params.workflowId}/execute`,
+    { initialInput: params.initialInput || {} },
+    { accessToken: params.accessToken }
+  );
 
-    const result = await response.json();
+  if (!response.ok) {
+    const error = response.error!;
 
-    if (!response.ok) {
-      // Handle specific error codes
-      const error: ApiError = {
-        message: result.error?.message || "Failed to execute workflow",
-        code: result.error?.code,
-        details: result.error?.details,
-      };
-
-      // Handle rate limiting (429)
-      if (response.status === 429) {
-        error.code = "RATE_LIMIT_EXCEEDED";
-        error.retryAfter = result.retryAfter;
-        error.message = `Rate limit exceeded. Please try again ${result.retryAfter
-          ? `in ${Math.ceil(result.retryAfter / 1000)} seconds`
-          : "later"
-          }.`;
-      }
-
-      // Handle validation errors (400)
-      if (response.status === 400 && result.error?.code === "VALIDATION_ERROR") {
-        error.code = "VALIDATION_ERROR";
-        error.details = result.error?.details;
-        error.message = "Validation failed: " +
-          (result.error?.details?.map((d: { message: string }) => d.message).join(", ") || result.error?.message);
-      }
-
-      return {
-        success: false,
-        error,
-        statusCode: response.status,
-      };
+    // Handle rate limiting (429)
+    if (response.status === 429) {
+      error.code = "RATE_LIMIT_EXCEEDED";
+      error.message = `Rate limit exceeded. Please try again ${error.retryAfter
+        ? `in ${Math.ceil(error.retryAfter / 1000)} seconds`
+        : "later"
+        }.`;
     }
 
-    return {
-      success: true,
-      data: result.data,
-      statusCode: response.status,
-    };
-  } catch (error) {
-    console.error("Error executing workflow:", error);
+    // Handle validation errors (400)
+    if (response.status === 400 && error.code === "VALIDATION_ERROR") {
+      error.message = "Validation failed: " +
+        (error.details?.map((d) => d.message).join(", ") || error.message);
+    }
+
+    console.error(
+      `[${response.requestId}] Error executing workflow:`,
+      formatErrorWithRequestId(error)
+    );
+
     return {
       success: false,
-      error: {
-        message: error instanceof Error ? error.message : "Unknown error",
-        code: "NETWORK_ERROR",
-      },
+      error: error as ApiError,
+      statusCode: response.status,
+      requestId: response.requestId,
     };
   }
+
+  return {
+    success: true,
+    data: response.data?.data,
+    statusCode: response.status,
+    requestId: response.requestId,
+  };
 }
 
 /**
@@ -313,42 +277,29 @@ export async function executeWorkflow(params: {
 export async function getExecutionStatus(params: {
   executionId: string;
   accessToken: string;
-}): Promise<{ success: boolean; data?: any; error?: any }> {
-  try {
-    const response = await fetch(
-      buildApiUrl(`/workflows/executions/${params.executionId}`),
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${params.accessToken}`,
-        },
-      }
+}): Promise<{ success: boolean; data?: any; error?: ApiError; requestId?: string }> {
+  const response = await api.get<{ data: any }>(
+    `/workflows/executions/${params.executionId}`,
+    { accessToken: params.accessToken }
+  );
+
+  if (!response.ok) {
+    console.error(
+      `[${response.requestId}] Error getting execution status:`,
+      formatErrorWithRequestId(response.error!)
     );
-
-    const result = await response.json();
-
-    if (!response.ok) {
-      return {
-        success: false,
-        error: result.error || { message: "Failed to get execution status" },
-      };
-    }
-
-    return {
-      success: true,
-      data: result.data,
-    };
-  } catch (error) {
-    console.error("Error getting execution status:", error);
     return {
       success: false,
-      error: {
-        message: error instanceof Error ? error.message : "Unknown error",
-        code: "NETWORK_ERROR",
-      },
+      error: response.error as ApiError,
+      requestId: response.requestId,
     };
   }
+
+  return {
+    success: true,
+    data: response.data?.data,
+    requestId: response.requestId,
+  };
 }
 
 /**
