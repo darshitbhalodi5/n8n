@@ -25,6 +25,8 @@ import {
   UniswapLogo,
   RelayLogo,
   OneInchLogo,
+  AaveLogo,
+  CompoundLogo,
 } from "./logos";
 
 // Re-export types
@@ -53,12 +55,15 @@ export const iconRegistry: IconRegistry = {
   UniswapLogo,
   RelayLogo,
   OneInchLogo,
+  AaveLogo,
+  CompoundLogo,
   Share2, // Keep for category icon
   Play, // For triggers category
   GitBranch, // For control category icon
   Wallet, // For wallet category icon
   ArrowRightLeft, // For DeFi category
 };
+
 
 /**
  * All block categories

@@ -9,6 +9,8 @@ import switchIcon from "@/assets/blocks/Switch.svg";
 import uniswap from "@/assets/blocks/Uniswap.svg";
 import relay from "@/assets/blocks/Relay.svg";
 import oneinch from "@/assets/blocks/OneInch.svg";
+import aave from "@/assets/blocks/Aave.svg";
+import compound from "@/assets/blocks/Compound.svg";
 
 interface LogoProps {
   className?: string;
@@ -109,6 +111,26 @@ export const SwitchLogo = ({ className }: LogoProps) => (
   <Image
     src={switchIcon}
     alt="Switch"
+    className={className}
+    width={32}
+    height={32}
+  />
+);
+
+export const AaveLogo = ({ className }: LogoProps) => (
+  <Image
+    src={aave}
+    alt="Aave"
+    className={className}
+    width={32}
+    height={32}
+  />
+);
+
+export const CompoundLogo = ({ className }: LogoProps) => (
+  <Image
+    src={compound}
+    alt="Compound"
     className={className}
     width={32}
     height={32}

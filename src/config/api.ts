@@ -43,6 +43,15 @@ export const API_CONFIG = {
             PROVIDERS: "/swaps/providers",
             EXECUTIONS: "/swaps/executions",
         },
+        LENDING: {
+            QUOTE: "/lending/quote",
+            POSITION: "/lending/position",
+            ACCOUNT: "/lending/account",
+            ASSET: "/lending/asset",
+            ASSETS: "/lending/assets",
+            PROVIDERS: "/lending/providers",
+            EXECUTIONS: "/lending/executions",
+        },
         USERS: {
             GET_BY_ADDRESS: "/users/address/:address",
             CREATE: "/users",
