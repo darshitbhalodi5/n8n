@@ -20,6 +20,10 @@ import openseaSvg from "@/assets/blocks/OpenSea.svg";
 import pythSvg from "@/assets/blocks/Pyth.svg";
 import ostiumSvg from "@/assets/blocks/Ostium.svg";
 import zapperSvg from "@/assets/blocks/Zapper.svg";
+import relaySvg from "@/assets/blocks/Relay.svg";
+import gmxSvg from "@/assets/blocks/GMX.svg";
+import stargateSvg from "@/assets/blocks/Stargate.svg";
+import gammaSvg from "@/assets/blocks/Gamma.svg";
 
 // Helper function to get point on path at a given progress (0-1)
 function getPointOnPath(pathElement: SVGPathElement, progress: number): { x: number; y: number; angle: number } {
@@ -59,6 +63,8 @@ const LOGOS: LogoConfig[] = [
   { name: "Mail", icon: mailSvg, path: "#path-1", duration: 10, delay: 5, reverse: false },
   { name: "Telegram", icon: telegramSvg, path: "#path-1", duration: 10, delay: 6, reverse: false },
   { name: "Aave", icon: aaveSvg, path: "#path-1", duration: 10, delay: 7, reverse: false },
+  { name: "GMX", icon: gmxSvg, path: "#path-1", duration: 10, delay: 8, reverse: false },
+  { name: "Stargate", icon: stargateSvg, path: "#path-1", duration: 10, delay: 9, reverse: false },
   // Bottom path (path-2): All move right to left (reverse: true)
   { name: "Tally", icon: tallySvg, path: "#path-2", duration: 10, delay: 0, reverse: true },
   { name: "Yearn", icon: yearnSvg, path: "#path-2", duration: 10, delay: 1, reverse: true },
@@ -68,6 +74,8 @@ const LOGOS: LogoConfig[] = [
   { name: "Uniswap", icon: uniswapSvg, path: "#path-2", duration: 10, delay: 5, reverse: true },
   { name: "1inch", icon: oneinchSvg, path: "#path-2", duration: 10, delay: 6, reverse: true },
   { name: "Zapper", icon: zapperSvg, path: "#path-2", duration: 10, delay: 7, reverse: true },
+  { name: "Gamma", icon: gammaSvg, path: "#path-2", duration: 10, delay: 8, reverse: true },
+  { name: "Relay", icon: relaySvg, path: "#path-2", duration: 10, delay: 9, reverse: true },
 ];
 
 // Component to render SVG with optional fill color
