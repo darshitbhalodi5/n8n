@@ -29,7 +29,7 @@ import { calculateCanvasCenter } from "@/utils/canvas";
 import { usePrivyEmbeddedWallet } from "@/hooks/usePrivyEmbeddedWallet";
 import { usePrivyWallet } from "@/hooks/usePrivyWallet";
 import { arbitrum } from "viem/chains";
-import { CheckSquare } from "lucide-react";
+import { CheckSquare, Clock } from "lucide-react";
 
 // The Start node ID - used to identify and protect it from deletion
 const START_NODE_ID = "start-node";
@@ -795,7 +795,14 @@ export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({
       };
     });
 
-    return [allCategory, ...dynamicCategories];
+    // Add Coming Soon category at the end
+    const comingSoonCategory = {
+      id: "coming-soon",
+      label: "Coming Soon",
+      icon: <Clock className="w-4 h-4" />,
+    };
+
+    return [allCategory, ...dynamicCategories, comingSoonCategory];
   }, []);
 
   const contextValue = useMemo<WorkflowContextType>(
