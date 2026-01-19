@@ -13,6 +13,7 @@ import {
   Play,
   SquareArrowOutUpRight,
 } from "lucide-react";
+import Image from "next/image";
 
 type ProblemStatementSectionProps = {
   heightClass?: string;
@@ -235,7 +236,7 @@ export function ProblemStatementSection({
 
           {/* --- 3. CENTER CARD (THE REVEAL) --- */}
           <motion.div
-            className="absolute z-20 bg-[#FF4400] overflow-hidden flex items-center justify-center rounded-4xl"
+            className="absolute z-20 overflow-hidden flex flex-col justify-end rounded-4xl bg-[#050505] border border-white/10"
             style={{
               x: cardX,
               y: cardY,
@@ -245,16 +246,25 @@ export function ProblemStatementSection({
               width: cardWidth,
             }}
           >
-            {/* Card Content... */}
-            <motion.div
-              className="absolute inset-0 w-full h-full mix-blend-multiply opacity-60"
-              style={{ scale: imageScale }}
-            >
-              <div className="w-full h-full bg-neutral-600 grayscale" />
+            <motion.div className="absolute inset-0 w-full h-full" style={{ scale: imageScale }}>
+              <Image
+                src="/assets/images/hybrid_canvas.png"
+                alt="Hybrid Canvas"
+                fill
+                className="object-cover opacity-80"
+              />
             </motion.div>
-            <h3 className="relative z-10 text-white text-6xl md:text-9xl font-black uppercase opacity-90 mix-blend-overlay">
-              SCIFY
-            </h3>
+            <div className="relative z-10 p-8 md:p-12 space-y-4 bg-gradient-to-t from-black via-black/60 to-transparent">
+              {/* <span className="text-blue-400 font-bold tracking-wider uppercase text-sm md:text-base">
+                Add Blocks to Canvas
+              </span> */}
+              <h3 className="text-white text-4xl md:text-6xl font-bold leading-tight">
+                Add Blocks
+              </h3>
+              <p className="text-gray-300 text-lg md:text-xl max-w-2xl">
+                Drag and drop or click on blocks to add to canvas and start creating workflow.
+              </p>
+            </div>
           </motion.div>
 
           {/* --- 4. RIGHT SIDE IMAGES (Expanding from Center) --- */}
@@ -272,8 +282,21 @@ export function ProblemStatementSection({
                   scale: sideImage1Scale,
                   zIndex: sideImage1ZIndex,
                 }}
-                className="w-full bg-slate-800 rounded-2xl"
-              />
+                className="w-full relative rounded-2xl overflow-hidden bg-[#050505] border border-white/10"
+              >
+                <Image
+                  src="/assets/images/social_onboarding.png"
+                  alt="Seamless Access"
+                  fill
+                  className="object-cover opacity-90"
+                />
+                <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black via-black/80 to-transparent">
+                  <h4 className="text-white text-[10px] font-bold leading-none mb-1">Connect Blocks</h4>
+                  <p className="text-gray-300 text-[6px] leading-tight">
+                    Connect blocks according to your workflow logic to create workflows in canvas.
+                  </p>
+                </div>
+              </motion.div>
             </div>
             <div className="h-[130px] w-[14vw] ml-[4vw] flex items-center justify-center">
               <motion.div
@@ -284,8 +307,21 @@ export function ProblemStatementSection({
                   scale: sideImage2Scale,
                   zIndex: sideImage2ZIndex,
                 }}
-                className="w-full bg-blue-900 rounded-2xl"
-              />
+                className="w-full relative rounded-2xl overflow-hidden bg-[#050505] border border-white/10"
+              >
+                <Image
+                  src="/assets/images/gasless.png"
+                  alt="Frictionless Run"
+                  fill
+                  className="object-cover opacity-90"
+                />
+                <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black via-black/80 to-transparent">
+                  <h4 className="text-white text-[8px] font-bold leading-none mb-1">Configure Blocks</h4>
+                  <p className="text-gray-300 text-[5px] leading-tight">
+                    Configure blocks to perform actions on your behalf in workflow execution.
+                  </p>
+                </div>
+              </motion.div>
             </div>
           </motion.div>
 
@@ -303,8 +339,21 @@ export function ProblemStatementSection({
                   scale: sideImage3Scale,
                   zIndex: sideImage3ZIndex,
                 }}
-                className="w-full bg-[#FF4400] rounded-2xl"
-              />
+                className="w-full relative rounded-2xl overflow-hidden bg-[#050505] border border-white/10"
+              >
+                <Image
+                  src="/assets/images/visual_logic.png"
+                  alt="Smart Logic"
+                  fill
+                  className="object-cover opacity-90"
+                />
+                <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black via-black/80 to-transparent">
+                  <h4 className="text-white text-[10px] font-bold leading-none mb-1">Save & Test</h4>
+                  <p className="text-gray-300 text-[6px] leading-tight">
+                    Save and test your workflows in a secure environment.
+                  </p>
+                </div>
+              </motion.div>
             </div>
             <div className="h-[130px] w-[14vw] ml-[4vw] flex items-center justify-center">
               <motion.div
@@ -315,8 +364,21 @@ export function ProblemStatementSection({
                   scale: sideImage4Scale,
                   zIndex: sideImage4ZIndex,
                 }}
-                className="w-full bg-[#b700ff] rounded-2xl"
-              />
+                className="w-full relative rounded-2xl overflow-hidden bg-[#050505] border border-white/10"
+              >
+                <Image
+                  src="/assets/images/event_trigger.png"
+                  alt="Any Trigger"
+                  fill
+                  className="object-cover opacity-90"
+                />
+                <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black via-black/80 to-transparent">
+                  <h4 className="text-white text-[8px] font-bold leading-none mb-1">Deploy or Run</h4>
+                  <p className="text-gray-300 text-[5px] leading-tight">
+                    Deploy workflows to run on-chain or off-chain actions.
+                  </p>
+                </div>
+              </motion.div>
             </div>
           </motion.div>
 

@@ -87,6 +87,10 @@ export const nodeTypes: NodeTypes = {
   relay: BaseNodeWrapper,
   oneinch: BaseNodeWrapper,
 
+  // DeFi / lending nodes (Aave, Compound) - use base node visuals
+  aave: BaseNodeWrapper,
+  compound: BaseNodeWrapper,
+
   // Wallet node (specialized)
   "wallet-node": WalletNodeWrapper,
 };

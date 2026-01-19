@@ -38,6 +38,7 @@ export type {
   WalletNodeData,
   StartNodeData,
   SwapNodeData,
+  LendingNodeData,
   WorkflowNodeData,
 } from "./node-data";
 
@@ -48,6 +49,7 @@ export {
   isIfNodeData,
   isSwitchNodeData,
   isSwapNodeData,
+  isLendingNodeData,
 } from "./node-data";
 
 // API types
@@ -85,3 +87,27 @@ export {
   SLIPPAGE_PRESETS,
   DEFAULT_SWAP_CONFIG,
 } from "./swap";
+
+// Lending types (Aave, Compound)
+export type {
+  LendingTokenInfo,
+  LendingInputConfig,
+  LendingPosition,
+  LendingQuote,
+  AssetReserveData,
+  LendingAccountData,
+} from "./lending";
+
+export {
+  LendingProvider,
+  LendingOperation,
+  InterestRateMode,
+  AAVE_ARBITRUM_TOKENS,
+  COMPOUND_ARBITRUM_TOKENS,
+  getTokensForLendingProvider,
+  LENDING_PROVIDER_LABELS,
+  LENDING_OPERATION_LABELS,
+  INTEREST_RATE_MODE_LABELS,
+  DEFAULT_LENDING_CONFIG,
+} from "./lending";
+
