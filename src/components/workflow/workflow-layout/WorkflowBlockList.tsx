@@ -4,13 +4,27 @@ import { Typography } from "@/components/ui";
 import { DraggableBlock } from "./DraggableBlock";
 import { ComingSoonSection } from "./ComingSoonSection";
 import {
-  getBlocksByCategory,
-  getAllBlocks,
+  blockCategories,
 } from "@/components/blocks";
 import { useWorkflow } from "@/contexts/WorkflowContext";
 
 interface WorkflowBlockListProps {
   activeCategory: string;
+}
+
+// Helper function to categorize DeFi blocks
+function categorizeDefiBlocks(blocks: typeof blockCategories[0]["blocks"]) {
+  const swapBlocks = blocks.filter(
+    (block) =>
+      block.nodeType === "uniswap" ||
+      block.nodeType === "relay" ||
+      block.nodeType === "oneinch"
+  );
+  const lendingBlocks = blocks.filter(
+    (block) => block.nodeType === "aave" || block.nodeType === "compound"
+  );
+
+  return { swapBlocks, lendingBlocks };
 }
 
 export function WorkflowBlockList({
@@ -21,14 +35,6 @@ export function WorkflowBlockList({
     handleBlockClick,
     isBlockDisabled,
   } = useWorkflow();
-
-  // Get blocks for the active category
-  const blocks =
-    activeCategory === "all"
-      ? getAllBlocks()
-      : activeCategory === "coming-soon"
-        ? [] // Coming soon has its own rendering
-        : getBlocksByCategory(activeCategory);
 
   // Handle Coming Soon category
   if (activeCategory === "coming-soon") {
@@ -42,36 +48,127 @@ export function WorkflowBlockList({
     );
   }
 
+  // Get categories to display
+  const categoriesToDisplay =
+    activeCategory === "all"
+      ? blockCategories
+      : blockCategories.filter((cat) => cat.id === activeCategory);
+
   return (
     <div
       className="w-[95%] mx-auto h-[80vh] overflow-y-auto scrollbar-hide mt-5"
       data-lenis-prevent
     >
-      {/* Blocks Section - Dynamic based on category */}
-      {blocks.length > 0 && (
-        <div className="space-y-3">
-          {/* Responsive Grid: 2 cols on desktop */}
-          <div className="grid grid-cols-2 gap-2.5">
-            {blocks.map((block) => {
-              // Check if block should be disabled
-              const disabled = isBlockDisabled(block.id);
+      {/* Blocks Section - Grouped by category */}
+      {categoriesToDisplay.length > 0 && (
+        <div className="space-y-6">
+          {categoriesToDisplay.map((category) => {
+            const categoryBlocks = category.blocks;
+            
+            if (categoryBlocks.length === 0) return null;
+
+            // Special handling for DeFi category - split into Swap and Lending
+            if (category.id === "defi") {
+              const { swapBlocks, lendingBlocks } = categorizeDefiBlocks(categoryBlocks);
 
               return (
-                <DraggableBlock
-                  key={block.id}
-                  block={block}
-                  onDragStart={handleBlockDragStart}
-                  onClick={handleBlockClick}
-                  disabled={disabled}
-                />
+                <div key={category.id} className="space-y-6">
+                  {/* Swap Section */}
+                  {swapBlocks.length > 0 && (
+                    <div className="space-y-3">
+                      <div className="px-1">
+                        <Typography
+                          variant="caption"
+                          className="text-xs font-semibold text-white/70 uppercase tracking-wider"
+                        >
+                          Swap
+                        </Typography>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2.5">
+                        {swapBlocks.map((block) => {
+                          const disabled = isBlockDisabled(block.id);
+                          return (
+                            <DraggableBlock
+                              key={block.id}
+                              block={block}
+                              onDragStart={handleBlockDragStart}
+                              onClick={handleBlockClick}
+                              disabled={disabled}
+                            />
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Lending & Borrowing Section */}
+                  {lendingBlocks.length > 0 && (
+                    <div className="space-y-3">
+                      <div className="px-1">
+                        <Typography
+                          variant="caption"
+                          className="text-xs font-semibold text-white/70 uppercase tracking-wider"
+                        >
+                          Lending & Borrowing
+                        </Typography>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2.5">
+                        {lendingBlocks.map((block) => {
+                          const disabled = isBlockDisabled(block.id);
+                          return (
+                            <DraggableBlock
+                              key={block.id}
+                              block={block}
+                              onDragStart={handleBlockDragStart}
+                              onClick={handleBlockClick}
+                              disabled={disabled}
+                            />
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
               );
-            })}
-          </div>
+            }
+
+            // Regular category display
+            return (
+              <div key={category.id} className="space-y-3">
+                {/* Category Header */}
+                <div className="px-1">
+                  <Typography
+                    variant="caption"
+                    className="text-xs font-semibold text-white/70 uppercase tracking-wider"
+                  >
+                    {category.label}
+                  </Typography>
+                </div>
+
+                {/* Blocks Grid */}
+                <div className="grid grid-cols-2 gap-2.5">
+                  {categoryBlocks.map((block) => {
+                    const disabled = isBlockDisabled(block.id);
+
+                    return (
+                      <DraggableBlock
+                        key={block.id}
+                        block={block}
+                        onDragStart={handleBlockDragStart}
+                        onClick={handleBlockClick}
+                        disabled={disabled}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
 
       {/* Empty State */}
-      {blocks.length === 0 && (
+      {categoriesToDisplay.length === 0 && (
         <div className="flex flex-col items-center justify-center py-12 px-2 text-center">
           <Typography
             variant="caption"

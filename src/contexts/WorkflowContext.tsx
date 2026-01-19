@@ -28,7 +28,7 @@ import { useCanvasDimensions, useUnsavedChanges } from "@/hooks";
 import { calculateCanvasCenter } from "@/utils/canvas";
 import { usePrivyEmbeddedWallet } from "@/hooks/usePrivyEmbeddedWallet";
 import { usePrivyWallet } from "@/hooks/usePrivyWallet";
-import { arbitrum } from "viem/chains";
+import { arbitrum, arbitrumSepolia } from "viem/chains";
 import { CheckSquare, Clock } from "lucide-react";
 
 // The Start node ID - used to identify and protect it from deletion
@@ -711,9 +711,15 @@ export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({
         return nodes.some((n) => n.type === "wallet-node");
       }
 
+      // Disable Aave and Compound on Arbitrum Sepolia
+      const isSepolia = chainId === arbitrumSepolia.id;
+      if ((blockId === "aave" || blockId === "compound") && isSepolia) {
+        return true;
+      }
+
       return isSwapBlockDisabled(blockId);
     },
-    [nodes, isSwapBlockDisabled]
+    [nodes, isSwapBlockDisabled, chainId]
   );
 
   // Handle node click - select node
