@@ -13,8 +13,27 @@ import { walletBlocks } from "./wallet";
 import { triggerBlocks, startBlock } from "./triggers";
 import { controlBlocks } from "./control";
 import { defiBlocks } from "./defi";
-import { Share2, Play, GitBranch, Wallet, ArrowRightLeft } from "lucide-react";
 import {
+  Share2,
+  Play,
+  GitBranch,
+  Wallet,
+  ArrowRightLeft,
+  Eye,
+  TrendingUp,
+  ArrowLeftRight,
+  LineChart,
+  Droplets,
+  Layers,
+  DollarSign,
+  Gamepad2,
+  Vote,
+  BarChart3,
+  Shield,
+  Clock,
+} from "lucide-react";
+import {
+  // Existing logos
   TelegramLogo,
   MailLogo,
   WalletLogo,
@@ -27,6 +46,40 @@ import {
   OneInchLogo,
   AaveLogo,
   CompoundLogo,
+  // Coming Soon - Oracle
+  ChainlinkLogo,
+  PythLogo,
+  // Coming Soon - Yield
+  YearnLogo,
+  BeefyLogo,
+  // Coming Soon - Bridges
+  StargateLogo,
+  AcrossLogo,
+  // Coming Soon - Perpetuals
+  GMXLogo,
+  HyperliquidLogo,
+  OstiumLogo,
+  // Coming Soon - Liquidity
+  CamelotLogo,
+  GammaLogo,
+  // Coming Soon - Staking
+  LidoLogo,
+  PendleLogo,
+  // Coming Soon - Stablecoins
+  FraxLogo,
+  RadiantLogo,
+  // Coming Soon - Gaming
+  TreasureLogo,
+  OpenSeaLogo,
+  // Coming Soon - Governance
+  SnapshotLogo,
+  TallyLogo,
+  // Coming Soon - Analytics
+  DefiLlamaLogo,
+  ZapperLogo,
+  // Coming Soon - Insurance
+  NexusMutualLogo,
+  InsurAceLogo,
 } from "./logos";
 
 // Re-export types
@@ -43,8 +96,12 @@ export {
   type SwitchCaseData,
 } from "./control";
 
+// Re-export Coming Soon module
+export * from "./coming-soon";
+
 // Icon registry - maps icon names to actual components (logos and icons)
 export const iconRegistry: IconRegistry = {
+  // Existing logos
   TelegramLogo,
   MailLogo,
   WalletLogo,
@@ -57,11 +114,72 @@ export const iconRegistry: IconRegistry = {
   OneInchLogo,
   AaveLogo,
   CompoundLogo,
-  Share2, // Keep for category icon
-  Play, // For triggers category
-  GitBranch, // For control category icon
-  Wallet, // For wallet category icon
-  ArrowRightLeft, // For DeFi category
+
+  // Coming Soon - Oracle
+  ChainlinkLogo,
+  PythLogo,
+
+  // Coming Soon - Yield
+  YearnLogo,
+  BeefyLogo,
+
+  // Coming Soon - Bridges
+  StargateLogo,
+  AcrossLogo,
+
+  // Coming Soon - Perpetuals
+  GMXLogo,
+  HyperliquidLogo,
+  OstiumLogo,
+
+  // Coming Soon - Liquidity
+  CamelotLogo,
+  GammaLogo,
+
+  // Coming Soon - Staking
+  LidoLogo,
+  PendleLogo,
+
+  // Coming Soon - Stablecoins
+  FraxLogo,
+  RadiantLogo,
+
+  // Coming Soon - Gaming
+  TreasureLogo,
+  OpenSeaLogo,
+
+  // Coming Soon - Governance
+  SnapshotLogo,
+  TallyLogo,
+
+  // Coming Soon - Analytics
+  DefiLlamaLogo,
+  ZapperLogo,
+
+  // Coming Soon - Insurance
+  NexusMutualLogo,
+  InsurAceLogo,
+
+  // Category icons (Lucide)
+  Share2, // Social category icon
+  Play, // Triggers category icon
+  GitBranch, // Control category icon
+  Wallet, // Wallet category icon
+  ArrowRightLeft, // DeFi category
+
+  // Coming Soon category icons
+  Eye, // Oracle
+  TrendingUp, // Yield
+  ArrowLeftRight, // Bridges
+  LineChart, // Perpetuals
+  Droplets, // Liquidity
+  Layers, // Staking
+  DollarSign, // Stablecoins
+  Gamepad2, // Gaming
+  Vote, // Governance
+  BarChart3, // Analytics
+  Shield, // Insurance
+  Clock, // Coming Soon main
 };
 
 
@@ -170,4 +288,3 @@ export function getCategoryById(
 ): CategoryDefinition | undefined {
   return blockCategories.find((cat) => cat.id === categoryId);
 }
-
