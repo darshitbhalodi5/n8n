@@ -21,6 +21,7 @@ import { IfNodeConfiguration } from "./if";
 import { SwitchNodeConfiguration } from "./switch";
 import { SwapNodeConfiguration } from "./swap";
 import { WalletNodeConfiguration } from "./wallet";
+import { LendingNodeConfiguration } from "./lending";
 
 export function WorkflowRightSidebar() {
   const {
@@ -106,6 +107,11 @@ export function WorkflowRightSidebar() {
     nodeType === "uniswap" || blockId === "uniswap" ||
     nodeType === "relay" || blockId === "relay" ||
     nodeType === "oneinch" || blockId === "oneinch";
+
+  // Check if this is a Lending node (Aave or Compound)
+  const isLendingNode =
+    nodeType === "aave" || blockId === "aave" ||
+    nodeType === "compound" || blockId === "compound";
 
   const handleDeleteClick = () => {
     setShowDeleteDialog(true);
@@ -230,6 +236,14 @@ export function WorkflowRightSidebar() {
         ) : isSwapNode ? (
           /* Swap Node Configuration */
           <SwapNodeConfiguration
+            nodeData={nodeData}
+            handleDataChange={handleBatchDataChange}
+            authenticated={authenticated}
+            login={login}
+          />
+        ) : isLendingNode ? (
+          /* Lending Node Configuration (Aave/Compound) */
+          <LendingNodeConfiguration
             nodeData={nodeData}
             handleDataChange={handleBatchDataChange}
             authenticated={authenticated}

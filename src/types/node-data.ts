@@ -101,6 +101,30 @@ export interface SwapNodeData extends BaseNodeData {
   lastExecutedAt?: string;
 }
 
+// Lending Node Data (for Aave, Compound blocks)
+export interface LendingNodeData extends BaseNodeData {
+  lendingProvider?: "AAVE" | "COMPOUND";
+  lendingChain?: "ARBITRUM"; // Only Arbitrum mainnet supported
+  lendingOperation?: "SUPPLY" | "WITHDRAW" | "BORROW" | "REPAY" | "ENABLE_COLLATERAL" | "DISABLE_COLLATERAL";
+  assetAddress?: string;
+  assetSymbol?: string;
+  assetDecimals?: number;
+  lendingAmount?: string;
+  interestRateMode?: "STABLE" | "VARIABLE";
+  walletAddress?: string;
+  simulateFirst?: boolean;
+  hasQuote?: boolean;
+  quoteSupplyAPY?: string;
+  quoteBorrowAPY?: string;
+  quoteGasEstimate?: string;
+  quoteHealthFactor?: string;
+  suppliedAmount?: string;
+  borrowedAmount?: string;
+  isCollateral?: boolean;
+  lastTxHash?: string;
+  lastExecutedAt?: string;
+}
+
 // Discriminated union for all node types
 export type WorkflowNodeData =
   | ({ nodeType: "slack" } & SlackNodeData)
@@ -113,6 +137,8 @@ export type WorkflowNodeData =
   | ({ nodeType: "uniswap" } & SwapNodeData)
   | ({ nodeType: "relay" } & SwapNodeData)
   | ({ nodeType: "oneinch" } & SwapNodeData)
+  | ({ nodeType: "aave" } & LendingNodeData)
+  | ({ nodeType: "compound" } & LendingNodeData)
   | ({ nodeType: "base" } & BaseNodeData);
 
 // Type guard functions
@@ -163,3 +189,12 @@ export function isSwapNodeData(data: unknown): data is SwapNodeData {
     ("swapProvider" in data || "sourceTokenAddress" in data || "swapAmount" in data)
   );
 }
+
+export function isLendingNodeData(data: unknown): data is LendingNodeData {
+  return (
+    typeof data === "object" &&
+    data !== null &&
+    ("lendingProvider" in data || "assetAddress" in data || "lendingAmount" in data)
+  );
+}
+
