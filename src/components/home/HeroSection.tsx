@@ -2,13 +2,30 @@
 
 import { FlowChartAnimation } from "./FlowChartAnimation";
 import { Typography } from "../ui/Typography";
+import { RotatingElement } from "../ui/RotatingElement";
 import { AiOutlineNodeIndex } from "react-icons/ai";
 import { MdCropSquare } from "react-icons/md";
 import { motion, MotionValue } from "framer-motion";
+import { 
+  FaLink, 
+  FaNetworkWired,
+  FaProjectDiagram,
+  FaCodeBranch
+} from "react-icons/fa";
 
 interface HeroSectionProps {
   gapAnimation?: MotionValue<string>;
 }
+
+const ROTATING_ICONS = [
+  { Icon: FaLink, name: "Link" },
+  { Icon: FaNetworkWired, name: "Network" },
+  { Icon: FaProjectDiagram, name: "Diagram" },
+  { Icon: FaCodeBranch, name: "Branch" },
+  { Icon: AiOutlineNodeIndex, name: "Link" },
+];
+
+const ROTATING_SYMBOLS = ["%", "$", "#", "@" , "&"];
 
 export function HeroSection({ gapAnimation }: HeroSectionProps) {
   return (
@@ -40,8 +57,13 @@ export function HeroSection({ gapAnimation }: HeroSectionProps) {
             className="flex items-center justify-center gap-3"
           >
             <Typography variant="h1" className="flex items-center justify-center gap-3">
-              THE CREATIVE <AiOutlineNodeIndex /> PLACE
-              FOR
+              THE CREATIVE{" "}
+              <RotatingElement
+                items={ROTATING_ICONS.map((item) => ({ Icon: item.Icon }))}
+                startDelay={500}
+                changeInterval={200}
+              />{" "}
+              PLACE FOR
             </Typography>
           </motion.div>
 
@@ -52,7 +74,16 @@ export function HeroSection({ gapAnimation }: HeroSectionProps) {
             className="flex items-center justify-center"
           >
             <Typography variant="h1">
-              <MdCropSquare className="w-7 h-7 mb-8 inline"/> WEB2 <span className="mx-3">&</span> WEB3 AUTOMATION
+              <MdCropSquare className="w-7 h-7 mb-8 inline"/> WEB2{" "}
+              <span className="mx-3">
+                <RotatingElement
+                  items={ROTATING_SYMBOLS.map((symbol) => ({ text: symbol }))}
+                  startDelay={800}
+                  changeInterval={200}
+                  className="inline-block"
+                />
+              </span>{" "}
+              WEB3 AUTOMATION
             </Typography>
           </motion.div>
         </motion.div>

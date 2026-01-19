@@ -3,6 +3,8 @@ import NavBar from "@/components/layout/Navbar";
 import { ProblemSolutionHorizontal } from "@/components/home/ProblemSolutionHorizontal";
 import { Footer } from "@/components/layout/Footer";
 import { HomeAnimationWrapper } from "@/components/home/HomeAnimationWrapper";
+import { WordsScrollSection } from "@/components/home/WordsScrollSection";
+import { AwardsMentionsSection } from "@/components/home/AwardsMentionsSection";
 
 export const metadata: Metadata = {
   title: "FlowForge — Unified Web2 & Web3 Automation Platform",
@@ -16,6 +18,8 @@ export default function Home() {
       <NavBar />
       <HomeAnimationWrapper />
       <ProblemSolutionHorizontal />
+      <WordsScrollSection />
+      <AwardsMentionsSection />
       <Footer />
     </div>
   );

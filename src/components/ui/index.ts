@@ -72,3 +72,6 @@ export {
 
 export { DeleteConfirmDialog } from "./DeleteConfirmDialog";
 export type { DeleteConfirmDialogProps } from "./DeleteConfirmDialog";
+
+export { RotatingElement } from "./RotatingElement";
+export type { RotatingElementProps } from "./RotatingElement";
