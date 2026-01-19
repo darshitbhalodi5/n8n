@@ -250,7 +250,8 @@ export function ProblemStatementSection({
               <Image
                 src="/assets/images/hybrid_canvas.png"
                 alt="Hybrid Canvas"
-                className="w-full h-full object-cover opacity-80"
+                fill
+                className="object-cover opacity-80"
               />
             </motion.div>
             <div className="relative z-10 p-8 md:p-12 space-y-4 bg-gradient-to-t from-black via-black/60 to-transparent">
@@ -286,7 +287,8 @@ export function ProblemStatementSection({
                 <Image
                   src="/assets/images/social_onboarding.png"
                   alt="Seamless Access"
-                  className="absolute inset-0 w-full h-full object-cover opacity-90"
+                  fill
+                  className="object-cover opacity-90"
                 />
                 <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black via-black/80 to-transparent">
                   <h4 className="text-white text-[10px] font-bold leading-none mb-1">Connect Blocks</h4>
@@ -310,7 +312,8 @@ export function ProblemStatementSection({
                 <Image
                   src="/assets/images/gasless.png"
                   alt="Frictionless Run"
-                  className="absolute inset-0 w-full h-full object-cover opacity-90"
+                  fill
+                  className="object-cover opacity-90"
                 />
                 <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black via-black/80 to-transparent">
                   <h4 className="text-white text-[8px] font-bold leading-none mb-1">Configure Blocks</h4>
@@ -341,7 +344,8 @@ export function ProblemStatementSection({
                 <Image
                   src="/assets/images/visual_logic.png"
                   alt="Smart Logic"
-                  className="absolute inset-0 w-full h-full object-cover opacity-90"
+                  fill
+                  className="object-cover opacity-90"
                 />
                 <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black via-black/80 to-transparent">
                   <h4 className="text-white text-[10px] font-bold leading-none mb-1">Save & Test</h4>
@@ -365,7 +369,8 @@ export function ProblemStatementSection({
                 <Image
                   src="/assets/images/event_trigger.png"
                   alt="Any Trigger"
-                  className="absolute inset-0 w-full h-full object-cover opacity-90"
+                  fill
+                  className="object-cover opacity-90"
                 />
                 <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black via-black/80 to-transparent">
                   <h4 className="text-white text-[8px] font-bold leading-none mb-1">Deploy or Run</h4>
