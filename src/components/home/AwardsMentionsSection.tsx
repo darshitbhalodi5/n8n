@@ -38,7 +38,7 @@ export function AwardsMentionsSection() {
 
         {/* 2. Creativepool */}
         <div className="flex items-center gap-4">
-          <div className="flex-shrink-0">
+          <div className="shrink-0">
             <svg width="60" height="60" viewBox="0 0 60 60" fill="none">
               <circle cx="30" cy="30" r="28" stroke="white" strokeWidth="3" fill="none" />
               <path
@@ -54,7 +54,7 @@ export function AwardsMentionsSection() {
 
         {/* 3. The Drum Awards */}
         <div className="flex items-center gap-4">
-          <div className="flex-shrink-0">
+          <div className="shrink-0">
             <div className="text-white">
               <p className="text-xl font-bold leading-tight">The Drum™</p>
               <p className="text-sm font-bold">Awards</p>
@@ -65,7 +65,7 @@ export function AwardsMentionsSection() {
 
         {/* 4. Hermes Creative Awards */}
         <div className="flex items-center gap-4">
-          <div className="flex-shrink-0">
+          <div className="shrink-0">
             <svg width="120" height="60" viewBox="0 0 120 60" fill="none">
               <text
                 x="60"
@@ -102,7 +102,7 @@ export function AwardsMentionsSection() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 max-w-7xl mx-auto">
         {/* 1. MUSE Creative Awards */}
         <div className="flex items-center gap-4">
-          <div className="flex-shrink-0">
+          <div className="shrink-0">
             <svg width="50" height="70" viewBox="0 0 50 70" fill="none">
               <path
                 d="M25 5 L40 15 L40 55 L25 65 L10 55 L10 15 Z"
@@ -136,7 +136,7 @@ export function AwardsMentionsSection() {
 
         {/* 2. The Drum Awards Digital Industries */}
         <div className="flex items-center gap-4">
-          <div className="flex-shrink-0">
+          <div className="shrink-0">
             <svg width="60" height="60" viewBox="0 0 60 60" fill="none">
               <circle cx="30" cy="30" r="25" stroke="white" strokeWidth="3" fill="none" />
               <path
@@ -158,7 +158,7 @@ export function AwardsMentionsSection() {
 
         {/* 3. Little Black Book */}
         <div className="flex items-center gap-4">
-          <div className="flex-shrink-0">
+          <div className="shrink-0">
             <svg width="60" height="60" viewBox="0 0 60 60" fill="none">
               <rect
                 x="15"
@@ -194,7 +194,7 @@ export function AwardsMentionsSection() {
 
         {/* 4. IDEAS AWARDS */}
         <div className="flex items-center gap-4">
-          <div className="flex-shrink-0">
+          <div className="shrink-0">
             <svg width="50" height="70" viewBox="0 0 50 70" fill="none">
               <rect
                 x="5"
