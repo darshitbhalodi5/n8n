@@ -1,15 +1,7 @@
 "use client";
 
 import React from "react";
-import { Button } from "@/components/ui/Button";
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/Dialog";
+import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
 
 interface SlackDeleteConnectionDialogProps {
     open: boolean;
@@ -28,24 +20,13 @@ export const SlackDeleteConnectionDialog = React.memo(function SlackDeleteConnec
     onCancel,
 }: SlackDeleteConnectionDialogProps) {
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Delete Webhook Connection</DialogTitle>
-                    <DialogDescription>
-                        Are you sure you want to delete this webhook connection? This action
-                        cannot be undone.
-                    </DialogDescription>
-                </DialogHeader>
-                <DialogFooter>
-                    <Button type="button" onClick={onCancel}>
-                        Cancel
-                    </Button>
-                    <Button type="button" onClick={onConfirm}>
-                        Delete
-                    </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
+        <DeleteConfirmDialog
+            open={open}
+            onOpenChange={onOpenChange}
+            onConfirm={onConfirm}
+            onCancel={onCancel}
+            title="Delete Webhook Connection?"
+            description="Are you sure you want to delete this webhook connection? This action cannot be undone."
+        />
     );
 });

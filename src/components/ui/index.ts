@@ -24,19 +24,6 @@ export type { CardProps } from "./Card";
 export { SimpleCard } from "./SimpleCard";
 export type { SimpleCardProps } from "./SimpleCard";
 
-export {
-  Dialog,
-  DialogPortal,
-  DialogOverlay,
-  DialogTrigger,
-  DialogContent,
-  DialogHeader,
-  DialogFooter,
-  DialogTitle,
-  DialogDescription,
-  DialogClose,
-} from "./Dialog";
-
 export { Input } from "./Input";
 export type { InputProps } from "./Input";
 
@@ -82,3 +69,6 @@ export {
   PopoverTrigger,
   PopoverContent,
 } from "./Popover";
+
+export { DeleteConfirmDialog } from "./DeleteConfirmDialog";
+export type { DeleteConfirmDialogProps } from "./DeleteConfirmDialog";

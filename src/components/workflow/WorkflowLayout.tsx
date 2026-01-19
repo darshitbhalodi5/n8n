@@ -182,7 +182,7 @@ export function WorkflowLayout({ onCategoryChange }: WorkflowLayoutProps) {
       </div>
 
       {/* Desktop: Single Sidebar with Logo, Dropdown, and Blocks */}
-      <aside className="max-h-screen hidden md:flex flex-col overflow-hidden md:w-[200px] lg:w-[220px] xl:w-[240px] p-4 bg-white/5">
+      <aside className="max-h-screen hidden md:flex flex-col overflow-hidden md:w-[200px] lg:w-[220px] xl:w-[240px] p-4 bg-white/5 border border-white/10 rounded-r-xl">
         {/* Category Dropdown */}
         <CategoryDropdown
           categories={categories}
@@ -255,11 +255,7 @@ export function WorkflowLayout({ onCategoryChange }: WorkflowLayoutProps) {
 
       {/* Desktop: Right Sidebar - Configuration Panel */}
       <aside
-        className={cn(
-          "hidden border-l border-border bg-card overflow-y-auto scrollbar-thin transition-all duration-200",
-          showRightSidebar ? "md:block" : "hidden",
-          "md:w-[280px] lg:w-[300px] xl:w-[320px]"
-        )}
+        className={`rounded-l-xl border-l border-white/10 bg-white/5 overflow-y-auto transition-all duration-200 ${showRightSidebar ? "md:block" : "hidden"} md:w-[280px] lg:w-[300px] xl:w-[320px]`}
       >
         {showRightSidebar && <WorkflowRightSidebar />}
       </aside>

@@ -1,10 +1,9 @@
 "use client";
 
-import React, { useCallback } from "react";
+import { useCallback } from "react";
 import {
   ReactFlow,
   Background,
-  MiniMap,
   OnNodesChange,
   OnEdgesChange,
   OnConnect,
@@ -14,7 +13,6 @@ import {
   ConnectionMode,
 } from "reactflow";
 import "reactflow/dist/style.css";
-import { cn } from "@/lib/utils";
 import { useWorkflow } from "@/contexts/WorkflowContext";
 import { nodeTypes as importedNodeTypes } from "../nodeTypes";
 
@@ -29,7 +27,6 @@ export interface WorkflowCanvasProps {
 function WorkflowCanvasInner({
   className,
   showBackground = true,
-  showMiniMap = false,
   backgroundVariant = BackgroundVariant.Dots,
   fitView = true,
 }: WorkflowCanvasProps) {
@@ -78,10 +75,7 @@ function WorkflowCanvasInner({
 
   return (
     <div
-      className={cn(
-        "w-full h-full min-h-[500px] rounded-lg border border-border bg-background",
-        className
-      )}
+      className={`w-full h-full min-h-[500px] rounded-xl border border-white/10 transition-all duration-300 bg-white/5 ${className || ""}`}
     >
       <ReactFlow
         nodes={nodes}
@@ -121,16 +115,9 @@ function WorkflowCanvasInner({
         {showBackground && (
           <Background
             variant={backgroundVariant}
-            gap={16}
-            size={1}
-            color="hsl(var(--muted-foreground) / 0.2)"
-          />
-        )}
-        {showMiniMap && (
-          <MiniMap
-            className="bg-card! border-border!"
-            nodeColor="hsl(var(--primary))"
-            maskColor="hsl(var(--background) / 0.8)"
+            gap={20}
+            size={2}
+            color="rgba(255, 255, 255, 0.08)"
           />
         )}
       </ReactFlow>
@@ -138,30 +125,6 @@ function WorkflowCanvasInner({
   );
 }
 
-/**
- * WorkflowCanvas - A generic React Flow canvas component
- *
- * Features:
- * - Token-based styling using CSS variables
- * - Optional Background and MiniMap
- * - Mouse-based zoom (scroll wheel)
- * - Pan on drag
- * - Fully controlled component pattern
- * - No business logic, pure presentation
- *
- * @example
- * ```tsx
- * <WorkflowCanvas
- *   nodes={nodes}
- *   edges={edges}
- *   onNodesChange={handleNodesChange}
- *   onEdgesChange={handleEdgesChange}
- *   onConnect={handleConnect}
- *   nodeTypes={customNodeTypes}
- *   showBackground
- * />
- * ```
- */
 export function WorkflowCanvas(props: WorkflowCanvasProps) {
   return (
     <ReactFlowProvider>

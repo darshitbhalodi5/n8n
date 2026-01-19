@@ -28,7 +28,6 @@ export {
 } from "./nodeTypes";
 
 export { WorkflowToolbar } from "./workflow-layout/WorkflowToolbar";
-export { WorkflowStatusBar } from "./workflow-layout/WorkflowStatusBar";
 
 // Workflow management components
 export { WorkflowDashboard } from "./WorkflowDashboard";

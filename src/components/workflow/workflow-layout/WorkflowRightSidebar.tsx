@@ -4,35 +4,23 @@ import React, { useState } from "react";
 import { Typography } from "@/components/ui/Typography";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/Dialog";
-import { usePrivy, useWallets } from "@privy-io/react-auth";
-import { useSafeWalletContext } from "@/contexts/SafeWalletContext";
+import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
+import { usePrivy } from "@privy-io/react-auth";
 import { useWorkflow } from "@/contexts/WorkflowContext";
 import { getBlockById, getBlockByNodeType } from "@/components/blocks";
 import type { BlockDefinition } from "@/components/blocks";
 import {
-  RefreshCw,
-  Plus,
-  CheckCircle2,
-  XCircle,
-  Loader2,
   Trash2,
-  LogIn,
   X,
 } from "lucide-react";
+import { HiPlay } from "react-icons/hi2";
 import { SlackNodeConfiguration } from "./slack";
 import { TelegramNodeConfiguration } from "./telegram";
 import { EmailNodeConfiguration } from "./email";
 import { IfNodeConfiguration } from "./if";
 import { SwitchNodeConfiguration } from "./switch";
 import { SwapNodeConfiguration } from "./swap";
+import { WalletNodeConfiguration } from "./wallet";
 
 export function WorkflowRightSidebar() {
   const {
@@ -42,11 +30,6 @@ export function WorkflowRightSidebar() {
     setSelectedNode,
   } = useWorkflow();
   const { authenticated, login } = usePrivy();
-  const { wallets } = useWallets();
-  const embeddedWallet = wallets.find((w) => w.walletClientType === "privy");
-  const isConnected = authenticated && embeddedWallet !== undefined;
-  const address = embeddedWallet?.address;
-  const { selection, creation, moduleControl } = useSafeWalletContext();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   if (!selectedNode) {
@@ -141,342 +124,73 @@ export function WorkflowRightSidebar() {
 
   return (
     <>
-      <div className="h-full overflow-y-auto p-4 space-y-4">
+      <div className="h-full overflow-y-auto p-4 space-y-8">
         {/* Header */}
-        <div className="space-y-2 pb-4 border-b border-border">
-          <div className="flex items-start justify-between gap-2">
-            <div className="flex-1">
-              <Typography variant="h3" className="text-foreground">
-                {blockDefinition?.label || "Block Settings"}
-              </Typography>
-              <Typography variant="caption" className="text-muted-foreground">
-                {blockDefinition?.description ||
-                  "Configure parameters for the selected block"}
-              </Typography>
-            </div>
-            <div className="flex items-center gap-1">
-              {/* Mobile Close Button - Next to Delete */}
+        <div className="pb-6 border-b border-white/60 flex items-center justify-between gap-4">
+          <div className="flex flex-col items-start gap-1">
+            <Typography
+              variant="h3"
+            >
+              {blockDefinition?.label || "Block Settings"}
+            </Typography>
+            <Typography
+              variant="caption"
+            >
+              {blockDefinition?.description ||
+                "Configure parameters for the selected block"}
+            </Typography>
+          </div>
+          <div className="flex items-center gap-2">
+            {/* Mobile Close Button - Next to Delete */}
+            <Button
+              onClick={() => setSelectedNode(null)}
+              className="md:hidden w-9 h-9 p-0 rounded-full bg-secondary/50 hover:bg-secondary border border-border/50 hover:border-border text-muted-foreground hover:text-foreground transition-all duration-200 shadow-sm hover:shadow"
+              aria-label="Close settings"
+            >
+              <X className="w-4 h-4" />
+            </Button>
+            {/* Delete Button - Hidden for Start node */}
+            {!isStartNode && (
               <Button
-                onClick={() => setSelectedNode(null)}
-                className="md:hidden text-muted-foreground hover:text-foreground hover:bg-secondary/50"
-                aria-label="Close settings"
+                onClick={handleDeleteClick}
+                className="w-9 h-9 p-0 rounded-full"
+                aria-label="Delete block"
               >
-                <X className="w-4 h-4" />
+                <Trash2 className="w-4 h-4" />
               </Button>
-              {/* Delete Button - Hidden for Start node */}
-              {!isStartNode && (
-                <Button
-                  onClick={handleDeleteClick}
-                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                  aria-label="Delete block"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              )}
-            </div>
+            )}
           </div>
         </div>
 
         {/* Start Node - Simple info display */}
         {isStartNode ? (
-          <div className="space-y-4">
-            <Card className="p-4 space-y-3 border-emerald-500/30 bg-emerald-500/5">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-linear-to-br from-emerald-500 to-green-600 flex items-center justify-center shadow-md">
-                  <svg
-                    className="w-5 h-5 text-white ml-0.5"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                  >
-                    <path d="M8 5v14l11-7z" />
-                  </svg>
-                </div>
-                <div>
-                  <Typography
-                    variant="bodySmall"
-                    className="font-semibold text-emerald-600 dark:text-emerald-400"
-                  >
-                    Workflow Entry Point
-                  </Typography>
-                  <Typography
-                    variant="caption"
-                    className="text-muted-foreground"
-                  >
-                    All workflows begin here
-                  </Typography>
-                </div>
+          <Card className="p-6 bg-white/5 border border-white/20 hover:bg-white/10 hover:border-amber-600/40 rounded-lg transition-all duration-200">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-xl bg-linear-to-br from-orange-500 to-amber-500 flex items-center justify-center shrink-0 shadow-lg shadow-orange-500/20">
+                <HiPlay className="w-7 h-7 text-white ml-0.5" />
               </div>
-            </Card>
-
-            <Card className="p-4 space-y-3">
-              <Typography
-                variant="bodySmall"
-                className="font-semibold text-foreground"
-              >
-                💡 Getting Started
-              </Typography>
-              <div className="space-y-2 text-sm text-muted-foreground">
-                <p>
-                  Connect other blocks to the Start node to define your
-                  workflow.
-                </p>
+              <div className="flex-1 min-w-0">
+                <Typography
+                  variant="bodySmall"
+                  className="font-semibold text-foreground mb-1"
+                >
+                  Start Node
+                </Typography>
+                <Typography
+                  variant="caption"
+                  className="text-muted-foreground"
+                >
+                  Connect blocks to begin your workflow
+                </Typography>
               </div>
-            </Card>
-          </div>
+            </div>
+          </Card>
         ) : isWalletNode ? (
           /* Wallet Node Configuration */
-          <div className="space-y-4">
-            {/* Section A: Login */}
-            <Card className="p-4 space-y-3">
-              <Typography
-                variant="bodySmall"
-                className="font-semibold text-foreground"
-              >
-                1. Login / Sign Up
-              </Typography>
-              <div className="flex justify-center">
-                {authenticated && embeddedWallet ? (
-                  <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-secondary text-secondary-foreground text-sm">
-                    <span>✓ Connected</span>
-                  </div>
-                ) : (
-                  <Button onClick={login} className="gap-2">
-                    <LogIn className="w-4 h-4" />
-                    Login / Sign Up
-                  </Button>
-                )}
-              </div>
-            </Card>
-
-            {/* Section B: Safe Wallet (shown after connect) */}
-            {isConnected && address && (
-              <Card className="p-4 space-y-3">
-                <Typography
-                  variant="bodySmall"
-                  className="font-semibold text-foreground"
-                >
-                  2. Select or Create Safe Wallet
-                </Typography>
-
-                {/* Loading state */}
-                {selection.isLoading && (
-                  <div className="flex items-center justify-center py-4">
-                    <Loader2 className="w-5 h-5 animate-spin text-primary" />
-                    <span className="ml-2 text-sm text-muted-foreground">
-                      Loading safes...
-                    </span>
-                  </div>
-                )}
-
-                {/* Error state */}
-                {selection.error && (
-                  <div className="text-sm text-destructive">
-                    {selection.error}
-                  </div>
-                )}
-
-                {/* Safe list */}
-                {!selection.isLoading && !selection.error && (
-                  <>
-                    {selection.safeWallets.length > 0 ? (
-                      <div className="space-y-2">
-                        <select
-                          value={selection.selectedSafe || ""}
-                          onChange={(e) =>
-                            selection.selectSafe(e.target.value || null)
-                          }
-                          className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                          aria-label="Select Safe wallet"
-                        >
-                          <option value="">Select a Safe wallet...</option>
-                          {selection.safeWallets.map((safe) => (
-                            <option key={safe} value={safe}>
-                              {safe.slice(0, 6)}...{safe.slice(-4)}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    ) : (
-                      <div className="text-sm text-muted-foreground py-2">
-                        No Safe wallets found
-                      </div>
-                    )}
-
-                    {/* Action buttons */}
-                    <div className="flex gap-2">
-                      <Button
-                        onClick={selection.refreshSafeList}
-                        className="flex-1"
-                      >
-                        <RefreshCw className="w-3 h-3 mr-1" />
-                        Refresh
-                      </Button>
-                      {selection.safeWallets.length === 0 && (
-                        <Button
-                          onClick={creation.handleCreateNewSafe}
-                          disabled={creation.isCreating}
-                          className="flex-1"
-                        >
-                          {creation.isCreating ? (
-                            <>
-                              <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                              Creating...
-                            </>
-                          ) : (
-                            <>
-                              <Plus className="w-3 h-3 mr-1" />
-                              Create Safe
-                            </>
-                          )}
-                        </Button>
-                      )}
-                    </div>
-                  </>
-                )}
-              </Card>
-            )}
-
-            {/* Section C: Module Status (when a Safe selected) */}
-            {isConnected && selection.selectedSafe && (
-              <Card className="p-4 space-y-3">
-                <Typography
-                  variant="bodySmall"
-                  className="font-semibold text-foreground"
-                >
-                  3. TriggerX Module Status
-                </Typography>
-
-                {selection.checkingModule ? (
-                  <div className="flex items-center py-2">
-                    <Loader2 className="w-4 h-4 animate-spin text-primary mr-2" />
-                    <span className="text-sm text-muted-foreground">
-                      Checking module status...
-                    </span>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {/* Status display */}
-                    <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-secondary/30">
-                      <span className="text-sm font-medium">
-                        Module Status:
-                      </span>
-                      <div className="flex items-center gap-2">
-                        {selection.moduleEnabled === true && (
-                          <>
-                            <CheckCircle2 className="w-4 h-4 text-success" />
-                            <span className="text-sm text-success font-medium">
-                              Enabled
-                            </span>
-                          </>
-                        )}
-                        {selection.moduleEnabled === false && (
-                          <>
-                            <XCircle className="w-4 h-4 text-destructive" />
-                            <span className="text-sm text-destructive font-medium">
-                              Disabled
-                            </span>
-                          </>
-                        )}
-                        {selection.moduleEnabled === null && (
-                          <span className="text-sm text-muted-foreground">
-                            Unknown
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Action buttons */}
-                    <div className="flex gap-2">
-                      <Button
-                        onClick={moduleControl.handleManualModuleRefresh}
-                        className="flex-1"
-                      >
-                        <RefreshCw className="w-3 h-3 mr-1" />
-                        Refresh Status
-                      </Button>
-                      {selection.moduleEnabled === false && (
-                        <Button
-                          onClick={moduleControl.handleEnableModule}
-                          className="flex-1"
-                        >
-                          Enable Module
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </Card>
-            )}
-
-            {/* Creation flow status */}
-            {creation.showCreateFlow && (
-              <Card className="p-4 space-y-2">
-                <Typography
-                  variant="bodySmall"
-                  className="font-semibold text-foreground"
-                >
-                  Creating Safe Wallet...
-                </Typography>
-
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    {creation.createStep === "pending" && (
-                      <Loader2 className="w-3 h-3 animate-spin text-primary" />
-                    )}
-                    {creation.createStep === "success" && (
-                      <CheckCircle2 className="w-3 h-3 text-success" />
-                    )}
-                    {creation.createStep === "error" && (
-                      <XCircle className="w-3 h-3 text-destructive" />
-                    )}
-                    <span className="text-xs text-foreground">
-                      Creating Safe contract
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    {creation.signStep === "pending" && (
-                      <Loader2 className="w-3 h-3 animate-spin text-primary" />
-                    )}
-                    {creation.signStep === "success" && (
-                      <CheckCircle2 className="w-3 h-3 text-success" />
-                    )}
-                    {creation.signStep === "error" && (
-                      <XCircle className="w-3 h-3 text-destructive" />
-                    )}
-                    <span className="text-xs text-foreground">
-                      Signing module enable
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    {creation.enableStep === "pending" && (
-                      <Loader2 className="w-3 h-3 animate-spin text-primary" />
-                    )}
-                    {creation.enableStep === "success" && (
-                      <CheckCircle2 className="w-3 h-3 text-success" />
-                    )}
-                    {creation.enableStep === "error" && (
-                      <XCircle className="w-3 h-3 text-destructive" />
-                    )}
-                    <span className="text-xs text-foreground">
-                      Enabling module
-                    </span>
-                  </div>
-                </div>
-
-                {(creation.createError ||
-                  creation.signError ||
-                  creation.enableError) && (
-                    <div className="text-xs text-destructive mt-2">
-                      {creation.createError ||
-                        creation.signError ||
-                        creation.enableError}
-                    </div>
-                  )}
-              </Card>
-            )}
-          </div>
+          <WalletNodeConfiguration
+            authenticated={authenticated}
+            login={login}
+          />
         ) : isEmailNode ? (
           /* Email Node Configuration */
           <EmailNodeConfiguration
@@ -618,25 +332,12 @@ export function WorkflowRightSidebar() {
       </div>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete Block</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete this block? This action cannot be
-              undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button onClick={handleDeleteCancel}>
-              Cancel
-            </Button>
-            <Button onClick={handleDeleteConfirm}>
-              Delete
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DeleteConfirmDialog
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        onConfirm={handleDeleteConfirm}
+        onCancel={handleDeleteCancel}
+      />
     </>
   );
 }

@@ -20,6 +20,7 @@ body {
 :root {
   --background: #000000;
   --foreground: #ffffff;
+  --primary: #ffffff;
 }
 
 /* Custom scrollbar for dark theme */

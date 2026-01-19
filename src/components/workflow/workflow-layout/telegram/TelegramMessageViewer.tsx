@@ -4,12 +4,7 @@ import React, { useCallback, useEffect, useRef } from "react";
 import { Loader2, RefreshCw, MessageSquare, X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Typography } from "@/components/ui/Typography";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/Dialog";
+import { cn } from "@/lib/utils";
 
 interface TelegramMessage {
   updateId: number;
@@ -63,10 +58,38 @@ export const TelegramMessageViewer = React.memo(function TelegramMessageViewer({
     });
   }, []);
 
+  // Handle ESC key to close
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
+
+    document.addEventListener("keydown", handleEscape);
+    return () => {
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [isOpen, onClose]);
+
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
+
   // Focus management when modal opens
   useEffect(() => {
     if (isOpen && closeButtonRef.current) {
-      // Small delay to ensure dialog is rendered
+      // Small delay to ensure modal is rendered
       const timer = setTimeout(() => {
         closeButtonRef.current?.focus();
       }, 100);
@@ -74,17 +97,49 @@ export const TelegramMessageViewer = React.memo(function TelegramMessageViewer({
     }
   }, [isOpen]);
 
+  if (!isOpen) return null;
+
+  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-md max-h-[80vh] flex flex-col p-0 gap-0">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center"
+      onClick={handleBackdropClick}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="telegram-messages-title"
+      aria-describedby="telegram-messages-description"
+    >
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 bg-background/80 backdrop-blur-sm"
+        aria-hidden="true"
+      />
+
+      {/* Modal Content */}
+      <div
+        className={cn(
+          "relative z-50 w-full max-w-md max-h-[80vh] mx-4",
+          "bg-card border border-border rounded-xl",
+          "shadow-lg flex flex-col",
+          "animate-in fade-in-0 zoom-in-95 duration-200"
+        )}
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
-        <DialogHeader className="flex flex-row items-center justify-between p-4 border-b border-border">
+        <div className="flex flex-row items-center justify-between p-4 border-b border-border">
           <div className="flex items-center gap-2">
             <MessageSquare
               className="w-5 h-5 text-primary"
               aria-hidden="true"
             />
-            <DialogTitle className="text-base">Incoming Messages</DialogTitle>
+            <h2 id="telegram-messages-title" className="text-base font-semibold text-foreground">
+              Incoming Messages
+            </h2>
           </div>
           <div className="flex items-center gap-2">
             <Button
@@ -108,7 +163,7 @@ export const TelegramMessageViewer = React.memo(function TelegramMessageViewer({
               <X className="w-4 h-4" />
             </Button>
           </div>
-        </DialogHeader>
+        </div>
 
         {/* Messages */}
         <div
@@ -179,7 +234,7 @@ export const TelegramMessageViewer = React.memo(function TelegramMessageViewer({
             webhook
           </Typography>
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   );
 });
