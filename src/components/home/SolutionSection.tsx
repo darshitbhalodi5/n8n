@@ -161,80 +161,84 @@ export function SolutionSection({ progress }: SolutionSectionProps) {
   return (
     <div className="h-full w-full flex flex-col items-center justify-center overflow-hidden bg-white">
       {/* Row 1 */}
+      {/* Row 1 - PROTOCOLS */}
+      {/* Row 1 - HYBRID */}
+      {/* Row 1 - HYBRID */}
       <RevealRow x={row1X} scale={row1Scale} scroll={row1Scroll}>
         <div className="flex items-start justify-center h-[17vh] gap-4 w-full py-3">
-          <MediaCard src="https://images.unsplash.com/photo-1542204165-65bf26472b9b?auto=format&fit=crop&q=80&w=600" />
+          <MediaCard src="/assets/images/hybrid_canvas.png" />
           <MediaCard
-            src="https://images.unsplash.com/photo-1600607686527-6fb886090705?auto=format&fit=crop&q=80&w=600"
+            src="/assets/images/hybrid_var1.png"
             className="md:w-[200px]"
           />
-          <MediaCard src="https://images.unsplash.com/photo-1517292987719-0369a794ec0f?auto=format&fit=crop&q=80&w=600" />
+          <MediaCard src="/assets/images/hybrid_var2.png" />
           <h2 className="text-7xl md:text-9xl font-bold tracking-tight leading-none shrink-0 text-black uppercase select-none">
-            Branding
+            Hybrid
           </h2>
           <ArrowDownRight className="w-16 h-16 md:w-36 md:h-36 text-black shrink-0 stroke-[1.5]" />
-          <MediaCard src="https://images.unsplash.com/photo-1616469829941-c7200edec809?auto=format&fit=crop&q=80&w=600" />
+          <MediaCard src="/assets/images/hybrid_canvas.png" />
           <MediaCard
-            src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&q=80&w=600"
-            label="Graphic"
+            src="/assets/images/hybrid_var1.png"
+            label="Unified"
           />
-          <MediaCard src="https://images.unsplash.com/photo-1493612276216-ee3925520721?auto=format&fit=crop&q=80&w=600" />
-          <MediaCard src="https://images.unsplash.com/photo-1542204165-65bf26472b9b?auto=format&fit=crop&q=80&w=600" />
-          <MediaCard
-            src="https://images.unsplash.com/photo-1600607686527-6fb886090705?auto=format&fit=crop&q=80&w=600"
-            className="md:w-[200px]"
-          />
-          <MediaCard src="https://images.unsplash.com/photo-1517292987719-0369a794ec0f?auto=format&fit=crop&q=80&w=600" />
+          <MediaCard src="/assets/images/hybrid_var2.png" />
         </div>
       </RevealRow>
 
       {/* Row 2 */}
+      {/* Row 2 - INTEGRATIONS */}
+      {/* Row 2 - ACCESS */}
+      {/* Row 2 - ACCESS */}
       <RevealRow x={row2X} scale={row2Scale} scroll={row2Scroll}>
         <div className="flex items-start justify-center h-[17vh] gap-4 w-full py-3">
-          <MediaCard src="https://images.unsplash.com/photo-1616469829941-c7200edec809?auto=format&fit=crop&q=80&w=600" />
-          <MediaCard src="https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&q=80&w=600" />
-          <MediaCard src="https://images.unsplash.com/photo-1496337589254-7e19d01cec44?auto=format&fit=crop&q=80&w=600" />
+          <MediaCard src="/assets/images/social_onboarding.png" />
+          <MediaCard src="/assets/images/access_var1.png" />
+          <MediaCard src="/assets/images/access_var2.png" />
           <h2 className="text-7xl md:text-9xl font-bold tracking-tight leading-none shrink-0 text-black uppercase select-none">
-            Websites
+            Access
           </h2>
           <div className="w-16 h-16 md:w-32 md:h-32 rounded-full bg-black shrink-0" />
-          <MediaCard src="https://images.unsplash.com/photo-1522542550221-31fd19575a2d?auto=format&fit=crop&q=80&w=600" />
-          <MediaCard src="https://images.unsplash.com/photo-1542204165-65bf26472b9b?auto=format&fit=crop&q=80&w=600" />
+          <MediaCard src="/assets/images/social_onboarding.png" />
+          <MediaCard src="/assets/images/access_var1.png" />
           <MediaCard
-            src="https://images.unsplash.com/photo-1600607686527-6fb886090705?auto=format&fit=crop&q=80&w=600"
+            src="/assets/images/access_var2.png"
             className="md:w-[200px]"
           />
-          <MediaCard src="https://images.unsplash.com/photo-1517292987719-0369a794ec0f?auto=format&fit=crop&q=80&w=600" />
         </div>
       </RevealRow>
 
       {/* Row 3 */}
+      {/* Row 3 - PAYMENTS */}
+      {/* Row 3 - GASLESS */}
+      {/* Row 3 - GASLESS */}
       <RevealRow x={row3X} scale={row3Scale} scroll={row3Scroll}>
         <div className="flex items-start justify-center h-[17vh] gap-4 w-full py-3">
-          <MediaCard src="https://images.unsplash.com/photo-1611162617474-5b21e879e113?auto=format&fit=crop&q=80&w=600" />
-          <MediaCard src="https://images.unsplash.com/photo-1611162616475-46b635cb6868?auto=format&fit=crop&q=80&w=600" />
-          <MediaCard src="https://images.unsplash.com/photo-1542204165-65bf26472b9b?auto=format&fit=crop&q=80&w=600" />
+          <MediaCard src="/assets/images/gasless.png" />
+          <MediaCard src="/assets/images/gasless_var1.png" />
+          <MediaCard src="/assets/images/gasless_var2.png" />
           <h2 className="text-7xl md:text-9xl font-bold tracking-tight leading-none shrink-0 text-black uppercase select-none">
-            Social
+            Gasless
           </h2>
-          <div className="w-20 h-12 md:w-40 md:h-24 bg-black shrink-0 rounded-sm" />
-          <MediaCard src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=600" />
-          <MediaCard src="https://images.unsplash.com/photo-1542204165-65bf26472b9b?auto=format&fit=crop&q=80&w=600" />
+          {/* <div className="w-20 h-12 md:w-40 md:h-24 bg-black shrink-0 rounded-sm" /> */}
+          <MediaCard src="/assets/images/gasless.png" />
+          <MediaCard src="/assets/images/gasless_var1.png" />
           <MediaCard
-            src="https://images.unsplash.com/photo-1600607686527-6fb886090705?auto=format&fit=crop&q=80&w=600"
+            src="/assets/images/gasless_var2.png"
             className="md:w-[200px]"
           />
-          <MediaCard src="https://images.unsplash.com/photo-1517292987719-0369a794ec0f?auto=format&fit=crop&q=80&w=600" />
         </div>
       </RevealRow>
 
       {/* Row 4 */}
+      {/* Row 4 - AGENTS */}
+      {/* Row 4 - LOGIC */}
+      {/* Row 4 - LOGIC */}
       <RevealRow x={row4X} scale={row4Scale} scroll={row4Scroll}>
         <div className="flex items-start justify-center h-[17vh] gap-4 w-full py-3">
-          <MediaCard src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&q=80&w=600" />
+          <MediaCard src="/assets/images/visual_logic.png" />
           <div className="w-10 h-10 md:w-20 md:h-20 border-[6px] border-black shrink-0" />
           <h2 className="text-7xl md:text-9xl font-bold tracking-tight leading-none shrink-0 text-black uppercase select-none">
-            Campaigns
+            Logic
           </h2>
           <div className="shrink-0 h-[100px] md:h-[160px] w-[180px] md:w-[300px] rounded-2xl bg-linear-to-tr from-pink-500 via-red-500 to-yellow-500 flex items-center justify-center">
             <div className="grid grid-cols-6 gap-2 opacity-50">
@@ -243,57 +247,60 @@ export function SolutionSection({ progress }: SolutionSectionProps) {
               ))}
             </div>
           </div>
-          <MediaCard src="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&q=80&w=600" />
-          <MediaCard src="https://images.unsplash.com/photo-1542204165-65bf26472b9b?auto=format&fit=crop&q=80&w=600" />
+          <MediaCard src="/assets/images/logic_var1.png" />
+          <MediaCard src="/assets/images/logic_var2.png" />
           <MediaCard
-            src="https://images.unsplash.com/photo-1600607686527-6fb886090705?auto=format&fit=crop&q=80&w=600"
+            src="/assets/images/visual_logic.png"
             className="md:w-[200px]"
           />
-          <MediaCard src="https://images.unsplash.com/photo-1517292987719-0369a794ec0f?auto=format&fit=crop&q=80&w=600" />
         </div>
       </RevealRow>
 
       {/* Row 5 */}
+      {/* Row 5 - SOCIALS */}
+      {/* Row 5 - EVENTS */}
+      {/* Row 5 - EVENTS */}
       <RevealRow x={row5X} scale={row5Scale} scroll={row5Scroll}>
         <div className="flex items-start justify-center h-[17vh] gap-4 w-full py-3">
-          <MediaCard src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80&w=600" />
+          <MediaCard src="/assets/images/event_trigger.png" />
           <MediaCard
-            src="https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&q=80&w=600"
-            label="worked"
+            src="/assets/images/events_var1.png"
+            label="Live"
             className="grayscale contrast-125"
           />
-          <MediaCard src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=600" />
-          <MediaCard src="https://images.unsplash.com/photo-1493238792000-8113da705763?auto=format&fit=crop&q=80&w=600" />
+          <MediaCard src="/assets/images/events_var2.png" />
+          <MediaCard src="/assets/images/event_trigger.png" />
           <h2 className="text-7xl md:text-9xl font-bold tracking-tight leading-none shrink-0 text-black uppercase select-none">
-            Motion
+            Events
           </h2>
           <Play className="w-16 h-16 md:w-32 md:h-32 text-black fill-black shrink-0 ml-2" />
-          <MediaCard src="https://images.unsplash.com/photo-1535295972055-1c762f4483e5?auto=format&fit=crop&q=80&w=600" />
-          <MediaCard src="https://images.unsplash.com/photo-1542204165-65bf26472b9b?auto=format&fit=crop&q=80&w=600" />
+          <MediaCard src="/assets/images/events_var1.png" />
+          <MediaCard src="/assets/images/events_var2.png" />
           <MediaCard
-            src="https://images.unsplash.com/photo-1600607686527-6fb886090705?auto=format&fit=crop&q=80&w=600"
+            src="/assets/images/event_trigger.png"
             className="md:w-[200px]"
           />
-          <MediaCard src="https://images.unsplash.com/photo-1517292987719-0369a794ec0f?auto=format&fit=crop&q=80&w=600" />
         </div>
       </RevealRow>
 
       {/* Row 6 */}
+      {/* Row 6 - INFRASTRUCTURE */}
+      {/* Row 6 - SCALE */}
       <RevealRow x={row6X} scale={row6Scale} scroll={row6Scroll}>
         <div className="flex items-start justify-center h-[17vh] gap-4 w-full py-3">
-          <MediaCard src="https://images.unsplash.com/photo-1561489396-888724a1543d?auto=format&fit=crop&q=80&w=600" />
-          <MediaCard src="https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&q=80&w=600" />
-          <MediaCard src="https://images.unsplash.com/photo-1496337589254-7e19d01cec44?auto=format&fit=crop&q=80&w=600" />
+          <MediaCard src="/assets/images/feature_infrastructure.png" />
+          <MediaCard src="/assets/images/feature_infrastructure.png" />
+          <MediaCard src="/assets/images/feature_infrastructure.png" />
           <h2 className="text-7xl md:text-9xl font-bold tracking-tight leading-none shrink-0 text-black uppercase select-none">
-            Experiential
+            Scale
           </h2>
           <MoveUpRight className="w-16 h-16 md:w-36 md:h-36 text-black shrink-0 stroke-[1.5]" />
-          <MediaCard src="https://images.unsplash.com/photo-1542204165-65bf26472b9b?auto=format&fit=crop&q=80&w=600" />
+          <MediaCard src="/assets/images/feature_infrastructure.png" />
           <MediaCard
-            src="https://images.unsplash.com/photo-1600607686527-6fb886090705?auto=format&fit=crop&q=80&w=600"
+            src="/assets/images/feature_infrastructure.png"
             className="md:w-[200px]"
           />
-          <MediaCard src="https://images.unsplash.com/photo-1517292987719-0369a794ec0f?auto=format&fit=crop&q=80&w=600" />
+          <MediaCard src="/assets/images/feature_infrastructure.png" />
         </div>
       </RevealRow>
     </div>

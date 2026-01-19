@@ -21,7 +21,7 @@ import {
     ArrowDownCircle,
 } from "lucide-react";
 import { useWallets } from "@privy-io/react-auth";
-import { ethers } from "ethers";
+// import { ethers } from "ethers";
 import { useSafeWalletContext } from "@/contexts/SafeWalletContext";
 import {
     LendingProvider,
@@ -73,50 +73,50 @@ const AAVE_POOL_ADDRESS = '0x794a61358D6845594F94dc1DB02A252b5b4814aD';
 const COMPOUND_COMET_ADDRESS = '0xA5EDBDD9646f8dFF606d7448e414884C7d905dCA';
 
 // ABI fragments for lending operations
-const AAVE_POOL_ABI = [
-    'function supply(address asset, uint256 amount, address onBehalfOf, uint16 referralCode)',
-    'function withdraw(address asset, uint256 amount, address to) returns (uint256)',
-    'function borrow(address asset, uint256 amount, uint256 interestRateMode, uint16 referralCode, address onBehalfOf)',
-    'function repay(address asset, uint256 amount, uint256 interestRateMode, address onBehalfOf) returns (uint256)',
-    'function setUserUseReserveAsCollateral(address asset, bool useAsCollateral)',
-];
+// const AAVE_POOL_ABI = [
+//     'function supply(address asset, uint256 amount, address onBehalfOf, uint16 referralCode)',
+//     'function withdraw(address asset, uint256 amount, address to) returns (uint256)',
+//     'function borrow(address asset, uint256 amount, uint256 interestRateMode, uint16 referralCode, address onBehalfOf)',
+//     'function repay(address asset, uint256 amount, uint256 interestRateMode, address onBehalfOf) returns (uint256)',
+//     'function setUserUseReserveAsCollateral(address asset, bool useAsCollateral)',
+// ];
 
-const ERC20_ABI = {
-    allowance: {
-        name: 'allowance',
-        type: 'function',
-        inputs: [
-            { name: 'owner', type: 'address' },
-            { name: 'spender', type: 'address' },
-        ],
-        outputs: [{ name: '', type: 'uint256' }],
-        stateMutability: 'view',
-    },
-    approve: {
-        name: 'approve',
-        type: 'function',
-        inputs: [
-            { name: 'spender', type: 'address' },
-            { name: 'amount', type: 'uint256' },
-        ],
-        outputs: [{ name: '', type: 'bool' }],
-        stateMutability: 'nonpayable',
-    },
-    balanceOf: {
-        name: 'balanceOf',
-        type: 'function',
-        inputs: [
-            { name: 'account', type: 'address' },
-        ],
-        outputs: [{ name: '', type: 'uint256' }],
-        stateMutability: 'view',
-    },
-} as const;
+// const ERC20_ABI = {
+//     allowance: {
+//         name: 'allowance',
+//         type: 'function',
+//         inputs: [
+//             { name: 'owner', type: 'address' },
+//             { name: 'spender', type: 'address' },
+//         ],
+//         outputs: [{ name: '', type: 'uint256' }],
+//         stateMutability: 'view',
+//     },
+//     approve: {
+//         name: 'approve',
+//         type: 'function',
+//         inputs: [
+//             { name: 'spender', type: 'address' },
+//             { name: 'amount', type: 'uint256' },
+//         ],
+//         outputs: [{ name: '', type: 'bool' }],
+//         stateMutability: 'nonpayable',
+//     },
+//     balanceOf: {
+//         name: 'balanceOf',
+//         type: 'function',
+//         inputs: [
+//             { name: 'account', type: 'address' },
+//         ],
+//         outputs: [{ name: '', type: 'uint256' }],
+//         stateMutability: 'view',
+//     },
+// } as const;
 
-function encodeFunctionData(funcName: 'allowance' | 'approve' | 'balanceOf', args: string[]): string {
-    const iface = new ethers.Interface([ERC20_ABI[funcName]]);
-    return iface.encodeFunctionData(funcName, args);
-}
+// function encodeFunctionData(funcName: 'allowance' | 'approve' | 'balanceOf', args: string[]): string {
+//     const iface = new ethers.Interface([ERC20_ABI[funcName]]);
+//     return iface.encodeFunctionData(funcName, args);
+// }
 
 /**
  * LendingNodeConfiguration - Configuration component for lending nodes (Aave/Compound)
