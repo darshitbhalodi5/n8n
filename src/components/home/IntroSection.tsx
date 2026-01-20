@@ -6,51 +6,99 @@ import {
   useMotionValue,
   useTransform,
 } from "framer-motion";
+import { useEffect, useState, useRef } from "react";
 import { Typography } from "../ui/Typography";
 
 interface IntroSectionProps {
   scrollProgress?: MotionValue<number>;
 }
 
+// Sub-component for the counting numbers
+function AnimatedNumber({ 
+  value, 
+  isVisible 
+}: { 
+  value: string; 
+  isVisible: boolean;
+}) {
+  // Extract number from string (e.g., "$1M+" -> 1000000)
+  const numericValue = parseFloat(value.replace(/[^0-9.]/g, ""));
+  const suffix = value.replace(/[0-9.]/g, "");
+  const prefix = value.startsWith("$") ? "$" : "";
+  const cleanSuffix = suffix.replace("$", "");
+
+  const [display, setDisplay] = useState(0);
+  const hasAnimatedRef = useRef(false);
+
+  useEffect(() => {
+    if (isVisible && !hasAnimatedRef.current) {
+      hasAnimatedRef.current = true;
+      
+      // Animate from 0 to target value
+      const duration = 2000; // 2 seconds
+      const startTime = Date.now();
+      const startValue = 0;
+      
+      const animate = () => {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        
+        // Easing function (ease-out)
+        const eased = 1 - Math.pow(1 - progress, 3);
+        const current = startValue + (numericValue - startValue) * eased;
+        
+        setDisplay(current);
+        
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          setDisplay(numericValue); // Ensure final value
+        }
+      };
+      
+      requestAnimationFrame(animate);
+    }
+  }, [isVisible, numericValue]);
+
+  // Format display value
+  const formatDisplay = (val: number) => {
+    if (val >= 1000000) return `${(val / 1000000).toFixed(1)}M`;
+    if (val >= 1000) return `${Math.round(val / 1000)}K`;
+    return Math.round(val).toString();
+  };
+
+  return <span>{prefix}{formatDisplay(display)}{cleanSuffix}</span>;
+}
+
 export function IntroSection({ scrollProgress }: IntroSectionProps) {
-  // Create a default motion value if scrollProgress is not provided
   const defaultProgress = useMotionValue(0.2);
   const progress = scrollProgress || defaultProgress;
 
-  // Header Y position: starts at 0, moves to -60px when scrollProgress reaches 0.4
-  const headerY = useTransform(
+  // Header scale
+  const headerScale = useTransform(progress, [0.3, 0.5], [2.7, 1]);
+
+  // Description Reveals (using clip-path to reveal from bottom baseline)
+  const descriptionDisplay = useTransform(progress, [0.4, 0.41], ["none", "block"]);
+  const descriptionClip = useTransform(
     progress,
     [0.4, 0.6],
-    [0, -60]
+    ["inset(100% 0% 0% 0%)", "inset(0% 0% 0% 0%)"]
   );
+  const descriptionY = useTransform(progress, [0.4, 0.5], [40, 0]);
 
-  // Header scale: starts at 1, scales to 0.70 when scrollProgress reaches 0.4
-  const headerScale = useTransform(
-    progress,
-    [0.4, 0.6],
-    [1, 0.50]
-  );
+  // Stats Container Reveals
+  const statsDisplay = useTransform(progress, [0.4, 0.41], ["none", "grid"]);
+  const [statsVisible, setStatsVisible] = useState(false);
 
-  // Description container opacity: starts at 0, becomes 1 when scrollProgress reaches 0.4
-  const descriptionOpacity = useTransform(
-    progress,
-    [0.5, 0.7],
-    [0, 1]
-  );
-
-  // Stats opacity: starts at 0, becomes 1 when scrollProgress reaches 0.6
-  const statsOpacity = useTransform(
-    progress,
-    [0.6, 0.8],
-    [0, 1]
-  );
-
-  // Stats Y position: slides up
-  const statsY = useTransform(
-    progress,
-    [0.6, 0.8],
-    [20, 0]
-  );
+  // Track when stats become visible
+  useEffect(() => {
+    const unsubscribe = statsDisplay.on("change", (latest) => {
+      if (latest === "grid") {
+        setStatsVisible(true);
+      }
+    });
+    return unsubscribe;
+  }, [statsDisplay]);
 
   const stats = [
     { label: "Protocol Integration", value: "15+" },
@@ -61,26 +109,26 @@ export function IntroSection({ scrollProgress }: IntroSectionProps) {
   ];
 
   return (
-    // Added w-full h-full to ensure it fills the wrapper
-    <div className="h-full w-full flex flex-col gap-3 items-center justify-center bg-[#7A1CAC] px-4 overflow-hidden">
+    <div className="h-full w-full flex flex-col gap-8 items-center justify-center bg-[#7A1CAC] overflow-hidden">
       <motion.h1
-        className="text-white text-[14vw] font-bold tracking-tighter"
-        style={{
-          y: headerY,
-          scale: headerScale
-        }}
+        className="text-white font-bold tracking-tighter text-[7vw]"
+        style={{ scale: headerScale }}
       >
         FlowForge
       </motion.h1>
 
       <motion.div
         className="max-w-4xl"
-        style={{ opacity: descriptionOpacity }}
+        style={{ 
+          display: descriptionDisplay,
+          clipPath: descriptionClip,
+          y: descriptionY,
+        }}
       >
         <Typography
           variant="body"
           align="center"
-          className="text-gray-300 md:text-xl leading-relaxed"
+          className="text-white md:text-base leading-relaxed"
         >
           <span className="block font-semibold text-white mb-2">Connect everything. Automate anything.</span>
           Seamlessly bridge the gap between traditional apps and decentralized networks.
@@ -90,15 +138,20 @@ export function IntroSection({ scrollProgress }: IntroSectionProps) {
       </motion.div>
 
       <motion.div
-        className="grid grid-cols-2 md:grid-cols-5 gap-8 mt-12 w-full max-w-[90rem]"
-        style={{ opacity: statsOpacity, y: statsY }}
+        className="grid grid-cols-2 md:grid-cols-5 gap-2 mt-12 w-max"
+        style={{ 
+          display: statsDisplay,
+        }}
       >
         {stats.map((stat, index) => (
           <div key={index} className="flex flex-col items-center justify-center gap-2">
-            <span className="text-3xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-white to-blue-200 drop-shadow-sm">
-              {stat.value}
+            <span className="text-3xl md:text-4xl font-bold bg-clip-text text-transparent bg-linear-to-b from-white to-blue-200 drop-shadow-sm">
+              <AnimatedNumber 
+                value={stat.value} 
+                isVisible={statsVisible}
+              />
             </span>
-            <span className="text-xs md:text-sm text-blue-200/70 text-center font-medium uppercase tracking-wider">
+            <span className="text-xs text-blue-200/70 text-center font-medium uppercase tracking-wider">
               {stat.label}
             </span>
           </div>
