@@ -1,3 +1,12 @@
+/**
+ * Safe chain configuration utilities.
+ */
+
+interface SafeChainInfo {
+  readonly shortName: string | null;
+  readonly transactionService: string | null;
+}
+
 interface SafeChain {
   chainId: string;
   shortName: string;
@@ -9,18 +18,29 @@ interface SafeChainsResponse {
   results: SafeChain[];
 }
 
-// In-memory cache for Safe chains
-interface SafeChainInfo {
-  shortName: string | null;
-  transactionService: string | null;
-}
+// Static data for known chains - avoids network fetch for common cases
+const KNOWN_SAFE_CHAINS: ReadonlyMap<number, SafeChainInfo> = new Map([
+  [421614, { shortName: "arb-sep", transactionService: "https://safe-transaction-arbitrum-sepolia.safe.global" }],
+  [42161, { shortName: "arb1", transactionService: "https://safe-transaction-arbitrum.safe.global" }],
+]);
 
-let safeChainCache: Map<number, SafeChainInfo> | null = null;
-let cacheTimestamp = 0;
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+// Constant default (single allocation, reused)
+const DEFAULT_CHAIN_INFO: SafeChainInfo = Object.freeze({
+  shortName: null,
+  transactionService: null,
+});
 
 const SAFE_CONFIG_BASE_URL = "https://safe-config.safe.global/api/v1/chains/";
+const CACHE_DURATION_MS = 5 * 60 * 1000; // 5 minutes
 
+// Cache state
+let safeChainCache: Map<number, SafeChainInfo> | null = null;
+let cacheTimestamp = 0;
+let fetchInProgress: Promise<Map<number, SafeChainInfo>> | null = null;
+
+/**
+ * Fetch chains from Safe API with pagination
+ */
 async function fetchSafeChains(): Promise<Map<number, SafeChainInfo>> {
   try {
     let nextUrl: string | null = SAFE_CONFIG_BASE_URL;
@@ -35,17 +55,12 @@ async function fetchSafeChains(): Promise<Map<number, SafeChainInfo>> {
       const data: SafeChainsResponse = await response.json();
 
       for (const chain of data.results) {
-        const chainId = Number.parseInt(chain.chainId, 10);
-        if (Number.isNaN(chainId)) {
-          continue;
-        }
-
-        const shortName = chain.shortName?.trim() || null;
-        const transactionService = chain.transactionService?.trim() || null;
+        const chainId = parseInt(chain.chainId, 10);
+        if (isNaN(chainId)) continue;
 
         chainMap.set(chainId, {
-          shortName,
-          transactionService,
+          shortName: chain.shortName?.trim() || null,
+          transactionService: chain.transactionService?.trim() || null,
         });
       }
 
@@ -54,71 +69,77 @@ async function fetchSafeChains(): Promise<Map<number, SafeChainInfo>> {
 
     return chainMap;
   } catch {
+    // Return empty map on error, static fallback will be used
     return new Map();
   }
 }
 
-export async function getSafeChainInfo(
-  chainId: number
-): Promise<SafeChainInfo> {
-  const now = Date.now();
+/**
+ * Get Safe chain info with caching and static fallback.
+ * Uses static data for known chains, fetches from API only when needed.
+ */
+export async function getSafeChainInfo(chainId: number): Promise<SafeChainInfo> {
+  // Fast path: check static data first (no async needed)
+  const staticInfo = KNOWN_SAFE_CHAINS.get(chainId);
+  if (staticInfo) return staticInfo;
 
-  if (!safeChainCache || now - cacheTimestamp >= CACHE_DURATION) {
-    safeChainCache = await fetchSafeChains();
-    cacheTimestamp = now;
+  const now = Date.now();
+  const cacheValid = safeChainCache && (now - cacheTimestamp < CACHE_DURATION_MS);
+
+  if (cacheValid) {
+    return safeChainCache!.get(chainId) || DEFAULT_CHAIN_INFO;
   }
 
-  return (
-    safeChainCache.get(chainId) || {
-      shortName: null,
-      transactionService: null,
-    }
-  );
+  // Deduplicate concurrent fetches
+  if (!fetchInProgress) {
+    fetchInProgress = fetchSafeChains().finally(() => {
+      fetchInProgress = null;
+    });
+  }
+
+  safeChainCache = await fetchInProgress;
+  cacheTimestamp = Date.now();
+
+  return safeChainCache.get(chainId) || DEFAULT_CHAIN_INFO;
 }
 
-export async function getSafeShortName(
-  chainId: number
-): Promise<string | null> {
+/**
+ * Get Safe short name for a chain
+ */
+export async function getSafeShortName(chainId: number): Promise<string | null> {
   const info = await getSafeChainInfo(chainId);
   return info.shortName;
 }
 
 /**
- * Builds a Safe web app URL for a given chain and Safe address
- * @param chainId - The chain ID
- * @param safeAddress - The Safe contract address
- * @returns Promise resolving to the URL or null if chain is not supported
+ * Build Safe web app URL
  */
 export async function getSafeWebAppUrl(
   chainId: number,
   safeAddress: string
 ): Promise<string | null> {
   const shortName = await getSafeShortName(chainId);
-
-  if (!shortName) {
-    return null;
-  }
-
+  if (!shortName) return null;
   return `https://app.safe.global/home?safe=${shortName}:${safeAddress}`;
 }
 
+/**
+ * Build Safe queue URL
+ */
 export async function getSafeQueueUrl(
   chainId: number,
   safeAddress: string
 ): Promise<string | null> {
   const shortName = await getSafeShortName(chainId);
-
-  if (!shortName) {
-    return null;
-  }
-
+  if (!shortName) return null;
   return `https://app.safe.global/transactions/queue?safe=${shortName}:${safeAddress}`;
 }
 
 /**
- * Clears the Safe chains cache (useful for testing or forcing refresh)
+ * Clear cache (for testing)
  */
 export function clearSafeChainCache(): void {
   safeChainCache = null;
   cacheTimestamp = 0;
+  fetchInProgress = null;
 }

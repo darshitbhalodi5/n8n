@@ -3,7 +3,7 @@ import { usePrivyEmbeddedWallet } from "@/hooks/usePrivyEmbeddedWallet";
 import { ethers } from "ethers";
 import { usePrivyWallet } from "@/hooks/usePrivyWallet";
 import {
-  SUPPORTED_CHAINS,
+  CHAIN_IDS,
   getChainName,
   getSafeModuleAddress,
   isSupportedChain,
@@ -118,7 +118,7 @@ export const useCreateSafeWallet = () => {
         return {
           success: false,
           safeAddress: null,
-          error: `Unsupported chain. Please switch to Arbitrum Sepolia (${SUPPORTED_CHAINS.ARBITRUM_SEPOLIA}) or Arbitrum Mainnet (${SUPPORTED_CHAINS.ARBITRUM_MAINNET}). Current chain: ${chainId}`,
+          error: `Unsupported chain. Please switch to Arbitrum Sepolia (${CHAIN_IDS.ARBITRUM_SEPOLIA}) or Arbitrum Mainnet (${CHAIN_IDS.ARBITRUM_MAINNET}). Current chain: ${chainId}`,
         };
       }
 
@@ -213,7 +213,7 @@ export const useCreateSafeWallet = () => {
       if (!isSupportedChain(chainId)) {
         return {
           success: false,
-          error: `Unsupported chain. Please switch to Arbitrum Sepolia (${SUPPORTED_CHAINS.ARBITRUM_SEPOLIA}) or Arbitrum Mainnet (${SUPPORTED_CHAINS.ARBITRUM_MAINNET}). Current chain: ${chainId}`,
+          error: `Unsupported chain. Please switch to Arbitrum Sepolia (${CHAIN_IDS.ARBITRUM_SEPOLIA}) or Arbitrum Mainnet (${CHAIN_IDS.ARBITRUM_MAINNET}). Current chain: ${chainId}`,
         };
       }
 
@@ -361,7 +361,7 @@ export const useCreateSafeWallet = () => {
       if (!isSupportedChain(chainId)) {
         return {
           success: false,
-          error: `Unsupported chain. Please switch to Arbitrum Sepolia (${SUPPORTED_CHAINS.ARBITRUM_SEPOLIA}) or Arbitrum Mainnet (${SUPPORTED_CHAINS.ARBITRUM_MAINNET}). Current chain: ${chainId}`,
+          error: `Unsupported chain. Please switch to Arbitrum Sepolia (${CHAIN_IDS.ARBITRUM_SEPOLIA}) or Arbitrum Mainnet (${CHAIN_IDS.ARBITRUM_MAINNET}). Current chain: ${chainId}`,
         };
       }
 
