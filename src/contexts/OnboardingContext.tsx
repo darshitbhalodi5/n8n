@@ -7,14 +7,21 @@ import React, {
     useCallback,
     useEffect,
     useMemo,
-    useRef,
 } from "react";
 import { usePrivy } from "@privy-io/react-auth";
 import { usePrivyEmbeddedWallet } from "@/hooks/usePrivyEmbeddedWallet";
 import { usePrivyWallet } from "@/hooks/usePrivyWallet";
 import { useCreateSafeWallet } from "@/web3/hooks/useCreateSafeWallet";
 import { API_CONFIG } from "@/config/api";
-import { ChainDefinition, getSelectableChains } from "@/web3/chains";
+import { ChainDefinition } from "@/web3/chains";
+import {
+    validateAndGetOnboardingChains,
+    ensureChainSelected,
+    waitForChain,
+    verifyModuleEnabled,
+    ModeMismatchError,
+    type BackendRuntimeConfig,
+} from "@/web3/onboarding";
 
 export type OnboardingStepStatus = "idle" | "pending" | "success" | "error";
 
@@ -23,6 +30,7 @@ export interface ChainProgress {
     walletCreate: OnboardingStepStatus;
     moduleSign: OnboardingStepStatus;
     moduleEnable: OnboardingStepStatus;
+    moduleVerify: OnboardingStepStatus;
     error?: string;
     safeAddress?: string;
 }
@@ -43,15 +51,18 @@ export interface OnboardingContextType {
     needsOnboarding: boolean;
     isOnboarding: boolean;
     isCheckingUser: boolean;
+    isModeValid: boolean | null;
+    modeError: string | null;
     chainsToSetup: ChainConfig[];
     progress: Record<string, ChainProgress>;
     userData: UserData | null;
     currentSigningChain: string | null;
+    backendConfig: BackendRuntimeConfig | null;
 
     // Actions
     startOnboarding: () => Promise<void>;
     retryChain: (chainKey: string) => Promise<void>;
-    skipOnboarding: () => void;
+    dismissOnboarding: () => void;
 }
 
 const OnboardingContext = createContext<OnboardingContextType | undefined>(
@@ -66,9 +77,6 @@ export const useOnboarding = () => {
     return context;
 };
 
-// Chains available for onboarding based on environment
-const getChainsToSetup = (): ChainConfig[] => getSelectableChains();
-
 // Initialize progress for chains
 const initializeProgress = (chains: ChainConfig[]): Record<string, ChainProgress> => {
     const progress: Record<string, ChainProgress> = {};
@@ -77,6 +85,7 @@ const initializeProgress = (chains: ChainConfig[]): Record<string, ChainProgress
             walletCreate: "idle",
             moduleSign: "idle",
             moduleEnable: "idle",
+            moduleVerify: "idle",
         };
     }
     return progress;
@@ -86,38 +95,33 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({
     children,
 }) => {
     const { authenticated, ready } = usePrivy();
-    const { walletAddress } = usePrivyEmbeddedWallet();
+    const { walletAddress, chainId, ethereumProvider, embeddedWallet } = usePrivyEmbeddedWallet();
     const { getPrivyAccessToken } = usePrivyWallet();
     const { signEnableModule, submitEnableModule } = useCreateSafeWallet();
 
-    // Chains to setup based on environment
-    const chainsToSetup = useMemo(() => getChainsToSetup(), []);
+    // Mode validation state
+    const [isModeValid, setIsModeValid] = useState<boolean | null>(null);
+    const [modeError, setModeError] = useState<string | null>(null);
+    const [backendConfig, setBackendConfig] = useState<BackendRuntimeConfig | null>(null);
+    const [chainsToSetup, setChainsToSetup] = useState<ChainConfig[]>([]);
 
     const [userData, setUserData] = useState<UserData | null>(null);
     const [isCheckingUser, setIsCheckingUser] = useState(false);
     const [needsOnboarding, setNeedsOnboarding] = useState(false);
     const [isOnboarding, setIsOnboarding] = useState(false);
-    const [progress, setProgress] = useState<Record<string, ChainProgress>>(() =>
-        initializeProgress(chainsToSetup)
-    );
+    const [progress, setProgress] = useState<Record<string, ChainProgress>>({});
     const [currentSigningChain, setCurrentSigningChain] = useState<string | null>(null);
 
-    // Track if we've already shown onboarding
-    const hasShownOnboardingRef = useRef(false);
-
-    // Local storage key for tracking onboarding shown state (persists forever)
-    const ONBOARDING_SHOWN_KEY = "onboarding_popup_shown";
-
-    // Fetch user data by wallet address
+    // Fetch user data by authenticated user ID (safer than by address)
     const fetchUserData = useCallback(async (): Promise<UserData | null> => {
-        if (!walletAddress) return null;
+        if (!authenticated) return null;
 
         try {
             const accessToken = await getPrivyAccessToken();
             if (!accessToken) return null;
 
             const response = await fetch(
-                `${API_CONFIG.BASE_URL}/users/address/${walletAddress}`,
+                `${API_CONFIG.BASE_URL}/users/me`,
                 {
                     headers: {
                         Authorization: `Bearer ${accessToken}`,
@@ -135,11 +139,38 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({
             console.error("Failed to fetch user data:", error);
             return null;
         }
-    }, [walletAddress, getPrivyAccessToken]);
+    }, [authenticated, getPrivyAccessToken]);
+
+    // Validate mode on mount
+    useEffect(() => {
+        const validateMode = async () => {
+            try {
+                const { chains, backendConfig: config } = await validateAndGetOnboardingChains();
+                setIsModeValid(true);
+                setModeError(null);
+                setBackendConfig(config);
+                setChainsToSetup(chains);
+                setProgress(initializeProgress(chains));
+            } catch (error) {
+                if (error instanceof ModeMismatchError) {
+                    setIsModeValid(false);
+                    setModeError(error.message);
+                    setChainsToSetup([]);
+                } else {
+                    console.error("Failed to validate onboarding mode:", error);
+                    setIsModeValid(false);
+                    setModeError(error instanceof Error ? error.message : "Failed to validate configuration");
+                    setChainsToSetup([]);
+                }
+            }
+        };
+
+        validateMode();
+    }, []);
 
     // Create Safe wallet on a specific chain
     const createSafeOnChain = useCallback(
-        async (chainId: number): Promise<{ success: boolean; safeAddress?: string; error?: string }> => {
+        async (chainId: number): Promise<{ success: boolean; safeAddress?: string; error?: string; alreadyExisted?: boolean }> => {
             try {
                 const accessToken = await getPrivyAccessToken();
                 if (!accessToken) {
@@ -161,7 +192,11 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({
                     return { success: false, error: data.error || "Failed to create Safe" };
                 }
 
-                return { success: true, safeAddress: data.data.safeAddress };
+                return {
+                    success: true,
+                    safeAddress: data.data.safeAddress,
+                    alreadyExisted: data.data.alreadyExisted,
+                };
             } catch (error) {
                 return {
                     success: false,
@@ -172,111 +207,181 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({
         [getPrivyAccessToken]
     );
 
-    // Process a single chain: create wallet + sign + enable module
+    // Process a single chain: create wallet + switch chain + sign + enable + verify module
     const processChain = useCallback(
         async (chain: ChainConfig): Promise<boolean> => {
             const { key } = chain;
 
-            // Step 1: Create wallet
-            setProgress((prev) => ({
-                ...prev,
-                [key]: { ...prev[key], walletCreate: "pending", error: undefined },
-            }));
-
-            const createResult = await createSafeOnChain(chain.id);
-
-            if (!createResult.success) {
+            try {
+                // Step 1: Create wallet
                 setProgress((prev) => ({
                     ...prev,
-                    [key]: { ...prev[key], walletCreate: "error", error: createResult.error },
+                    [key]: { ...prev[key], walletCreate: "pending", error: undefined },
                 }));
-                return false;
-            }
 
-            const safeAddress = createResult.safeAddress!;
-            setProgress((prev) => ({
-                ...prev,
-                [key]: { ...prev[key], walletCreate: "success", safeAddress },
-            }));
+                const createResult = await createSafeOnChain(chain.id);
 
-            // Step 2: Sign enable module transaction
-            setProgress((prev) => ({
-                ...prev,
-                [key]: { ...prev[key], moduleSign: "pending" },
-            }));
-            setCurrentSigningChain(key);
+                if (!createResult.success) {
+                    setProgress((prev) => ({
+                        ...prev,
+                        [key]: { ...prev[key], walletCreate: "error", error: createResult.error },
+                    }));
+                    return false;
+                }
 
-            const signResult = await signEnableModule(safeAddress);
-
-            if (!signResult.success) {
+                const safeAddress = createResult.safeAddress!;
                 setProgress((prev) => ({
                     ...prev,
-                    [key]: { ...prev[key], moduleSign: "error", error: signResult.error },
+                    [key]: { ...prev[key], walletCreate: "success", safeAddress },
+                }));
+
+                // Step 2: Switch to target chain before signing
+                setProgress((prev) => ({
+                    ...prev,
+                    [key]: { ...prev[key], moduleSign: "pending" },
+                }));
+                setCurrentSigningChain(key);
+
+                try {
+                    await ensureChainSelected(embeddedWallet, chain.id);
+                    // Wait for chain to be active
+                    await waitForChain(() => chainId, chain.id, 10000);
+                } catch (switchError) {
+                    setProgress((prev) => ({
+                        ...prev,
+                        [key]: {
+                            ...prev[key],
+                            moduleSign: "error",
+                            error: `Failed to switch to ${chain.name}: ${switchError instanceof Error ? switchError.message : String(switchError)}`,
+                        },
+                    }));
+                    setCurrentSigningChain(null);
+                    return false;
+                }
+
+                // Step 3: Sign enable module transaction (now on correct chain)
+                const signResult = await signEnableModule(safeAddress, chain.id);
+
+                if (!signResult.success) {
+                    setProgress((prev) => ({
+                        ...prev,
+                        [key]: { ...prev[key], moduleSign: "error", error: signResult.error },
+                    }));
+                    setCurrentSigningChain(null);
+                    return false;
+                }
+
+                setProgress((prev) => ({
+                    ...prev,
+                    [key]: { ...prev[key], moduleSign: "success" },
                 }));
                 setCurrentSigningChain(null);
-                return false;
-            }
 
-            setProgress((prev) => ({
-                ...prev,
-                [key]: { ...prev[key], moduleSign: "success" },
-            }));
-            setCurrentSigningChain(null);
+                // Check if module was already enabled (signResult.data.safeTxHash will be empty)
+                if (signResult.data && !signResult.data.safeTxHash) {
+                    // Module already enabled
+                    setProgress((prev) => ({
+                        ...prev,
+                        [key]: { ...prev[key], moduleEnable: "success", moduleVerify: "success" },
+                    }));
+                    return true;
+                }
 
-            // Check if module was already enabled (signResult.data.safeTxHash will be empty)
-            if (signResult.data && !signResult.data.safeTxHash) {
-                // Module already enabled
+                // Step 4: Submit enable module transaction
+                setProgress((prev) => ({
+                    ...prev,
+                    [key]: { ...prev[key], moduleEnable: "pending" },
+                }));
+
+                const submitResult = await submitEnableModule();
+
+                if (!submitResult.success) {
+                    setProgress((prev) => ({
+                        ...prev,
+                        [key]: { ...prev[key], moduleEnable: "error", error: submitResult.error },
+                    }));
+                    return false;
+                }
+
                 setProgress((prev) => ({
                     ...prev,
                     [key]: { ...prev[key], moduleEnable: "success" },
                 }));
-                return true;
-            }
 
-            // Step 3: Submit enable module transaction
-            setProgress((prev) => ({
-                ...prev,
-                [key]: { ...prev[key], moduleEnable: "pending" },
-            }));
-
-            const submitResult = await submitEnableModule();
-
-            if (!submitResult.success) {
+                // Step 5: Verify module is enabled on-chain
                 setProgress((prev) => ({
                     ...prev,
-                    [key]: { ...prev[key], moduleEnable: "error", error: submitResult.error },
+                    [key]: { ...prev[key], moduleVerify: "pending" },
+                }));
+
+                try {
+                    if (!ethereumProvider) {
+                        throw new Error("Ethereum provider not available");
+                    }
+
+                    const isEnabled = await verifyModuleEnabled(
+                        safeAddress,
+                        chain.id,
+                        ethereumProvider,
+                        5, // maxRetries
+                        2000 // delayMs
+                    );
+
+                    if (!isEnabled) {
+                        setProgress((prev) => ({
+                            ...prev,
+                            [key]: {
+                                ...prev[key],
+                                moduleVerify: "error",
+                                error: "Module not enabled after transaction",
+                            },
+                        }));
+                        return false;
+                    }
+
+                    setProgress((prev) => ({
+                        ...prev,
+                        [key]: { ...prev[key], moduleVerify: "success" },
+                    }));
+
+                    return true;
+                } catch (verifyError) {
+                    setProgress((prev) => ({
+                        ...prev,
+                        [key]: {
+                            ...prev[key],
+                            moduleVerify: "error",
+                            error: `Verification failed: ${verifyError instanceof Error ? verifyError.message : String(verifyError)}`,
+                        },
+                    }));
+                    return false;
+                }
+            } catch (error) {
+                setProgress((prev) => ({
+                    ...prev,
+                    [key]: {
+                        ...prev[key],
+                        error: error instanceof Error ? error.message : "Unknown error",
+                    },
                 }));
                 return false;
             }
-
-            setProgress((prev) => ({
-                ...prev,
-                [key]: { ...prev[key], moduleEnable: "success" },
-            }));
-
-            return true;
         },
-        [createSafeOnChain, signEnableModule, submitEnableModule]
+        [
+            createSafeOnChain,
+            signEnableModule,
+            submitEnableModule,
+            embeddedWallet,
+            chainId,
+            ethereumProvider,
+        ]
     );
 
-    // Check if user needs onboarding after authentication
+    // Check if user needs onboarding after authentication and mode validation
     useEffect(() => {
-        if (!ready || !authenticated || !walletAddress) {
+        if (!ready || !authenticated || !walletAddress || isModeValid !== true) {
             setNeedsOnboarding(false);
             setUserData(null);
-            return;
-        }
-
-        // Check if we've already shown the onboarding popup ever (persists in localStorage)
-        const hasShownEver = localStorage.getItem(ONBOARDING_SHOWN_KEY) === "true";
-
-        // If already shown ever, don't show again
-        if (hasShownEver) {
-            hasShownOnboardingRef.current = true;
-            // Still fetch user data to update context, but don't show popup
-            fetchUserData().then((user) => {
-                setUserData(user);
-            });
             return;
         }
 
@@ -298,12 +403,7 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({
                 });
 
                 if (chainsNeedingSetup.length > 0) {
-                    // Only show the popup if we haven't shown it in this session
-                    if (!hasShownOnboardingRef.current) {
-                        setNeedsOnboarding(true);
-                        hasShownOnboardingRef.current = true;
-                        localStorage.setItem(ONBOARDING_SHOWN_KEY, "true");
-                    }
+                    setNeedsOnboarding(true);
                     // Pre-fill progress for existing wallets
                     setProgress((prev) => {
                         const updated = { ...prev };
@@ -317,6 +417,7 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({
                                     walletCreate: "success",
                                     moduleSign: "success",
                                     moduleEnable: "success",
+                                    moduleVerify: "success",
                                 };
                             }
                         }
@@ -327,19 +428,15 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({
                 }
             } catch (error) {
                 console.error("Error checking user:", error);
-                // Only show error popup if we haven't shown anything yet
-                if (!hasShownOnboardingRef.current) {
-                    setNeedsOnboarding(true);
-                    hasShownOnboardingRef.current = true;
-                    localStorage.setItem(ONBOARDING_SHOWN_KEY, "true");
-                }
+                // Show onboarding on error (better safe than sorry)
+                setNeedsOnboarding(true);
             } finally {
                 setIsCheckingUser(false);
             }
         };
 
         checkUser();
-    }, [ready, authenticated, walletAddress, fetchUserData, chainsToSetup, ONBOARDING_SHOWN_KEY]);
+    }, [ready, authenticated, walletAddress, fetchUserData, chainsToSetup, isModeValid]);
 
     // Start the onboarding process
     const startOnboarding = useCallback(async () => {
@@ -351,8 +448,13 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({
         for (const chain of chainsToSetup) {
             const chainProgress = progress[chain.key];
 
-            // Skip if already complete
-            if (chainProgress.moduleEnable === "success") {
+            // Skip if already complete (all steps success)
+            if (
+                chainProgress.walletCreate === "success" &&
+                chainProgress.moduleSign === "success" &&
+                chainProgress.moduleEnable === "success" &&
+                chainProgress.moduleVerify === "success"
+            ) {
                 continue;
             }
 
@@ -372,8 +474,9 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({
         // Check if all chains are complete
         if (allSuccessful) {
             setNeedsOnboarding(false);
-            setIsOnboarding(false);
         }
+
+        setIsOnboarding(false);
     }, [chainsToSetup, progress, processChain, fetchUserData]);
 
     // Retry a specific chain
@@ -385,10 +488,14 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({
             const success = await processChain(chain);
 
             if (success) {
+                // Refresh user data
+                await fetchUserData();
+
                 // Check if all chains are now complete
                 const allComplete = chainsToSetup.every((c) => {
                     if (c.key === chainKey) return true;
-                    return progress[c.key]?.moduleEnable === "success";
+                    const p = progress[c.key];
+                    return p?.moduleVerify === "success";
                 });
 
                 if (allComplete) {
@@ -397,41 +504,47 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({
                 }
             }
         },
-        [chainsToSetup, processChain, progress]
+        [chainsToSetup, processChain, progress, fetchUserData]
     );
 
-    const skipOnboarding = useCallback(() => {
+    // Dismiss onboarding (user can resume later)
+    const dismissOnboarding = useCallback(() => {
         setNeedsOnboarding(false);
         setIsOnboarding(false);
-        // Mark as shown so it never reappears
-        hasShownOnboardingRef.current = true;
-        localStorage.setItem(ONBOARDING_SHOWN_KEY, "true");
-    }, [ONBOARDING_SHOWN_KEY]);
+        // Note: We do NOT mark as permanently dismissed
+        // User will see onboarding again on next session if not complete
+    }, []);
 
     const contextValue = useMemo<OnboardingContextType>(
         () => ({
             needsOnboarding,
             isOnboarding,
             isCheckingUser,
+            isModeValid,
+            modeError,
             chainsToSetup,
             progress,
             userData,
             currentSigningChain,
+            backendConfig,
             startOnboarding,
             retryChain,
-            skipOnboarding,
+            dismissOnboarding,
         }),
         [
             needsOnboarding,
             isOnboarding,
             isCheckingUser,
+            isModeValid,
+            modeError,
             chainsToSetup,
             progress,
             userData,
             currentSigningChain,
+            backendConfig,
             startOnboarding,
             retryChain,
-            skipOnboarding,
+            dismissOnboarding,
         ]
     );
 

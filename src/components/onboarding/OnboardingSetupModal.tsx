@@ -14,6 +14,7 @@ import {
     RefreshCw,
     Shield,
     PenLine,
+    X,
 } from "lucide-react";
 import { Button } from "@/components/ui";
 
@@ -81,12 +82,14 @@ const ChainProgressCard: React.FC<ChainProgressCardProps> = ({
     const hasError =
         progress.walletCreate === "error" ||
         progress.moduleSign === "error" ||
-        progress.moduleEnable === "error";
+        progress.moduleEnable === "error" ||
+        progress.moduleVerify === "error";
 
     const isComplete =
         progress.walletCreate === "success" &&
         progress.moduleSign === "success" &&
-        progress.moduleEnable === "success";
+        progress.moduleEnable === "success" &&
+        progress.moduleVerify === "success";
 
     return (
         <div className="rounded-lg border border-border bg-muted/20 p-4">
@@ -124,6 +127,10 @@ const ChainProgressCard: React.FC<ChainProgressCardProps> = ({
                     label="Enabling Automation"
                     status={progress.moduleEnable}
                 />
+                <StepIndicator
+                    label="Verifying On-Chain"
+                    status={progress.moduleVerify}
+                />
             </div>
 
             {progress.error && (
@@ -140,19 +147,22 @@ export const OnboardingSetupModal: React.FC = () => {
         needsOnboarding,
         isOnboarding,
         isCheckingUser,
+        isModeValid,
+        // modeError,
         chainsToSetup,
         progress,
         currentSigningChain,
         startOnboarding,
         retryChain,
+        dismissOnboarding,
     } = useOnboarding();
 
-    // Auto-start onboarding when modal appears
+    // Auto-start onboarding when modal appears (if mode is valid)
     useEffect(() => {
-        if (needsOnboarding && !isOnboarding && !isCheckingUser) {
+        if (needsOnboarding && !isOnboarding && !isCheckingUser && isModeValid === true) {
             startOnboarding();
         }
-    }, [needsOnboarding, isOnboarding, isCheckingUser, startOnboarding]);
+    }, [needsOnboarding, isOnboarding, isCheckingUser, isModeValid, startOnboarding]);
 
     // Calculate completion status (must be before any early returns for hooks rules)
     const allComplete = chainsToSetup.every((chain) => {
@@ -160,7 +170,8 @@ export const OnboardingSetupModal: React.FC = () => {
         return (
             chainProgress?.walletCreate === "success" &&
             chainProgress?.moduleSign === "success" &&
-            chainProgress?.moduleEnable === "success"
+            chainProgress?.moduleEnable === "success" &&
+            chainProgress?.moduleVerify === "success"
         );
     });
 
@@ -168,17 +179,16 @@ export const OnboardingSetupModal: React.FC = () => {
     useEffect(() => {
         if (allComplete) {
             const timer = setTimeout(() => {
-                // The context will set needsOnboarding to false
-            }, 1500);
+                dismissOnboarding();
+            }, 2000);
             return () => clearTimeout(timer);
         }
-    }, [allComplete]);
+    }, [allComplete, dismissOnboarding]);
 
     // Don't show if not needed or still checking
     if (isCheckingUser || !needsOnboarding) {
         return null;
     }
-
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center">
@@ -188,12 +198,23 @@ export const OnboardingSetupModal: React.FC = () => {
             {/* Modal */}
             <div className="relative w-full max-w-lg mx-4 bg-card border border-border rounded-xl shadow-2xl overflow-hidden">
                 {/* Header */}
-                <div className="p-6 pb-4 text-center border-b border-border bg-gradient-to-b from-primary/10 to-transparent">
+                <div className="p-6 pb-4 text-center border-b border-border bg-gradient-to-b from-primary/10 to-transparent relative">
+                    {/* Dismiss button (top-right) */}
+                    {!isOnboarding && (
+                        <button
+                            onClick={dismissOnboarding}
+                            className="absolute top-4 right-4 p-2 hover:bg-muted rounded-lg transition-colors"
+                            title="Dismiss (you can resume later)"
+                        >
+                            <X className="w-4 h-4 text-muted-foreground" />
+                        </button>
+                    )}
+
                     <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
                         <Shield className="w-8 h-8 text-primary" />
                     </div>
                     <h2 className="text-xl font-semibold text-foreground">
-                        One-Time Setup
+                        Smart Wallet Setup
                     </h2>
                     <p className="text-sm text-muted-foreground mt-2 max-w-xs mx-auto">
                         Setting up your Smart Wallets for seamless automated transactions
@@ -206,7 +227,12 @@ export const OnboardingSetupModal: React.FC = () => {
                         <ChainProgressCard
                             key={chain.key}
                             chain={chain}
-                            progress={progress[chain.key] || { walletCreate: "idle", moduleSign: "idle", moduleEnable: "idle" }}
+                            progress={progress[chain.key] || {
+                                walletCreate: "idle",
+                                moduleSign: "idle",
+                                moduleEnable: "idle",
+                                moduleVerify: "idle",
+                            }}
                             isSigning={currentSigningChain === chain.key}
                             onRetry={() => retryChain(chain.key)}
                         />
@@ -236,9 +262,19 @@ export const OnboardingSetupModal: React.FC = () => {
                             </p>
                         </div>
                     ) : (
-                        <p className="text-xs text-center text-muted-foreground py-1">
-                            This is a one-time setup for each network
-                        </p>
+                        <div className="flex items-center justify-between">
+                            <p className="text-xs text-muted-foreground py-1">
+                                This setup is required for automated workflows
+                            </p>
+                            {!isOnboarding && (
+                                <Button
+                                    onClick={dismissOnboarding}
+                                    className="h-8 px-3 text-xs bg-transparent hover:bg-muted"
+                                >
+                                    Skip for now
+                                </Button>
+                            )}
+                        </div>
                     )}
                 </div>
             </div>
