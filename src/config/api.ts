@@ -3,17 +3,6 @@
  * Centralized API configuration to avoid re-evaluation on every render
  */
 
-/**
- * Chain Configuration
- * USE_TESTNET_ONLY: When true, only Arbitrum Sepolia is used (no mainnet)
- * This should match the backend's USE_TESTNET_ONLY setting
- */
-export const CHAIN_CONFIG = {
-    USE_TESTNET_ONLY: process.env.NEXT_PUBLIC_USE_TESTNET_ONLY !== 'false', // Default true
-    ARBITRUM_SEPOLIA_CHAIN_ID: 421614,
-    ARBITRUM_MAINNET_CHAIN_ID: 42161,
-} as const;
-
 export const API_CONFIG = {
     BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3000/api/v1",
 

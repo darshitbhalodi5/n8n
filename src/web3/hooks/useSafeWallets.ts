@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { usePrivyEmbeddedWallet } from "@/hooks/usePrivyEmbeddedWallet";
 import { ethers } from "ethers";
-import { getSafeWalletFactoryAddress } from "../utils/contractAddresses";
+import { getSafeWalletFactoryAddress } from "@/web3/chains";
 import TriggerXSafeFactoryArtifact from "../artifacts/TriggerXSafeFactory.json";
 
 export const useSafeWallets = () => {

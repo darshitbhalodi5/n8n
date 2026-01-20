@@ -122,4 +122,3 @@ export function clearSafeChainCache(): void {
   safeChainCache = null;
   cacheTimestamp = 0;
 }
-

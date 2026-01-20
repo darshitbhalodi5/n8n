@@ -6,14 +6,8 @@ import { OnboardingProvider } from "@/contexts/OnboardingContext";
 import { OnboardingSetupModal } from "@/components/onboarding";
 import { useState } from "react";
 import { PrivyProvider } from "@privy-io/react-auth";
-import {
-  arbitrumSepolia,
-  arbitrum,
-} from "viem/chains";
+import { getSupportedChainsForPrivy, getDefaultChainForPrivy } from "@/web3/chains";
 import { LenisProvider } from "@/components/providers/LenisProvider";
-
-// Supported chains configuration
-const supportedChains = [arbitrumSepolia, arbitrum];
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   // Create QueryClient inside the component to prevent re-initialization
@@ -32,34 +26,38 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   // Get Privy App ID from environment variable
   const privyAppId = process.env.NEXT_PUBLIC_PRIVY_APP_ID || "";
 
+  // Get chain configuration from centralized module
+  const supportedChains = getSupportedChainsForPrivy();
+  const defaultChain = getDefaultChainForPrivy();
+
   return (
     <LenisProvider>
       <PrivyProvider
-      appId={privyAppId}
-      config={{
-        loginMethods: ["email"],
-        embeddedWallets: {
-          ethereum: {
-            createOnLogin: "users-without-wallets",
+        appId={privyAppId}
+        config={{
+          loginMethods: ["email"],
+          embeddedWallets: {
+            ethereum: {
+              createOnLogin: "users-without-wallets",
+            },
           },
-        },
-        appearance: {
-          theme: "dark",
-          accentColor: "#F8FF7C",
-        },
-        defaultChain: arbitrum,
-        supportedChains: supportedChains,
-      }}
-    >
-      <QueryClientProvider client={queryClient}>
-        <OnboardingProvider>
-          <SafeWalletProvider>
-            {children}
-            <OnboardingSetupModal />
+          appearance: {
+            theme: "dark",
+            accentColor: "#FF6500",
+          },
+          defaultChain: defaultChain,
+          supportedChains: supportedChains,
+        }}
+      >
+        <QueryClientProvider client={queryClient}>
+          <OnboardingProvider>
+            <SafeWalletProvider>
+              {children}
+              <OnboardingSetupModal />
             </SafeWalletProvider>
-        </OnboardingProvider>
-      </QueryClientProvider>
-    </PrivyProvider>
+          </OnboardingProvider>
+        </QueryClientProvider>
+      </PrivyProvider>
     </LenisProvider>
   );
 }

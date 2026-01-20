@@ -28,7 +28,7 @@ import { useCanvasDimensions, useUnsavedChanges } from "@/hooks";
 import { calculateCanvasCenter } from "@/utils/canvas";
 import { usePrivyEmbeddedWallet } from "@/hooks/usePrivyEmbeddedWallet";
 import { usePrivyWallet } from "@/hooks/usePrivyWallet";
-import { arbitrum, arbitrumSepolia } from "viem/chains";
+import { isTestnet, isMainnet } from "@/web3/chains";
 import { CheckSquare, Clock } from "lucide-react";
 
 // The Start node ID - used to identify and protect it from deletion
@@ -685,14 +685,14 @@ export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({
   // Check if a swap block is disabled based on network availability
   const isSwapBlockDisabled = useCallback(
     (blockId: string): boolean => {
-      const isMainnet = chainId === arbitrum.id;
+      const isMainnetChain = isMainnet(chainId);
 
       if (blockId === "relay") {
         return true;
       }
 
       if (blockId === "oneinch") {
-        return !isMainnet;
+        return !isMainnetChain;
       }
 
       if (blockId === "uniswap") {
@@ -711,9 +711,9 @@ export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({
         return nodes.some((n) => n.type === "wallet-node");
       }
 
-      // Disable Aave and Compound on Arbitrum Sepolia
-      const isSepolia = chainId === arbitrumSepolia.id;
-      if ((blockId === "aave" || blockId === "compound") && isSepolia) {
+      // Disable Aave and Compound on Arbitrum Sepolia (testnet)
+      const isTestnetChain = isTestnet(chainId);
+      if ((blockId === "aave" || blockId === "compound") && isTestnetChain) {
         return true;
       }
 

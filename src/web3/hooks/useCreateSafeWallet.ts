@@ -2,12 +2,12 @@ import { useState, useRef } from "react";
 import { usePrivyEmbeddedWallet } from "@/hooks/usePrivyEmbeddedWallet";
 import { ethers } from "ethers";
 import { usePrivyWallet } from "@/hooks/usePrivyWallet";
-import { getSafeModuleAddress } from "../utils/contractAddresses";
 import {
   SUPPORTED_CHAINS,
-  isSupportedChain,
   getChainName,
-} from "../utils/supportedChains";
+  getSafeModuleAddress,
+  isSupportedChain,
+} from "@/web3/chains";
 import Safe from "@safe-global/protocol-kit";
 import SafeArtifact from "../artifacts/Safe.json";
 import type { SafeTransaction } from "@safe-global/safe-core-sdk-types";

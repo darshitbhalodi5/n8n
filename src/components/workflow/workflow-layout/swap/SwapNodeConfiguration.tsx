@@ -20,7 +20,7 @@ import { useWallets } from "@privy-io/react-auth";
 import { ethers } from "ethers";
 import { useSafeWalletContext } from "@/contexts/SafeWalletContext";
 import { usePrivyEmbeddedWallet } from "@/hooks/usePrivyEmbeddedWallet";
-import { arbitrumSepolia } from "viem/chains";
+import { isTestnet } from "@/web3/chains";
 import {
     SwapProvider,
     SupportedChain,
@@ -133,7 +133,7 @@ export function SwapNodeConfiguration({
 
     // Convert chainId to SupportedChain enum
     const getChainFromChainId = useCallback((chainId: number | null): SupportedChain => {
-        if (chainId === arbitrumSepolia.id) {
+        if (isTestnet(chainId)) {
             return SupportedChain.ARBITRUM_SEPOLIA;
         }
         // Default to Arbitrum mainnet

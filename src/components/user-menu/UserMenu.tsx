@@ -3,7 +3,6 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePrivy } from "@privy-io/react-auth";
-import { arbitrumSepolia, arbitrum } from "viem/chains";
 import { usePrivyEmbeddedWallet } from "@/hooks/usePrivyEmbeddedWallet";
 import { Avatar } from "@/components/user-menu/Avatar";
 import {
@@ -15,7 +14,7 @@ import { Button } from "@/components/ui/Button";
 import { Switch } from "@/components/user-menu/Switch";
 import { LogOut, Network, LayoutGrid } from "lucide-react";
 import { Typography } from "@/components/ui/Typography";
-import { CHAIN_CONFIG } from "@/config/api";
+import { USE_TESTNET_ONLY, isTestnet, getTargetChainId } from "@/web3/chains";
 
 export interface UserMenuProps {
   size?: "sm" | "md" | "lg";
@@ -30,11 +29,11 @@ export function UserMenu({ size = "md" }: UserMenuProps) {
   const currentChainId = chainId;
 
   // Check if testnet-only mode is enabled
-  const isTestnetOnlyMode = CHAIN_CONFIG.USE_TESTNET_ONLY;
+  const isTestnetOnlyMode = USE_TESTNET_ONLY;
 
   // Derive testnet mode from current chain (null-safe)
   // In testnet-only mode, always treat as testnet
-  const isTestnetMode = isTestnetOnlyMode || currentChainId === arbitrumSepolia.id;
+  const isTestnetMode = isTestnetOnlyMode || isTestnet(currentChainId);
 
   const handleTestnetToggle = async (checked: boolean) => {
     // Don't allow switching when in testnet-only mode
@@ -44,7 +43,7 @@ export function UserMenu({ size = "md" }: UserMenuProps) {
     }
 
     try {
-      const targetChainId = checked ? arbitrumSepolia.id : arbitrum.id;
+      const targetChainId = getTargetChainId(checked);
 
       if (!embeddedWallet) {
         throw new Error("Embedded wallet not found");

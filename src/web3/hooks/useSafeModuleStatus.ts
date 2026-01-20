@@ -3,7 +3,7 @@ import type { InterfaceAbi, Eip1193Provider } from "ethers";
 import { ethers, BrowserProvider, Contract } from "ethers";
 import { usePrivyEmbeddedWallet } from "@/hooks/usePrivyEmbeddedWallet";
 import SafeArtifact from "../artifacts/Safe.json";
-import { getSafeModuleAddress } from "../utils/contractAddresses";
+import { getSafeModuleAddress } from "@/web3/chains";
 
 function toChecksum(address: string): string {
   return ethers.getAddress(address);
