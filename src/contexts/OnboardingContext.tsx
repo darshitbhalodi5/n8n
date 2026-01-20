@@ -13,7 +13,7 @@ import { usePrivy } from "@privy-io/react-auth";
 import { usePrivyEmbeddedWallet } from "@/hooks/usePrivyEmbeddedWallet";
 import { usePrivyWallet } from "@/hooks/usePrivyWallet";
 import { useCreateSafeWallet } from "@/web3/hooks/useCreateSafeWallet";
-import { API_CONFIG } from "@/config/api";
+import { API_CONFIG, CHAIN_CONFIG } from "@/config/api";
 
 export type OnboardingStepStatus = "idle" | "pending" | "success" | "error";
 
@@ -70,25 +70,27 @@ export const useOnboarding = () => {
     return context;
 };
 
-// Chain IDs
-const ARBITRUM_SEPOLIA_CHAIN_ID = 421614;
-const ARBITRUM_MAINNET_CHAIN_ID = 42161;
+// Chain IDs from centralized config
+const ARBITRUM_SEPOLIA_CHAIN_ID = CHAIN_CONFIG.ARBITRUM_SEPOLIA_CHAIN_ID;
+const ARBITRUM_MAINNET_CHAIN_ID = CHAIN_CONFIG.ARBITRUM_MAINNET_CHAIN_ID;
 
-// Environment-based chain configuration
-const isProduction = process.env.NODE_ENV === "production";
+// Testnet-only mode from centralized config
+const USE_TESTNET_ONLY = CHAIN_CONFIG.USE_TESTNET_ONLY;
 
+// All available chains
 const ALL_CHAINS: ChainConfig[] = [
     { id: ARBITRUM_SEPOLIA_CHAIN_ID, name: "Arbitrum Sepolia (Testnet)", key: "testnet" },
     { id: ARBITRUM_MAINNET_CHAIN_ID, name: "Arbitrum Mainnet", key: "mainnet" },
 ];
 
-const PRODUCTION_CHAINS: ChainConfig[] = [
-    { id: ARBITRUM_MAINNET_CHAIN_ID, name: "Arbitrum Mainnet", key: "mainnet" },
+// Testnet-only chains
+const TESTNET_ONLY_CHAINS: ChainConfig[] = [
+    { id: ARBITRUM_SEPOLIA_CHAIN_ID, name: "Arbitrum Sepolia (Testnet)", key: "testnet" },
 ];
 
-// Get chains based on environment
+// Get chains based on testnet-only mode
 const getChainsToSetup = (): ChainConfig[] => {
-    return isProduction ? PRODUCTION_CHAINS : ALL_CHAINS;
+    return USE_TESTNET_ONLY ? TESTNET_ONLY_CHAINS : ALL_CHAINS;
 };
 
 // Initialize progress for chains

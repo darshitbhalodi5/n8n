@@ -38,19 +38,35 @@ Visit [http://localhost:3000/automation-builder](http://localhost:3000/automatio
 The Wallet block requires the following environment variables to function:
 
 ```env
-# Safe Wallet Factory Address (TriggerXSafeFactory contract)
+# API Configuration
+NEXT_PUBLIC_API_BASE_URL=http://localhost:3000/api/v1
+
+# Privy Authentication
+NEXT_PUBLIC_PRIVY_APP_ID=your_privy_app_id
+
+# ===========================================
+# CHAIN CONFIGURATION
+# ===========================================
+
+# Testnet Only Mode (default: true)
+# When true, only Arbitrum Sepolia is used - users cannot switch to mainnet
+# Set to false to enable both testnet and mainnet networks
+# This should match the backend's USE_TESTNET_ONLY setting
+NEXT_PUBLIC_USE_TESTNET_ONLY=true
+
+# Safe Wallet Factory Address - Arbitrum Sepolia (REQUIRED)
 NEXT_PUBLIC_SAFE_WALLET_FACTORY_ADDRESS=0x...
 
-# Safe Module Address (TriggerX module for Safe wallets)
+# Safe Module Address - Arbitrum Sepolia (REQUIRED)
 NEXT_PUBLIC_SAFE_MODULE_ADDRESS=0x...
 ```
 
 ### Optional Environment Variables
 
-For improved performance and mainnet support:
+For mainnet support (only required when `NEXT_PUBLIC_USE_TESTNET_ONLY=false`):
 
 ```env
-# Mainnet-specific addresses (if different from testnet)
+# Mainnet-specific addresses (required if USE_TESTNET_ONLY is false)
 NEXT_PUBLIC_MAINNET_SAFE_WALLET_FACTORY_ADDRESS=0x...
 NEXT_PUBLIC_MAINNET_SAFE_MODULE_ADDRESS=0x...
 
@@ -67,8 +83,11 @@ NEXT_PUBLIC_SAFE_MULTISEND_CALL_ONLY_ADDRESS=0x...
 ### Supported Networks
 
 The wallet block supports the following networks out of the box:
-- **Arbitrum Sepolia** (chainId: 421614)
-- **Arbitrum Mainnet** (chainId: 42161)
+- **Arbitrum Sepolia** (chainId: 421614) - Testnet
+- **Arbitrum Mainnet** (chainId: 42161) - Production
+
+**Note:** When `NEXT_PUBLIC_USE_TESTNET_ONLY=true` (default), only Arbitrum Sepolia is available.
+Lending protocols (Aave, Compound) are only available on mainnet.
 
 To add support for additional networks, update `src/web3/utils/contractAddresses.ts`.
 

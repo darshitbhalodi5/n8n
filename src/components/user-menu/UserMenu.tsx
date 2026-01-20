@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/Button";
 import { Switch } from "@/components/user-menu/Switch";
 import { LogOut, Network, LayoutGrid } from "lucide-react";
 import { Typography } from "@/components/ui/Typography";
+import { CHAIN_CONFIG } from "@/config/api";
 
 export interface UserMenuProps {
   size?: "sm" | "md" | "lg";
@@ -28,10 +29,20 @@ export function UserMenu({ size = "md" }: UserMenuProps) {
   // Use chain ID from Privy embedded wallet (nullable until ready)
   const currentChainId = chainId;
 
+  // Check if testnet-only mode is enabled
+  const isTestnetOnlyMode = CHAIN_CONFIG.USE_TESTNET_ONLY;
+
   // Derive testnet mode from current chain (null-safe)
-  const isTestnetMode = currentChainId === arbitrumSepolia.id;
+  // In testnet-only mode, always treat as testnet
+  const isTestnetMode = isTestnetOnlyMode || currentChainId === arbitrumSepolia.id;
 
   const handleTestnetToggle = async (checked: boolean) => {
+    // Don't allow switching when in testnet-only mode
+    if (isTestnetOnlyMode) {
+      console.log("Network switching is disabled in testnet-only mode");
+      return;
+    }
+
     try {
       const targetChainId = checked ? arbitrumSepolia.id : arbitrum.id;
 
@@ -104,6 +115,9 @@ export function UserMenu({ size = "md" }: UserMenuProps) {
                       className="text-xs text-muted-foreground"
                     >
                       {isTestnetMode ? "Arbitrum Sepolia" : "Arbitrum"}
+                      {isTestnetOnlyMode && (
+                        <span className="ml-1 text-[10px] text-yellow-500">(Testnet Only)</span>
+                      )}
                     </Typography>
                   </div>
                 </div>
@@ -111,6 +125,7 @@ export function UserMenu({ size = "md" }: UserMenuProps) {
               <Switch
                 checked={isTestnetMode}
                 onCheckedChange={handleTestnetToggle}
+                disabled={isTestnetOnlyMode}
               />
             </div>
           </div>
