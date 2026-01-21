@@ -138,7 +138,7 @@ export function FlowChartAnimation() {
               <span className="text-zinc-500 font-bold uppercase tracking-tighter">System_Valid</span>
             </div>
             
-            <div className="h-4 w-px bg-zinc-800" />
+            <div className="h-4 w-px bg-zinc-500" />
             <div className="flex items-center gap-2 uppercase tracking-tighter opacity-50">
               {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })}
             </div>

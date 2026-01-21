@@ -43,7 +43,7 @@ export function ProblemStatementSection({
   const complexY = useTransform(
     progress,
     [0, 0.1, 0.15, 0.4],
-    ["-10vh", "-20vh", "-20vh", "-40vh"]
+    ["-10.5vh", "-20vh", "-20vh", "-40vh"]
   );
 
   // 2. MADE
@@ -62,7 +62,7 @@ export function ProblemStatementSection({
   const compellingY = useTransform(
     progress,
     [0, 0.1, 0.15, 0.4],
-    ["10vh", "20vh", "20vh", "40vh"]
+    ["10.5vh", "20vh", "20vh", "40vh"]
   );
 
   // --- TEXT SCALING ---
