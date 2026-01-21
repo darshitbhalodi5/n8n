@@ -80,7 +80,7 @@ export function CategoryDropdown({
         />
       </button>
       {dropdownOpen && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-black/95 backdrop-blur-sm border border-amber-600/40 rounded-3xl shadow-xl z-50 overflow-hidden">
+        <div className="absolute top-full left-0 right-0 mt-2 bg-black/95 backdrop-blur-sm border border-white/20 rounded-lg shadow-xl z-50 overflow-hidden">
           <div className="max-h-[500px] overflow-y-auto scrollbar-hide">
             {categories.map((category) => (
               <button
@@ -89,7 +89,7 @@ export function CategoryDropdown({
                   onCategoryChange(category.id);
                   setDropdownOpen(false);
                 }}
-                className={`w-full px-4 py-3 flex items-center gap-3 text-sm font-medium transition-all duration-200 text-left cursor-pointer group ${
+                className={`w-full px-5 py-4 flex items-center gap-3 text-sm font-medium transition-all duration-200 text-left cursor-pointer group ${
                   activeCategory === category.id
                     ? "bg-amber-800/5  text-white"
                     : "text-white/70 hover:text-white hover:bg-amber-800/10 hover:translate-x-1"

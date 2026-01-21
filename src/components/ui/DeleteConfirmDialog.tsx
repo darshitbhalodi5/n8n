@@ -86,7 +86,7 @@ export function DeleteConfirmDialog({
 
       {/* Modal Content */}
       <div
-        className="relative z-50 w-full max-w-[425px] flex flex-col items-center justify-center p-6 gap-4 bg-black border-white/30 border rounded-xl shadow-lg animate-in fade-in-0 zoom-in-95 duration-200"
+        className="relative z-50 w-full max-w-[425px] flex flex-col items-center justify-center p-6 gap-4 bg-black/95 border-white/20 border rounded-xl shadow-lg animate-in fade-in-0 zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         <MdDeleteSweep className="w-16 h-16 text-white" />

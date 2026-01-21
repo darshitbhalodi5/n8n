@@ -25,6 +25,13 @@ interface StepIndicatorProps {
     isSigning?: boolean;
 }
 
+interface ChainProgressCardProps {
+    chain: ChainConfig;
+    progress: ChainProgress;
+    isSigning: boolean;
+    onRetry: () => void;
+}
+
 const StepIndicator: React.FC<StepIndicatorProps> = ({
     label,
     status,
@@ -46,7 +53,7 @@ const StepIndicator: React.FC<StepIndicatorProps> = ({
 
     return (
         <div className="flex items-center gap-2.5 py-1.5">
-            <div className="flex-shrink-0">{getIcon()}</div>
+            <div className="shrink-0">{getIcon()}</div>
             <span
                 className={`text-sm ${status === "success"
                     ? "text-green-500"
@@ -65,13 +72,6 @@ const StepIndicator: React.FC<StepIndicatorProps> = ({
         </div>
     );
 };
-
-interface ChainProgressCardProps {
-    chain: ChainConfig;
-    progress: ChainProgress;
-    isSigning: boolean;
-    onRetry: () => void;
-}
 
 const ChainProgressCard: React.FC<ChainProgressCardProps> = ({
     chain,
@@ -148,7 +148,6 @@ export const OnboardingSetupModal: React.FC = () => {
         isOnboarding,
         isCheckingUser,
         isModeValid,
-        // modeError,
         chainsToSetup,
         progress,
         currentSigningChain,
@@ -191,14 +190,14 @@ export const OnboardingSetupModal: React.FC = () => {
     }
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center">
+        <div className="fixed inset-0 z-100 flex items-center justify-center bg-background">
             {/* Backdrop */}
-            <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+            <div className="absolute inset-0 bg-background backdrop-blur-md" />
 
             {/* Modal */}
-            <div className="relative w-full max-w-lg mx-4 bg-card border border-border rounded-xl shadow-2xl overflow-hidden">
+            <div className="relative z-50 w-full max-w-[425px] p-6 gap-4 bg-black/95 border-white/20 border rounded-xl shadow-lg animate-in fade-in-0 zoom-in-95 duration-200 overflow-hidden">
                 {/* Header */}
-                <div className="p-6 pb-4 text-center border-b border-border bg-gradient-to-b from-primary/10 to-transparent relative">
+                <div className="p-6 pb-4 text-center border-b border-border bg-linear-to-b from-primary/10 to-transparent relative">
                     {/* Dismiss button (top-right) */}
                     {!isOnboarding && (
                         <button

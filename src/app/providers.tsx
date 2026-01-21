@@ -7,7 +7,7 @@ import { OnboardingSetupModal } from "@/components/onboarding/OnboardingSetupMod
 import { useState } from "react";
 import { PrivyProvider } from "@privy-io/react-auth";
 import { getSupportedChainsForPrivy, getDefaultChainForPrivy } from "@/web3/chains";
-import { LenisProvider } from "@/components/providers/LenisProvider";
+import { LenisProvider } from "./LenisProvider";
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   // Create QueryClient inside the component to prevent re-initialization

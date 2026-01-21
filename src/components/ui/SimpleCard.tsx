@@ -1,5 +1,4 @@
 import * as React from "react";
-import { cn } from "@/lib/utils";
 
 export type SimpleCardProps = React.HTMLAttributes<HTMLDivElement>;
 
@@ -8,12 +7,7 @@ export const SimpleCard = React.forwardRef<HTMLDivElement, SimpleCardProps>(
     return (
       <div
         ref={ref}
-        className={cn(
-          "rounded-lg border border-border bg-card text-card-foreground",
-          "transition-colors duration-200",
-          "hover:border-primary/50 hover:bg-secondary/30",
-          className
-        )}
+        className={`p-2 bg-white/5 border border-white/20 hover:bg-white/10 hover:border-amber-600/40 rounded-lg transition-all duration-200 ${className ? ` ${className}` : ""}`}
         {...props}
       />
     );

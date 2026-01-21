@@ -3,6 +3,7 @@
 import React, { useRef, useState } from "react";
 import type { BlockDefinition } from "@/components/blocks/blocks";
 import { iconRegistry } from "@/components/blocks/blocks";
+import { SimpleCard } from "@/components/ui/SimpleCard";
 
 interface DraggableBlockProps {
   block: BlockDefinition;
@@ -66,13 +67,13 @@ export const DraggableBlock = React.memo(function DraggableBlock({
   };
 
   return (
-    <div
+    <SimpleCard
       ref={dragRef}
       draggable={!disabled}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
       onClick={handleClick}
-      className={`relative group w-full aspect-square flex flex-col items-center justify-center gap-1.5 p-2 bg-white/5 border border-white/20 hover:bg-white/10 hover:border-amber-600/40 rounded-lg transition-all duration-200 select-none touch-manipulation ${disabled
+      className={`relative group w-full aspect-square flex flex-col items-center justify-center gap-1.5 select-none touch-manipulation ${disabled
         ? "opacity-50 cursor-not-allowed"
         : "cursor-grab active:cursor-grabbing "
         }`}
@@ -103,6 +104,6 @@ export const DraggableBlock = React.memo(function DraggableBlock({
       {disabled && (
         <div className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-white/20" />
       )}
-    </div>
+    </SimpleCard>
   );
 });
