@@ -1,38 +1,47 @@
 "use client";
 
-import * as React from "react";
-import { cn } from "@/lib/utils";
-import { getInitialsFromEmail } from "@/lib/avatarUtils";
+import React from 'react';
+import { cn } from '@/lib/utils';
+
+/**
+ * Get the first letter from email address
+ */
+function getInitialsFromEmail(email: string): string {
+  return email[0]?.toUpperCase() || "";
+}
 
 export interface AvatarProps extends React.HTMLAttributes<HTMLDivElement> {
   email: string;
-  size?: "sm" | "md" | "lg";
+  gradient: string;
 }
 
-export function Avatar({
+export const Avatar: React.FC<AvatarProps> = ({
   email,
-  size = "md",
+  gradient,
   className,
+  style,
   ...props
-}: AvatarProps) {
+}) => {
   const initials = getInitialsFromEmail(email);
-
-  const sizeClasses = {
-    sm: "w-8 h-8 text-xs",
-    md: "w-10 h-10 text-sm",
-    lg: "w-12 h-12 text-base",
-  };
 
   return (
     <div
       className={cn(
-        "rounded-full flex items-center justify-center font-semibold text-primary bg-foreground ring-2 ring-accent",
-        sizeClasses[size],
+        'relative rounded-full flex items-center justify-center font-bold tracking-tight select-none text-white',
+        'ring-2 ring-white/10 ring-offset-2 ring-offset-slate-950',
         className
       )}
+      style={{
+        width: '2.5rem',
+        height: '2.5rem',
+        fontSize: '0.75rem',
+        background: gradient,
+        ...style,
+      }}
       {...props}
     >
-      {initials}
+      <div className="absolute inset-0 rounded-full bg-black/10 mix-blend-overlay" />
+      <span className="relative z-10">{initials}</span>
     </div>
   );
-}
+};

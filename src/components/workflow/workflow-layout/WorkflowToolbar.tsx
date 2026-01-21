@@ -229,7 +229,7 @@ export const WorkflowToolbar = React.memo(function WorkflowToolbar({
           <>
             {authenticated ? (
               <div className="ml-2">
-                <UserMenu size="md" />
+                <UserMenu />
               </div>
             ) : (
               <Button

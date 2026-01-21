@@ -1,44 +1,64 @@
 "use client";
 
-import * as React from "react";
-import Link from "next/link";
-import { usePrivy } from "@privy-io/react-auth";
-import { usePrivyEmbeddedWallet } from "@/hooks/usePrivyEmbeddedWallet";
-import { Avatar } from "@/components/user-menu/Avatar";
+import { useState, useRef, useEffect } from 'react';
+import Link from 'next/link';
+import { usePrivy } from '@privy-io/react-auth';
+import { usePrivyEmbeddedWallet } from '@/hooks/usePrivyEmbeddedWallet';
+import { useSafeWalletContext } from '@/contexts/SafeWalletContext';
+import { isTestnet, getTargetChainId, USE_TESTNET_ONLY } from '@/web3/chains';
+import { Avatar } from './Avatar';
+import { Switch } from './Switch';
+import { CopyButton } from '../ui/CopyButton';
+import { generateAvatarGradient } from './avatar-gredient-generator';
 import {
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-} from "@/components/ui/Popover";
-import { Button } from "@/components/ui/Button";
-import { Switch } from "@/components/user-menu/Switch";
-import { LogOut, Network, LayoutGrid } from "lucide-react";
-import { Typography } from "@/components/ui/Typography";
-import { USE_TESTNET_ONLY, isTestnet, getTargetChainId } from "@/web3/chains";
+  HiOutlineShieldCheck,
+} from 'react-icons/hi';
+import { BiLinkExternal } from 'react-icons/bi';
+import { LuLogOut } from 'react-icons/lu';
+import { TbLayoutGrid } from 'react-icons/tb';
+// import { TfiCreditCard } from 'react-icons/tfi';
+import { BiLink } from "react-icons/bi";
+import { Button } from '../ui/Button';
 
-export interface UserMenuProps {
-  size?: "sm" | "md" | "lg";
-}
-
-export function UserMenu({ size = "md" }: UserMenuProps) {
+export function UserMenu() {
   const { user, logout } = usePrivy();
   const { embeddedWallet, chainId } = usePrivyEmbeddedWallet();
-  const [open, setOpen] = React.useState(false);
+  const { selection } = useSafeWalletContext();
+  const safeAddress = selection.selectedSafe || selection.safeWallets[0] || null;
+  const [isOpen, setIsOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
-  // Use chain ID from Privy embedded wallet (nullable until ready)
+  // Network Configurations & use
   const currentChainId = chainId;
-
-  // Check if testnet-only mode is enabled
   const isTestnetOnlyMode = USE_TESTNET_ONLY;
-
-  // Derive testnet mode from current chain (null-safe)
-  // In testnet-only mode, always treat as testnet
   const isTestnetMode = isTestnetOnlyMode || isTestnet(currentChainId);
 
+  // Get email (may be undefined)
+  const email = user?.email?.address;
+
+  // Generate gradient (use fallback if no email)
+  const gradient = email ? generateAvatarGradient(email) : 'linear-gradient(135deg, #6366f1, #a855f7)';
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isOpen]);
+
+  // Early return AFTER all hooks
+  if (!email) return null;
+
   const handleTestnetToggle = async (checked: boolean) => {
-    // Don't allow switching when in testnet-only mode
     if (isTestnetOnlyMode) {
-      console.log("Network switching is disabled in testnet-only mode");
+      console.log('Network switching is disabled in testnet-only mode');
       return;
     }
 
@@ -46,124 +66,139 @@ export function UserMenu({ size = "md" }: UserMenuProps) {
       const targetChainId = getTargetChainId(checked);
 
       if (!embeddedWallet) {
-        throw new Error("Embedded wallet not found");
+        throw new Error('Embedded wallet not found');
       }
 
-      // Switch chain using Privy's native API
       await embeddedWallet.switchChain(targetChainId);
     } catch (error) {
-      console.error("Failed to switch chain:", error);
+      console.error('Failed to switch chain:', error);
     }
   };
 
-  if (!user?.email) {
-    return null;
-  }
-
-  const email = user.email.address;
-
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <button className="focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background rounded-full transition-transform hover:scale-105 active:scale-95">
-          <Avatar email={email} size={size} />
-        </button>
-      </PopoverTrigger>
-      <PopoverContent align="end" className="w-72 p-0">
-        <div className="space-y-1">
-          {/* User Info Section */}
-          <div className="px-4 pt-4 pb-3 bg-card/80 border-b border-border/50">
-            <div className="flex items-center gap-3">
-              <Avatar email={email} size="lg" />
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <Typography
-                    variant="bodySmall"
-                    className="font-semibold text-foreground truncate"
-                  >
-                    Account
-                  </Typography>
+    <div className="relative inline-block" ref={menuRef}>
+      {/* Trigger Button */}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="relative p-1.5 rounded-full transition-all duration-300 group cursor-pointer"
+      >
+        <Avatar email={email} gradient={gradient} />
+      </button>
+
+      {/* Popover Menu */}
+      {isOpen && (
+        <div className="absolute right-0 mt-2 w-80 bg-black/95 backdrop-blur-sm border border-white/20 rounded-lg shadow-xl z-50 overflow-hidden">
+          {/* Header Section */}
+          <div className="p-6 border-b border-white/20">
+            <div className="flex flex-col items-center text-center space-y-4">
+              <div className="relative">
+                <Avatar email={email} gradient={gradient} style={{ width: '5rem', height: '5rem', fontSize: '1.25rem' }} />
+                <div className="absolute -bottom-1 -right-1 bg-amber-600 p-1.5 rounded-full border-4 border-black">
+                  <HiOutlineShieldCheck className="w-4 h-4 text-white" />
                 </div>
-                <Typography
-                  variant="bodySmall"
-                  className="text-muted-foreground truncate text-xs"
-                >
-                  {email}
-                </Typography>
               </div>
+
+              {/* Email & Wallet Info */}
+              <div className="w-full space-y-2">
+                {/* Email Row */}
+                <div className="w-full items-center justify-between px-2 py-2 bg-white/10 rounded-lg text-sm text-white/70 truncate">
+                  {email}
+                </div>
+
+                {/* Safe Wallet Row */}
+                {embeddedWallet?.address && safeAddress && (
+                  <div className="w-full flex items-center gap-2 text-sm text-white/70">
+                    <div className="flex-1 px-2 py-2 font-mono truncate bg-white/10 rounded-lg">
+                      {safeAddress.slice(0, 6)}...{safeAddress.slice(-4)}
+                    </div>
+                    <div className="px-2 py-1.5 flex items-center justify-center bg-white/10 rounded-lg">
+                      <CopyButton text={safeAddress} size="md" />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Get a Plan Button */}
+              {/* <Button
+                onClick={() => { }}
+                className="w-full"
+              >
+                <span className="flex items-center justify-center gap-2">
+                  Get a plan
+                </span>
+              </Button> */}
             </div>
           </div>
 
-          {/* Network Settings Section */}
-          <div className="px-4 py-3">
-            <div className="flex items-center justify-between group">
-              <div className="flex items-center gap-3 flex-1">
-                <div className="p-2 rounded-md bg-secondary/50 group-hover:bg-secondary transition-colors">
-                  <Network className="w-4 h-4 text-primary" />
-                </div>
-                <div className="flex-1">
-                  <Typography
-                    variant="bodySmall"
-                    className="font-medium text-foreground mb-0.5"
-                  >
-                    Network
-                  </Typography>
-                  <div className="flex items-center gap-1.5">
-                    <Typography
-                      variant="bodySmall"
-                      className="text-xs text-muted-foreground"
-                    >
-                      {isTestnetMode ? "Arbitrum Sepolia" : "Arbitrum"}
-                      {isTestnetOnlyMode && (
-                        <span className="ml-1 text-[10px] text-yellow-500">(Testnet Only)</span>
-                      )}
-                    </Typography>
-                  </div>
-                </div>
-              </div>
+          {/* Plan & Billing */}
+          {/* <div className="py-2">
+            <button
+              onClick={() => { }}
+              className="w-full px-4 py-3 flex items-center gap-3 text-sm font-medium transition-all duration-200 text-left cursor-pointer text-white/70 hover:text-white hover:translate-x-1"
+            >
+              <TfiCreditCard className="shrink-0 w-5 h-5" />
+              <span className="flex-1">Plan & billing</span>
+              <span className="px-2 py-0.5 text-xs bg-white/10 rounded text-white/50">Free</span>
+              <BiLinkExternal className="w-4 h-4" />
+            </button>
+          </div> */}
+
+          {/* Divider */}
+          <div className="border-t border-white/20" />
+
+          {/* Network Selector */}
+          <div className="py-2">
+            <div className="w-full px-4 py-3 flex items-center gap-3 text-sm font-medium text-white/70">
+              <BiLink className="shrink-0 w-5 h-5" />
+              <span className="flex-1">Network</span>
+              <span className="px-2 py-0.5 text-xs bg-white/10 rounded text-white/50">
+                {isTestnetMode ? 'Arbitrum Sepolia' : 'Arbitrum One'}
+              </span>
               <Switch
                 checked={isTestnetMode}
                 onCheckedChange={handleTestnetToggle}
                 disabled={isTestnetOnlyMode}
+                gradient={gradient}
               />
             </div>
           </div>
 
           {/* Divider */}
-          <div className="border-t border-border" />
+          <div className="border-t border-white/20" />
 
-          {/* Navigation Links */}
-          <div className="p-2">
+          {/* Navigation Items */}
+          <div className="py-2">
             <Link
               href="/workflows"
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-secondary/50 transition-colors"
+              onClick={() => setIsOpen(false)}
+              className="w-full px-4 py-3 flex items-center gap-3 text-sm font-medium transition-all duration-200 text-left cursor-pointer text-white/70 hover:text-white hover:bg-amber-800/10 hover:translate-x-1"
             >
-              <LayoutGrid className="w-4 h-4 text-primary" />
-              <Typography variant="bodySmall" className="font-medium text-foreground">
-                My Workflows
-              </Typography>
+              <TbLayoutGrid className="shrink-0 w-5 h-5" />
+              <span className="flex-1">My Workflows</span>
+              <BiLinkExternal className="w-4 h-4" />
             </Link>
           </div>
 
           {/* Divider */}
-          <div className="border-t border-border" />
+          <div className="border-t border-white/20" />
 
-          {/* Actions Section */}
+          {/* Footer Actions */}
           <div className="p-2">
             <Button
               onClick={() => {
                 logout();
-                setOpen(false);
+                setIsOpen(false);
               }}
-              className="w-full justify-center gap-2"
+              variant="delete"
+              border
+              className="w-full"
             >
-              <LogOut className="w-4 h-4" />
-              <span>Sign out</span>
+              <LuLogOut className="w-4 h-4" />
+              <span>Sign Out</span>
             </Button>
           </div>
         </div>
-      </PopoverContent>
-    </Popover>
+      )}
+    </div>
   );
 }

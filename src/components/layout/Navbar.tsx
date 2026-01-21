@@ -60,7 +60,7 @@ export default function NavBar() {
           <>
             {authenticated ? (
               <div>
-                <UserMenu size="md" />
+                <UserMenu />
               </div>
             ) : (
               <Button onClick={login}>
