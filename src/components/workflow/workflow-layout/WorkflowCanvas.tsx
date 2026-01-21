@@ -106,8 +106,8 @@ function WorkflowCanvasInner({
           type: "smoothstep",
           animated: true,
           style: {
-            stroke: "hsl(var(--primary))",
-            strokeWidth: 2,
+            stroke: "#ffffff",
+            strokeWidth: 1,
           },
         }}
         className="workflow-canvas"

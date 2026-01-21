@@ -522,10 +522,15 @@ export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({
   const onConnect = useCallback(
     (connection: Parameters<typeof addEdge>[0]) => {
       setEdges((eds) => {
+        // Use a visible color for edges - white for dark background
         const baseEdge = {
           ...connection,
           type: "smoothstep",
           animated: true,
+          style: {
+            stroke: "#ffffff",
+            strokeWidth: 1,
+          },
         };
 
         const sourceNode = nodes.find((n) => n.id === connection.source);
