@@ -1,9 +1,9 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { usePrivyEmbeddedWallet } from "@/hooks/usePrivyEmbeddedWallet";
 import { ethers } from "ethers";
 import { usePrivyWallet } from "@/hooks/usePrivyWallet";
 import {
-  SUPPORTED_CHAINS,
+  CHAIN_IDS,
   getChainName,
   getSafeModuleAddress,
   isSupportedChain,
@@ -39,7 +39,18 @@ export const useCreateSafeWallet = () => {
     threshold: number;
     owners: string[];
     signerAddress: string;
+    chainId: number; // Track which chain this tx is for
   } | null>(null);
+
+  // Clear signed tx when chain changes to prevent cross-chain accidents
+  useEffect(() => {
+    if (chainId && signedTxRef.current && signedTxRef.current.chainId !== chainId) {
+      console.warn(
+        `Chain changed from ${signedTxRef.current.chainId} to ${chainId}, clearing signed transaction`
+      );
+      signedTxRef.current = null;
+    }
+  }, [chainId]);
 
   // Helper: Read Safe info with retry logic
   const readSafeInfo = async (
@@ -118,8 +129,29 @@ export const useCreateSafeWallet = () => {
         return {
           success: false,
           safeAddress: null,
-          error: `Unsupported chain. Please switch to Arbitrum Sepolia (${SUPPORTED_CHAINS.ARBITRUM_SEPOLIA}) or Arbitrum Mainnet (${SUPPORTED_CHAINS.ARBITRUM_MAINNET}). Current chain: ${chainId}`,
+          error: `Unsupported chain. Please switch to Arbitrum Sepolia (${CHAIN_IDS.ARBITRUM_SEPOLIA}) or Arbitrum Mainnet (${CHAIN_IDS.ARBITRUM_MAINNET}). Current chain: ${chainId}`,
         };
+      }
+
+      // Verify wallet is actually connected to the claimed chain
+      // This prevents silent mismatches between frontend state and actual wallet state
+      if (wallet) {
+        try {
+          const provider = await wallet.getEthereumProvider();
+          const actualChainId = await provider.request({ method: 'eth_chainId' });
+          const actualChainIdNum = parseInt(actualChainId as string, 16);
+
+          if (actualChainIdNum !== chainId) {
+            return {
+              success: false,
+              safeAddress: null,
+              error: `Wallet chain mismatch. Expected ${getChainName(chainId)} but wallet is on chain ${actualChainIdNum}. Please switch networks.`,
+            };
+          }
+        } catch (chainCheckError) {
+          console.warn('Failed to verify wallet chain:', chainCheckError);
+          // Continue anyway - backend will validate
+        }
       }
 
       // Get Privy access token
@@ -197,12 +229,19 @@ export const useCreateSafeWallet = () => {
   };
 
   // Sign enable module transaction (Step 2)
-  const signEnableModule = async (safeAddress: string): Promise<SignResult> => {
+  // IMPORTANT: targetChainId parameter ensures we sign on the correct chain
+  const signEnableModule = async (
+    safeAddress: string,
+    targetChainId?: number
+  ): Promise<SignResult> => {
     setIsSigningEnableModule(true);
 
     try {
+      // Use targetChainId if provided, otherwise fall back to current chainId
+      const effectiveChainId = targetChainId ?? chainId;
+
       // Check if chainId is available
-      if (!chainId) {
+      if (!effectiveChainId) {
         return {
           success: false,
           error: "Wallet not ready. Please wait for wallet to initialize.",
@@ -210,19 +249,27 @@ export const useCreateSafeWallet = () => {
       }
 
       // Validate chain ID
-      if (!isSupportedChain(chainId)) {
+      if (!isSupportedChain(effectiveChainId)) {
         return {
           success: false,
-          error: `Unsupported chain. Please switch to Arbitrum Sepolia (${SUPPORTED_CHAINS.ARBITRUM_SEPOLIA}) or Arbitrum Mainnet (${SUPPORTED_CHAINS.ARBITRUM_MAINNET}). Current chain: ${chainId}`,
+          error: `Unsupported chain. Please switch to Arbitrum Sepolia (${CHAIN_IDS.ARBITRUM_SEPOLIA}) or Arbitrum Mainnet (${CHAIN_IDS.ARBITRUM_MAINNET}). Current chain: ${effectiveChainId}`,
         };
       }
 
-      const moduleAddress = getSafeModuleAddress(chainId);
+      // CRITICAL: Verify wallet is on the target chain before signing
+      if (chainId !== effectiveChainId) {
+        return {
+          success: false,
+          error: `Wallet must be on chain ${effectiveChainId} to sign. Current chain: ${chainId}. Please switch networks first.`,
+        };
+      }
+
+      const moduleAddress = getSafeModuleAddress(effectiveChainId);
       if (!moduleAddress) {
         return {
           success: false,
           error: `Safe Module address not configured for ${getChainName(
-            chainId
+            effectiveChainId
           )}. Please check your environment variables.`,
         };
       }
@@ -293,6 +340,7 @@ export const useCreateSafeWallet = () => {
         threshold,
         owners,
         signerAddress,
+        chainId: effectiveChainId,
       };
 
       return {
@@ -345,7 +393,7 @@ export const useCreateSafeWallet = () => {
       };
     }
 
-    const { signedSafeTx, threshold, owners, safeAddress } =
+    const { signedSafeTx, threshold, owners, safeAddress, chainId: txChainId } =
       signedTxRef.current;
 
     try {
@@ -357,11 +405,19 @@ export const useCreateSafeWallet = () => {
         };
       }
 
+      // CRITICAL: Verify we're still on the same chain as when we signed
+      if (chainId !== txChainId) {
+        return {
+          success: false,
+          error: `Chain mismatch: Transaction was signed on chain ${txChainId} but wallet is now on chain ${chainId}. Please switch back to chain ${txChainId}.`,
+        };
+      }
+
       // Validate chain ID
       if (!isSupportedChain(chainId)) {
         return {
           success: false,
-          error: `Unsupported chain. Please switch to Arbitrum Sepolia (${SUPPORTED_CHAINS.ARBITRUM_SEPOLIA}) or Arbitrum Mainnet (${SUPPORTED_CHAINS.ARBITRUM_MAINNET}). Current chain: ${chainId}`,
+          error: `Unsupported chain. Please switch to Arbitrum Sepolia (${CHAIN_IDS.ARBITRUM_SEPOLIA}) or Arbitrum Mainnet (${CHAIN_IDS.ARBITRUM_MAINNET}). Current chain: ${chainId}`,
         };
       }
 

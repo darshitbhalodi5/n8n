@@ -12,6 +12,7 @@ import { usePrivyEmbeddedWallet } from "@/hooks/usePrivyEmbeddedWallet";
 import { useSafeWallets } from "@/web3/hooks/useSafeWallets";
 import { useCreateSafeWallet } from "@/web3/hooks/useCreateSafeWallet";
 import { useSafeModuleStatus } from "@/web3/hooks/useSafeModuleStatus";
+import { verifyModuleEnabled } from "@/web3/onboarding";
 
 // Placeholder types - will be properly typed when we port the hooks
 export interface SafeWalletSelection {
@@ -93,7 +94,7 @@ export const useSafeWalletContext = () => {
 export const SafeWalletProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const { walletAddress, chainId } = usePrivyEmbeddedWallet();
+  const { walletAddress, chainId, ethereumProvider, embeddedWallet } = usePrivyEmbeddedWallet();
 
   // Core hooks
   const { safeWallets, isLoading, error, refetch } = useSafeWallets();
@@ -181,6 +182,26 @@ export const SafeWalletProvider: React.FC<{ children: React.ReactNode }> = ({
       } else {
         setEnableStep("success");
 
+        // Verify module is actually enabled on-chain
+        if (chainId && ethereumProvider) {
+          try {
+            const isEnabled = await verifyModuleEnabled(
+              safeAddress,
+              chainId,
+              ethereumProvider,
+              5,
+              2000
+            );
+
+            if (!isEnabled) {
+              setEnableError("Module not verified on-chain");
+            }
+          } catch (verifyError) {
+            console.error("Failed to verify module:", verifyError);
+            // Don't fail the flow, just log it
+          }
+        }
+
         setTimeout(async () => {
           setSelectedSafe(safeAddress);
           await refetch();
@@ -195,7 +216,7 @@ export const SafeWalletProvider: React.FC<{ children: React.ReactNode }> = ({
         }, 2000);
       }
     },
-    [submitEnableModule, refetch, refreshModuleStatus]
+    [submitEnableModule, refetch, refreshModuleStatus, chainId, ethereumProvider]
   );
 
   const handleSignStep = useCallback(
@@ -203,22 +224,36 @@ export const SafeWalletProvider: React.FC<{ children: React.ReactNode }> = ({
       setSignStep("pending");
       setSignError(undefined);
 
-      const signResult = await signEnableModule(safeAddress);
-
-      if (!signResult.success) {
+      // Ensure we're on the correct chain before signing
+      if (!chainId || !embeddedWallet) {
         setSignStep("error");
-        setSignError(signResult.error || "Failed to sign transaction");
-        setTimeout(async () => {
-          await refetch();
-          setSelectedSafe(safeAddress);
-        }, 3000);
+        setSignError("Wallet not ready");
         return;
       }
 
-      setSignStep("success");
-      await handleEnableStep(safeAddress);
+      try {
+        // No need to switch chain here as user is already on it (manual Safe creation)
+        // But we pass chainId explicitly to signEnableModule for safety
+        const signResult = await signEnableModule(safeAddress, chainId);
+
+        if (!signResult.success) {
+          setSignStep("error");
+          setSignError(signResult.error || "Failed to sign transaction");
+          setTimeout(async () => {
+            await refetch();
+            setSelectedSafe(safeAddress);
+          }, 3000);
+          return;
+        }
+
+        setSignStep("success");
+        await handleEnableStep(safeAddress);
+      } catch (error) {
+        setSignStep("error");
+        setSignError(error instanceof Error ? error.message : "Failed to sign");
+      }
     },
-    [signEnableModule, refetch, handleEnableStep]
+    [signEnableModule, refetch, handleEnableStep, chainId, embeddedWallet]
   );
 
   const handleCreateNewSafe = useCallback(async () => {
@@ -332,7 +367,7 @@ export const SafeWalletProvider: React.FC<{ children: React.ReactNode }> = ({
   }, [selectedSafe, refreshModuleStatus]);
 
   const handleEnableModule = useCallback(async () => {
-    if (!selectedSafe) return;
+    if (!selectedSafe || !chainId) return;
 
     setModuleSignStep("pending");
     setModuleExecuteStep("idle");
@@ -341,7 +376,8 @@ export const SafeWalletProvider: React.FC<{ children: React.ReactNode }> = ({
     setHasOngoingModuleProcess(true);
 
     try {
-      const signResult = await signEnableModule(selectedSafe);
+      // Pass chainId explicitly to ensure we sign on the correct chain
+      const signResult = await signEnableModule(selectedSafe, chainId);
       if (!signResult.success) {
         setModuleSignStep("error");
         setModuleSignError(signResult.error || "Failed to sign transaction");
@@ -370,6 +406,27 @@ export const SafeWalletProvider: React.FC<{ children: React.ReactNode }> = ({
       }
 
       setModuleExecuteStep("success");
+
+      // Verify module is actually enabled on-chain
+      if (ethereumProvider) {
+        try {
+          const isEnabled = await verifyModuleEnabled(
+            selectedSafe,
+            chainId,
+            ethereumProvider,
+            5,
+            2000
+          );
+
+          if (!isEnabled) {
+            setModuleExecuteError("Module not verified on-chain");
+          }
+        } catch (verifyError) {
+          console.error("Failed to verify module:", verifyError);
+          // Don't fail the flow, just log it
+        }
+      }
+
       setHasOngoingModuleProcess(false);
       setTimeout(() => {
         closeModuleActionDialog();
@@ -380,20 +437,23 @@ export const SafeWalletProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, [
     selectedSafe,
+    chainId,
+    ethereumProvider,
     signEnableModule,
     submitEnableModule,
     closeModuleActionDialog,
   ]);
 
   const handleRetryModuleSign = useCallback(async () => {
-    if (!selectedSafe) return;
+    if (!selectedSafe || !chainId) return;
 
     setModuleSignStep("pending");
     setModuleSignError(undefined);
     setHasOngoingModuleProcess(true);
 
     try {
-      const signResult = await signEnableModule(selectedSafe);
+      // Pass chainId explicitly
+      const signResult = await signEnableModule(selectedSafe, chainId);
 
       if (!signResult.success) {
         setModuleSignStep("error");
@@ -424,6 +484,26 @@ export const SafeWalletProvider: React.FC<{ children: React.ReactNode }> = ({
       }
 
       setModuleExecuteStep("success");
+
+      // Verify module is actually enabled on-chain
+      if (ethereumProvider) {
+        try {
+          const isEnabled = await verifyModuleEnabled(
+            selectedSafe,
+            chainId,
+            ethereumProvider,
+            5,
+            2000
+          );
+
+          if (!isEnabled) {
+            setModuleExecuteError("Module not verified on-chain");
+          }
+        } catch (verifyError) {
+          console.error("Failed to verify module:", verifyError);
+        }
+      }
+
       setHasOngoingModuleProcess(false);
       setTimeout(() => {
         closeModuleActionDialog();
@@ -434,6 +514,8 @@ export const SafeWalletProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, [
     selectedSafe,
+    chainId,
+    ethereumProvider,
     signEnableModule,
     submitEnableModule,
     closeModuleActionDialog,

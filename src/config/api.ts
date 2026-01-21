@@ -53,11 +53,16 @@ export const API_CONFIG = {
             EXECUTIONS: "/lending/executions",
         },
         USERS: {
+            ME: "/users/me",
             GET_BY_ADDRESS: "/users/address/:address",
             CREATE: "/users",
         },
         RELAY: {
             CREATE_SAFE: "/relay/create-safe",
+            ENABLE_MODULE: "/relay/enable-module",
+        },
+        META: {
+            RUNTIME_CONFIG: "/meta/runtime-config",
         },
     },
 
