@@ -5,7 +5,7 @@ import { Handle, Position, NodeProps } from "reactflow";
 import { Card } from "@/components/ui/Card";
 import { cn } from "@/lib/utils";
 import { Wallet } from "lucide-react";
-import { iconRegistry } from "@/components/blocks";
+import { iconRegistry } from "@/components/blocks/blocks";
 
 export interface WalletNodeData {
   label: string;

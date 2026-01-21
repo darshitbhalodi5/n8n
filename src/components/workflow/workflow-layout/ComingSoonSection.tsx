@@ -13,7 +13,7 @@ import {
     comingSoonCategories,
     iconRegistry,
     type ComingSoonCategoryDefinition,
-} from "@/components/blocks";
+} from "@/components/blocks/blocks";
 
 // Theme color - single color for all categories
 const themeColor = {

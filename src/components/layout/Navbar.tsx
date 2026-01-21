@@ -4,8 +4,8 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePrivy } from "@privy-io/react-auth";
 import { LogIn, Rocket } from "lucide-react";
-import { UserMenu } from "../user-menu";
-import { Button } from "../ui";
+import { UserMenu } from "../user-menu/UserMenu";
+import { Button } from "../ui/Button";
 import Image from "next/image";
 import logo from "@/assets/logo.svg";
 
@@ -29,9 +29,8 @@ export default function NavBar() {
 
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 w-[90%] mx-auto py-10 flex items-center justify-between transition-all duration-300 ${
-        scrolled ? " " : "bg-transparent"
-      } ${isVisible ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+      className={`fixed top-0 left-0 right-0 z-50 w-[90%] mx-auto py-10 flex items-center justify-between transition-all duration-300 ${scrolled ? " " : "bg-transparent"
+        } ${isVisible ? "opacity-100" : "opacity-0 pointer-events-none"}`}
     >
       {/* Logo - Left Side */}
       <Link href="/">

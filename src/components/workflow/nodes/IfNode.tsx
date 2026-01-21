@@ -4,7 +4,7 @@ import React from "react";
 import { Handle, Position, NodeProps } from "reactflow";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/Card";
-import { iconRegistry } from "@/components/blocks";
+import { iconRegistry } from "@/components/blocks/blocks";
 
 export interface IfNodeData {
   label: string;
@@ -66,7 +66,7 @@ export const IfNode = React.memo(function IfNode({
               transform: "translateY(-50%)",
             }}
           />
-          
+
           {/* True output handle (top-right) */}
           <Handle
             type="source"
@@ -80,7 +80,7 @@ export const IfNode = React.memo(function IfNode({
               transform: "translateY(-50%)",
             }}
           />
-          
+
           {/* False output handle (bottom-right) */}
           <Handle
             type="source"

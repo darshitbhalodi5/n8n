@@ -7,21 +7,21 @@ import { Button } from "@/components/ui/Button";
 import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
 import { usePrivy } from "@privy-io/react-auth";
 import { useWorkflow } from "@/contexts/WorkflowContext";
-import { getBlockById, getBlockByNodeType } from "@/components/blocks";
-import type { BlockDefinition } from "@/components/blocks";
+import { getBlockById, getBlockByNodeType } from "@/components/blocks/blocks";
+import type { BlockDefinition } from "@/components/blocks/blocks";
 import {
   Trash2,
   X,
 } from "lucide-react";
 import { HiPlay } from "react-icons/hi2";
-import { SlackNodeConfiguration } from "./slack";
-import { TelegramNodeConfiguration } from "./telegram";
-import { EmailNodeConfiguration } from "./email";
-import { IfNodeConfiguration } from "./if";
-import { SwitchNodeConfiguration } from "./switch";
-import { SwapNodeConfiguration } from "./swap";
-import { WalletNodeConfiguration } from "./wallet";
-import { LendingNodeConfiguration } from "./lending";
+import { SlackNodeConfiguration } from "./slack/SlackNodeConfiguration";
+import { TelegramNodeConfiguration } from "./telegram/TelegramNodeConfiguration";
+import { EmailNodeConfiguration } from "./email/EmailNodeConfiguration";
+import { IfNodeConfiguration } from "./if/IfNodeConfiguration";
+import { SwitchNodeConfiguration } from "./switch/SwitchNodeConfiguration";
+import { SwapNodeConfiguration } from "./swap/SwapNodeConfiguration";
+import { WalletNodeConfiguration } from "./wallet/WalletNodeConfiguration";
+import { LendingNodeConfiguration } from "./lending/LendingNodeConfiguration";
 
 export function WorkflowRightSidebar() {
   const {

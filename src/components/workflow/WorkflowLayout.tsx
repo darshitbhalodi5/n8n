@@ -6,13 +6,11 @@ import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@/components/ui";
+} from "@/components/ui/Tooltip";
 import { X } from "lucide-react";
 import { useWorkflow } from "@/contexts/WorkflowContext";
-import {
-  WorkflowCanvas,
-  WorkflowToolbar,
-} from "@/components/workflow";
+import { WorkflowCanvas } from "./workflow-layout/WorkflowCanvas";
+import { WorkflowToolbar } from "./workflow-layout/WorkflowToolbar";
 import { WorkflowBlockList } from "./workflow-layout/WorkflowBlockList";
 import { WorkflowRightSidebar } from "./workflow-layout/WorkflowRightSidebar";
 import { CategoryDropdown } from "@/components/ui/CategoryDropdown";

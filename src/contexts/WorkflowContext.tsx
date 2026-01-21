@@ -23,8 +23,9 @@ import {
   blockCategories,
   startBlock,
   type BlockDefinition,
-} from "@/components/blocks";
-import { useCanvasDimensions, useUnsavedChanges } from "@/hooks";
+} from "@/components/blocks/blocks";
+import { useCanvasDimensions } from "@/hooks/useCanvasDimensions";
+import { useUnsavedChanges } from "@/hooks/useWorkflowState";
 import { calculateCanvasCenter } from "@/utils/canvas";
 import { usePrivyEmbeddedWallet } from "@/hooks/usePrivyEmbeddedWallet";
 import { usePrivyWallet } from "@/hooks/usePrivyWallet";

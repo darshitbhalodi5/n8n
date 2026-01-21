@@ -3,7 +3,7 @@
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 import { SafeWalletProvider } from "@/contexts/SafeWalletContext";
 import { OnboardingProvider } from "@/contexts/OnboardingContext";
-import { OnboardingSetupModal } from "@/components/onboarding";
+import { OnboardingSetupModal } from "@/components/onboarding/OnboardingSetupModal";
 import { useState } from "react";
 import { PrivyProvider } from "@privy-io/react-auth";
 import { getSupportedChainsForPrivy, getDefaultChainForPrivy } from "@/web3/chains";

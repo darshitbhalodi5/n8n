@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { WorkflowLayout } from "@/components/workflow/WorkflowLayout";
-import { TooltipProvider } from "@/components/ui";
+import { TooltipProvider } from "@/components/ui/Tooltip";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useWorkflow } from "@/contexts/WorkflowContext";
 import { Loader2 } from "lucide-react";

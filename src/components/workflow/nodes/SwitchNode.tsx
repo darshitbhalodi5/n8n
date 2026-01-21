@@ -4,8 +4,8 @@ import React from "react";
 import { Handle, Position, NodeProps } from "reactflow";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/Card";
-import { iconRegistry } from "@/components/blocks";
-import type { SwitchCaseData } from "@/components/blocks";
+import { iconRegistry } from "@/components/blocks/blocks";
+import type { SwitchCaseData } from "@/components/blocks/blocks";
 
 export interface SwitchNodeData {
   label: string;

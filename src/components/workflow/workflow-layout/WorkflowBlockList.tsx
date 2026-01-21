@@ -1,11 +1,11 @@
 "use client";
 
-import { Typography } from "@/components/ui";
+import { Typography } from "@/components/ui/Typography";
 import { DraggableBlock } from "./DraggableBlock";
 import { ComingSoonSection } from "./ComingSoonSection";
 import {
   blockCategories,
-} from "@/components/blocks";
+} from "@/components/blocks/blocks";
 import { useWorkflow } from "@/contexts/WorkflowContext";
 
 interface WorkflowBlockListProps {
@@ -64,7 +64,7 @@ export function WorkflowBlockList({
         <div className="space-y-6">
           {categoriesToDisplay.map((category) => {
             const categoryBlocks = category.blocks;
-            
+
             if (categoryBlocks.length === 0) return null;
 
             // Special handling for DeFi category - split into Swap and Lending

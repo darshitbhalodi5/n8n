@@ -4,8 +4,8 @@ import React, { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Play, Save, Share2, Menu, Pencil, LogIn, ChevronLeft, Loader2, Check } from "lucide-react";
 import { usePrivy } from "@privy-io/react-auth";
-import { Button } from "@/components/ui";
-import { UserMenu } from "@/components/user-menu";
+import { Button } from "@/components/ui/Button";
+import { UserMenu } from "@/components/user-menu/UserMenu";
 import { useWorkflow } from "@/contexts/WorkflowContext";
 import { formatDistanceToNow } from "date-fns";
 

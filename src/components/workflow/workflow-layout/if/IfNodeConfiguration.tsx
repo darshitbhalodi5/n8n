@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/Card";
 import { Typography } from "@/components/ui/Typography";
 import { Label } from "@/components/ui/Label";
 import { Input } from "@/components/ui/Input";
-import type { IfNodeData } from "@/types";
+import type { IfNodeData } from "@/types/node-data";
 
 interface IfNodeConfigurationProps {
   nodeData: IfNodeData;

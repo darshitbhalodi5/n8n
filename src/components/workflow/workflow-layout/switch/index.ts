@@ -1,1 +1,0 @@
-export { SwitchNodeConfiguration } from "./SwitchNodeConfiguration";

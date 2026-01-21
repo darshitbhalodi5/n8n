@@ -12,9 +12,9 @@ import {
   createNewCase,
   createDefaultCase,
   type SwitchCaseData,
-} from "@/components/blocks";
+} from "@/components/blocks/blocks";
 
-import type { SwitchNodeData } from "@/types";
+import type { SwitchNodeData } from "@/types/node-data";
 
 interface SwitchNodeConfigurationProps {
   nodeData: SwitchNodeData;

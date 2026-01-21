@@ -16,7 +16,7 @@ import {
     PenLine,
     X,
 } from "lucide-react";
-import { Button } from "@/components/ui";
+import { Button } from "@/components/ui/Button";
 
 interface StepIndicatorProps {
     label: string;

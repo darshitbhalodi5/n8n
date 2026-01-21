@@ -1,8 +1,9 @@
 "use client";
 
 import { Zap, ExternalLink, Workflow, Shield, Rocket, Book, HelpCircle, Mail, Github, Twitter, Linkedin, ArrowRight } from "lucide-react";
-import { Container, Stack } from "@/components/layout";
-import { Typography } from "@/components/ui";
+import { Container } from "@/components/layout/Container";
+import { Stack } from "@/components/layout/Stack";
+import { Typography } from "@/components/ui/Typography";
 import { motion } from "framer-motion";
 import { useRef } from "react";
 import { useInView } from "framer-motion";
@@ -10,8 +11,8 @@ import Link from "next/link";
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 20 },
-  visible: { 
-    opacity: 1, 
+  visible: {
+    opacity: 1,
     y: 0,
     transition: { duration: 0.5 }
   }
@@ -30,13 +31,13 @@ const staggerContainer = {
 
 const MotionLink = motion(Link);
 
-const FooterLink = ({ 
-  href, 
-  children, 
-  external = false 
-}: { 
-  href: string; 
-  children: React.ReactNode; 
+const FooterLink = ({
+  href,
+  children,
+  external = false
+}: {
+  href: string;
+  children: React.ReactNode;
   external?: boolean;
 }) => {
   const linkProps = external
@@ -76,11 +77,11 @@ const FooterLink = ({
   );
 };
 
-const FooterSection = ({ 
-  title, 
-  children 
-}: { 
-  title: string; 
+const FooterSection = ({
+  title,
+  children
+}: {
+  title: string;
   children: React.ReactNode;
 }) => (
   <motion.div variants={fadeInUp} className="min-w-[180px]">
@@ -100,7 +101,7 @@ export function Footer() {
   const isInView = useInView(ref, { once: false, margin: "0px" });
 
   return (
-    <footer 
+    <footer
       ref={ref}
       className="relative border-t border-border bg-black overflow-hidden z-20"
     >
@@ -120,7 +121,7 @@ export function Footer() {
       <Container maxWidth="xl" className="relative z-10">
         <div className="py-20">
           {/* Main Footer Content */}
-          <motion.div 
+          <motion.div
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 mb-16 opacity-100"
             variants={staggerContainer}
             initial="visible"
@@ -136,8 +137,8 @@ export function Footer() {
                   variant="bodySmall"
                   className="text-muted-foreground max-w-sm leading-relaxed"
                 >
-                  The creative place for Web2 & Web3 automation. Connect everything. 
-                  Automate anything. From APIs to blockchains, one powerful platform 
+                  The creative place for Web2 & Web3 automation. Connect everything.
+                  Automate anything. From APIs to blockchains, one powerful platform
                   for all your automation needs.
                 </Typography>
                 <motion.a
@@ -207,7 +208,7 @@ export function Footer() {
           </motion.div>
 
           {/* Social Links & Newsletter */}
-          <motion.div 
+          <motion.div
             className="border-t border-border pt-8 pb-8"
             variants={fadeInUp}
             initial="hidden"
@@ -265,7 +266,7 @@ export function Footer() {
           </motion.div>
 
           {/* Bottom Section */}
-          <motion.div 
+          <motion.div
             className="border-t border-border py-8"
             variants={fadeInUp}
             initial="hidden"

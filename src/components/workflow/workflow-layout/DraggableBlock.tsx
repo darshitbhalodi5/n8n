@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useRef, useState } from "react";
-import type { BlockDefinition } from "@/components/blocks";
-import { iconRegistry } from "@/components/blocks";
+import type { BlockDefinition } from "@/components/blocks/blocks";
+import { iconRegistry } from "@/components/blocks/blocks";
 
 interface DraggableBlockProps {
   block: BlockDefinition;
@@ -73,15 +73,15 @@ export const DraggableBlock = React.memo(function DraggableBlock({
       onDragEnd={handleDragEnd}
       onClick={handleClick}
       className={`relative group w-full aspect-square flex flex-col items-center justify-center gap-1.5 p-2 bg-white/5 border border-white/20 hover:bg-white/10 hover:border-amber-600/40 rounded-lg transition-all duration-200 select-none touch-manipulation ${disabled
-          ? "opacity-50 cursor-not-allowed"
-          : "cursor-grab active:cursor-grabbing "
+        ? "opacity-50 cursor-not-allowed"
+        : "cursor-grab active:cursor-grabbing "
         }`}
     >
       {/* Icon */}
       <div
         className={`flex items-center justify-center transition-colors ${disabled
-            ? "text-white/30"
-            : "text-white/70 group-hover:text-white"
+          ? "text-white/30"
+          : "text-white/70 group-hover:text-white"
           }`}
       >
         {IconComponent && (
@@ -92,8 +92,8 @@ export const DraggableBlock = React.memo(function DraggableBlock({
       {/* Block Label */}
       <span
         className={`text-[10px] md:text-xs font-medium text-center leading-tight px-1 transition-colors ${disabled
-            ? "text-white/20"
-            : "text-white/60 group-hover:text-white/80"
+          ? "text-white/20"
+          : "text-white/60 group-hover:text-white/80"
           }`}
       >
         {block.label}

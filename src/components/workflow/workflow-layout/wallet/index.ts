@@ -1,1 +1,0 @@
-export { WalletNodeConfiguration } from './WalletNodeConfiguration';

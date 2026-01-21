@@ -4,7 +4,7 @@ import React from "react";
 import { Typography } from "@/components/ui/Typography";
 import { Button } from "@/components/ui/Button";
 import { X, Trash2 } from "lucide-react";
-import type { BlockDefinition } from "@/components/blocks";
+import type { BlockDefinition } from "@/components/blocks/blocks";
 
 interface SidebarHeaderProps {
   blockDefinition: BlockDefinition | null;

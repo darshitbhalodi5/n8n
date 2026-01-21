@@ -8,11 +8,11 @@ import type {
   CategoryDefinition,
   IconRegistry,
 } from "./types";
-import { socialBlocks } from "./social";
-import { walletBlocks } from "./wallet";
-import { triggerBlocks, startBlock } from "./triggers";
-import { controlBlocks } from "./control";
-import { defiBlocks } from "./defi";
+import { socialBlocks } from "./social/social-blocks";
+import { walletBlocks } from "./wallet/wallet-blocks";
+import { triggerBlocks, startBlock } from "./triggers/triggers";
+import { controlBlocks } from "./control/control-blocks";
+import { defiBlocks } from "./defi/defi-blocks";
 import {
   Share2,
   Play,
@@ -80,7 +80,7 @@ import {
   // Coming Soon - Insurance
   NexusMutualLogo,
   InsurAceLogo,
-} from "./logos";
+} from "./logos/logos";
 
 // Re-export types
 export type { BlockDefinition, CategoryDefinition, IconRegistry };
@@ -88,16 +88,15 @@ export type { BlockDefinition, CategoryDefinition, IconRegistry };
 // Re-export startBlock for initial node setup
 export { startBlock };
 
-// Re-export Switch utilities for the configuration component
 export {
   MAX_SWITCH_CASES,
   createDefaultCase,
   createNewCase,
   type SwitchCaseData,
-} from "./control";
+} from "./control/control-blocks";
 
 // Re-export Coming Soon module
-export * from "./coming-soon";
+export * from "./coming-soon/coming-soon";
 
 // Icon registry - maps icon names to actual components (logos and icons)
 export const iconRegistry: IconRegistry = {
