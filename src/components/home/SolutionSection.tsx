@@ -2,8 +2,30 @@
 
 import { ArrowDownRight, MoveUpRight, Play } from "lucide-react";
 import { cn } from "@/lib/utils";
-import Image from "next/image";
+import Image, { type StaticImageData } from "next/image";
 import { motion, useTransform, MotionValue } from "framer-motion";
+
+import Hybrid1 from "@/assets/homepage/solution-section/hybrid/1_hybrid.png"
+import Hybrid2 from "@/assets/homepage/solution-section/hybrid/2_hybrid.png"
+import Hybrid3 from "@/assets/homepage/solution-section/hybrid/3_hybrid.png"
+
+import Access1 from "@/assets/homepage/solution-section/access/1_access.png"
+import Access2 from "@/assets/homepage/solution-section/access/2_access.png"
+import Access3 from "@/assets/homepage/solution-section/access/3_access.png"
+
+import Gasless1 from "@/assets/homepage/solution-section/gasless/1_gasless.png"
+import Gasless2 from "@/assets/homepage/solution-section/gasless/2_gasless.png"
+import Gasless3 from "@/assets/homepage/solution-section/gasless/3_gasless.png"
+
+import Logic1 from "@/assets/homepage/solution-section/logic/1_logic.png"
+import Logic2 from "@/assets/homepage/solution-section/logic/2_logic.png"
+import Logic3 from "@/assets/homepage/solution-section/logic/3_logic.png"
+
+import Events1 from "@/assets/homepage/solution-section/events/1_event.png"
+import Events2 from "@/assets/homepage/solution-section/events/2_event.png"
+import Events3 from "@/assets/homepage/solution-section/events/3_event.png"
+
+import Scale from "@/assets/homepage/solution-section/scale.png"
 
 type SolutionSectionProps = {
   progress: MotionValue<number>;
@@ -47,7 +69,7 @@ const MediaCard = ({
   className,
   label,
 }: {
-  src: string;
+  src: string | StaticImageData;
   className?: string;
   label?: string;
 }) => (
@@ -166,22 +188,22 @@ export function SolutionSection({ progress }: SolutionSectionProps) {
       {/* Row 1 - HYBRID */}
       <RevealRow x={row1X} scale={row1Scale} scroll={row1Scroll}>
         <div className="flex items-start justify-center h-[17vh] gap-4 w-full py-3">
-          <MediaCard src="/assets/images/hybrid_canvas.png" />
+          <MediaCard src={Hybrid1} />
           <MediaCard
-            src="/assets/images/hybrid_var1.png"
+            src={Hybrid2}
             className="md:w-[200px]"
           />
-          <MediaCard src="/assets/images/hybrid_var2.png" />
+          <MediaCard src={Hybrid3} />
           <h2 className="text-7xl md:text-9xl font-bold tracking-tight leading-none shrink-0 text-black uppercase select-none">
             Hybrid
           </h2>
           <ArrowDownRight className="w-16 h-16 md:w-36 md:h-36 text-black shrink-0 stroke-[1.5]" />
-          <MediaCard src="/assets/images/hybrid_canvas.png" />
+          <MediaCard src={Hybrid1} />
           <MediaCard
-            src="/assets/images/hybrid_var1.png"
+            src={Hybrid2}
             label="Unified"
           />
-          <MediaCard src="/assets/images/hybrid_var2.png" />
+          <MediaCard src={Hybrid3} />
         </div>
       </RevealRow>
 
@@ -191,17 +213,17 @@ export function SolutionSection({ progress }: SolutionSectionProps) {
       {/* Row 2 - ACCESS */}
       <RevealRow x={row2X} scale={row2Scale} scroll={row2Scroll}>
         <div className="flex items-start justify-center h-[17vh] gap-4 w-full py-3">
-          <MediaCard src="/assets/images/social_onboarding.png" />
-          <MediaCard src="/assets/images/access_var1.png" />
-          <MediaCard src="/assets/images/access_var2.png" />
+          <MediaCard src={Access1} />
+          <MediaCard src={Access2} />
+          <MediaCard src={Access3} />
           <h2 className="text-7xl md:text-9xl font-bold tracking-tight leading-none shrink-0 text-black uppercase select-none">
             Access
           </h2>
           <div className="w-16 h-16 md:w-32 md:h-32 rounded-full bg-black shrink-0" />
-          <MediaCard src="/assets/images/social_onboarding.png" />
-          <MediaCard src="/assets/images/access_var1.png" />
+          <MediaCard src={Access1} />
+          <MediaCard src={Access2} />
           <MediaCard
-            src="/assets/images/access_var2.png"
+            src={Access3}
             className="md:w-[200px]"
           />
         </div>
@@ -213,17 +235,17 @@ export function SolutionSection({ progress }: SolutionSectionProps) {
       {/* Row 3 - GASLESS */}
       <RevealRow x={row3X} scale={row3Scale} scroll={row3Scroll}>
         <div className="flex items-start justify-center h-[17vh] gap-4 w-full py-3">
-          <MediaCard src="/assets/images/gasless.png" />
-          <MediaCard src="/assets/images/gasless_var1.png" />
-          <MediaCard src="/assets/images/gasless_var2.png" />
+          <MediaCard src={Gasless1} />
+          <MediaCard src={Gasless2} />
+          <MediaCard src={Gasless3} />
           <h2 className="text-7xl md:text-9xl font-bold tracking-tight leading-none shrink-0 text-black uppercase select-none">
             Gasless
           </h2>
           {/* <div className="w-20 h-12 md:w-40 md:h-24 bg-black shrink-0 rounded-sm" /> */}
-          <MediaCard src="/assets/images/gasless.png" />
-          <MediaCard src="/assets/images/gasless_var1.png" />
+          <MediaCard src={Gasless1} />
+          <MediaCard src={Gasless2} />
           <MediaCard
-            src="/assets/images/gasless_var2.png"
+            src={Gasless3}
             className="md:w-[200px]"
           />
         </div>
@@ -235,7 +257,7 @@ export function SolutionSection({ progress }: SolutionSectionProps) {
       {/* Row 4 - LOGIC */}
       <RevealRow x={row4X} scale={row4Scale} scroll={row4Scroll}>
         <div className="flex items-start justify-center h-[17vh] gap-4 w-full py-3">
-          <MediaCard src="/assets/images/visual_logic.png" />
+          <MediaCard src={Logic1} />
           <div className="w-10 h-10 md:w-20 md:h-20 border-[6px] border-black shrink-0" />
           <h2 className="text-7xl md:text-9xl font-bold tracking-tight leading-none shrink-0 text-black uppercase select-none">
             Logic
@@ -247,10 +269,10 @@ export function SolutionSection({ progress }: SolutionSectionProps) {
               ))}
             </div>
           </div>
-          <MediaCard src="/assets/images/logic_var1.png" />
-          <MediaCard src="/assets/images/logic_var2.png" />
+          <MediaCard src={Logic1} />
+          <MediaCard src={Logic2} />
           <MediaCard
-            src="/assets/images/visual_logic.png"
+            src={Logic3}
             className="md:w-[200px]"
           />
         </div>
@@ -262,22 +284,22 @@ export function SolutionSection({ progress }: SolutionSectionProps) {
       {/* Row 5 - EVENTS */}
       <RevealRow x={row5X} scale={row5Scale} scroll={row5Scroll}>
         <div className="flex items-start justify-center h-[17vh] gap-4 w-full py-3">
-          <MediaCard src="/assets/images/event_trigger.png" />
+          <MediaCard src={Events1} />
           <MediaCard
-            src="/assets/images/events_var1.png"
+            src={Events2}
             label="Live"
             className="grayscale contrast-125"
           />
-          <MediaCard src="/assets/images/events_var2.png" />
-          <MediaCard src="/assets/images/event_trigger.png" />
+          <MediaCard src={Events3} />
+          <MediaCard src={Events1} />
           <h2 className="text-7xl md:text-9xl font-bold tracking-tight leading-none shrink-0 text-black uppercase select-none">
             Events
           </h2>
           <Play className="w-16 h-16 md:w-32 md:h-32 text-black fill-black shrink-0 ml-2" />
-          <MediaCard src="/assets/images/events_var1.png" />
-          <MediaCard src="/assets/images/events_var2.png" />
+          <MediaCard src={Events1} />
+          <MediaCard src={Events2} />
           <MediaCard
-            src="/assets/images/event_trigger.png"
+            src={Events3}
             className="md:w-[200px]"
           />
         </div>
@@ -288,19 +310,19 @@ export function SolutionSection({ progress }: SolutionSectionProps) {
       {/* Row 6 - SCALE */}
       <RevealRow x={row6X} scale={row6Scale} scroll={row6Scroll}>
         <div className="flex items-start justify-center h-[17vh] gap-4 w-full py-3">
-          <MediaCard src="/assets/images/feature_infrastructure.png" />
-          <MediaCard src="/assets/images/feature_infrastructure.png" />
-          <MediaCard src="/assets/images/feature_infrastructure.png" />
+          <MediaCard src={Scale} />
+          <MediaCard src={Scale} />
+          <MediaCard src={Scale} />
           <h2 className="text-7xl md:text-9xl font-bold tracking-tight leading-none shrink-0 text-black uppercase select-none">
             Scale
           </h2>
           <MoveUpRight className="w-16 h-16 md:w-36 md:h-36 text-black shrink-0 stroke-[1.5]" />
-          <MediaCard src="/assets/images/feature_infrastructure.png" />
+          <MediaCard src={Scale} />
           <MediaCard
-            src="/assets/images/feature_infrastructure.png"
+            src={Scale}
             className="md:w-[200px]"
           />
-          <MediaCard src="/assets/images/feature_infrastructure.png" />
+          <MediaCard src={Scale} />
         </div>
       </RevealRow>
     </div>

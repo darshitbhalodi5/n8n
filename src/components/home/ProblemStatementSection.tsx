@@ -14,6 +14,11 @@ import {
   SquareArrowOutUpRight,
 } from "lucide-react";
 import Image from "next/image";
+import Step1 from "@/assets/homepage/problem-section/1_add_block.png";
+import Step2 from "@/assets/homepage/problem-section/2_connect_block.png";
+import Step3 from "@/assets/homepage/problem-section/3_configure_block.png";
+import Step4 from "@/assets/homepage/problem-section/4_save_workflow.png";
+import Step5 from "@/assets/homepage/problem-section/5_run_workflow.png";
 
 type ProblemStatementSectionProps = {
   heightClass?: string;
@@ -248,13 +253,13 @@ export function ProblemStatementSection({
           >
             <motion.div className="absolute inset-0 w-full h-full" style={{ scale: imageScale }}>
               <Image
-                src="/assets/images/hybrid_canvas.png"
+                src={Step1}
                 alt="Hybrid Canvas"
                 fill
                 className="object-cover opacity-80"
               />
             </motion.div>
-            <div className="relative z-10 p-8 md:p-12 space-y-4 bg-gradient-to-t from-black via-black/60 to-transparent">
+            <div className="relative z-10 p-8 md:p-12 space-y-4 bg-linear-to-t from-black via-black/60 to-transparent">
               {/* <span className="text-blue-400 font-bold tracking-wider uppercase text-sm md:text-base">
                 Add Blocks to Canvas
               </span> */}
@@ -285,12 +290,12 @@ export function ProblemStatementSection({
                 className="w-full relative rounded-2xl overflow-hidden bg-[#050505] border border-white/10"
               >
                 <Image
-                  src="/assets/images/social_onboarding.png"
+                  src={Step2}
                   alt="Seamless Access"
                   fill
                   className="object-cover opacity-90"
                 />
-                <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black via-black/80 to-transparent">
+                <div className="absolute inset-x-0 bottom-0 p-3 bg-linear-to-t from-black via-black/80 to-transparent">
                   <h4 className="text-white text-[10px] font-bold leading-none mb-1">Connect Blocks</h4>
                   <p className="text-gray-300 text-[6px] leading-tight">
                     Connect blocks according to your workflow logic to create workflows in canvas.
@@ -310,12 +315,12 @@ export function ProblemStatementSection({
                 className="w-full relative rounded-2xl overflow-hidden bg-[#050505] border border-white/10"
               >
                 <Image
-                  src="/assets/images/gasless.png"
+                  src={Step3}
                   alt="Frictionless Run"
                   fill
                   className="object-cover opacity-90"
                 />
-                <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black via-black/80 to-transparent">
+                <div className="absolute inset-x-0 bottom-0 p-3 bg-linear-to-t from-black via-black/80 to-transparent">
                   <h4 className="text-white text-[8px] font-bold leading-none mb-1">Configure Blocks</h4>
                   <p className="text-gray-300 text-[5px] leading-tight">
                     Configure blocks to perform actions on your behalf in workflow execution.
@@ -342,12 +347,12 @@ export function ProblemStatementSection({
                 className="w-full relative rounded-2xl overflow-hidden bg-[#050505] border border-white/10"
               >
                 <Image
-                  src="/assets/images/visual_logic.png"
+                  src={Step4}
                   alt="Smart Logic"
                   fill
                   className="object-cover opacity-90"
                 />
-                <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black via-black/80 to-transparent">
+                <div className="absolute inset-x-0 bottom-0 p-3 bg-linear-to-t from-black via-black/80 to-transparent">
                   <h4 className="text-white text-[10px] font-bold leading-none mb-1">Save & Test</h4>
                   <p className="text-gray-300 text-[6px] leading-tight">
                     Save and test your workflows in a secure environment.
@@ -367,12 +372,12 @@ export function ProblemStatementSection({
                 className="w-full relative rounded-2xl overflow-hidden bg-[#050505] border border-white/10"
               >
                 <Image
-                  src="/assets/images/event_trigger.png"
+                  src={Step5}
                   alt="Any Trigger"
                   fill
                   className="object-cover opacity-90"
                 />
-                <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black via-black/80 to-transparent">
+                <div className="absolute inset-x-0 bottom-0 p-3 bg-linear-to-t from-black via-black/80 to-transparent">
                   <h4 className="text-white text-[8px] font-bold leading-none mb-1">Deploy or Run</h4>
                   <p className="text-gray-300 text-[5px] leading-tight">
                     Deploy workflows to run on-chain or off-chain actions.
