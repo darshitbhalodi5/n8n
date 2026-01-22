@@ -5,8 +5,6 @@ import { Typography } from "@/components/ui/Typography";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import {
-    Loader2,
-    RefreshCw,
     AlertCircle,
     CheckCircle2,
     ExternalLink,

@@ -21,7 +21,7 @@ import {
     type OracleProvider,
     type OracleChain,
     type PriceFeed,
-    type OracleConfig,
+    type FeedCategory,
 } from "@/lib/oracle-api";
 
 interface OracleNodeConfigurationV2Props {
@@ -54,11 +54,7 @@ export function OracleNodeConfigurationV2({
     const isChainlink = oracleProvider === "CHAINLINK";
 
     // Fetch available feeds when provider or chain changes
-    useEffect(() => {
-        loadAvailableFeeds();
-    }, [oracleProvider, oracleChain]);
-
-    async function loadAvailableFeeds() {
+    const loadAvailableFeeds = useCallback(async () => {
         setLoading(true);
         setError(null);
         try {
@@ -74,7 +70,11 @@ export function OracleNodeConfigurationV2({
         } finally {
             setLoading(false);
         }
-    }
+    }, [oracleProvider, oracleChain]);
+
+    useEffect(() => {
+        loadAvailableFeeds();
+    }, [loadAvailableFeeds]);
 
     // Handle chain change
     const handleChainChange = useCallback((chain: OracleChain) => {
@@ -263,7 +263,7 @@ export function OracleNodeConfigurationV2({
                             
                             {/* Group feeds by category */}
                             {Object.entries(groupedFeeds).map(([category, feeds]) => (
-                                <optgroup key={category} label={getCategoryLabel(category as any)}>
+                                <optgroup key={category} label={getCategoryLabel(category as FeedCategory)}>
                                     {(feeds as PriceFeed[]).map((feed) => (
                                         <option key={feed.symbol} value={feed.symbol}>
                                             {feed.symbol} - {feed.name}
