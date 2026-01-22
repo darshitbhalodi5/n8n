@@ -83,7 +83,7 @@ export interface AiTransformNodeData extends BaseNodeData {
   llmModel?: string;
   systemPrompt?: string;
   userPromptTemplate?: string;
-  outputSchema?: Record<string, any>;
+  outputSchema?: Record<string, unknown>;
   temperature?: number;
   maxOutputTokens?: number;
 }

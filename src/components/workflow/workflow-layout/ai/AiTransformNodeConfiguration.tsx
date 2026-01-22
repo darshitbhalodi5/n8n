@@ -3,9 +3,10 @@
 import React from "react";
 import { Typography } from "@/components/ui/Typography";
 import { Card } from "@/components/ui/Card";
+import type { AiTransformNodeData } from "@/types/node-data";
 
 interface AiTransformNodeConfigurationProps {
-  nodeData: Record<string, any>;
+  nodeData: AiTransformNodeData;
   handleDataChange: (updates: Record<string, unknown>) => void;
 }
 
@@ -16,7 +17,7 @@ export function AiTransformNodeConfiguration({
   return (
     <>
       {/* Model Info Card */}
-      <Card className="p-4 space-y-3 bg-gradient-to-br from-purple-500/10 to-blue-500/10 border-purple-500/30">
+      <Card className="p-4 space-y-3 bg-linear-to-br from-purple-500/10 to-blue-500/10 border-purple-500/30">
         <Typography variant="bodySmall" className="font-semibold text-foreground">
           Model Configuration
         </Typography>

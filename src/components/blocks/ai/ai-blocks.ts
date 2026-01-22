@@ -16,11 +16,12 @@ export const createAiTransformBlock = (
   id: string,
   label: string,
   provider: string,
-  model: string
+  model: string,
+  iconName: string
 ): BlockDefinition => ({
   id,
   label,
-  iconName: "BrainCircuit", // Will use a brain/AI icon
+  iconName,
   description: `AI-powered data transformation using ${label}`,
   category: "ai",
   nodeType: "ai-transform",
@@ -40,30 +41,34 @@ export const createAiTransformBlock = (
 // Static blocks for the 4 hardcoded models
 export const aiTransformQwen: BlockDefinition = createAiTransformBlock(
   "ai-openrouter-qwen-free",
-  "Qwen (OpenRouter free)",
+  "Qwen",
   "openrouter",
-  "openrouter:qwen"
+  "openrouter:qwen",
+  "QwenLogo"
 );
 
 export const aiTransformGLM: BlockDefinition = createAiTransformBlock(
   "ai-openrouter-glm-free",
-  "GLM (OpenRouter free)",
+  "GLM",
   "openrouter",
-  "openrouter:glm"
+  "openrouter:glm",
+  "GLMLogo"
 );
 
 export const aiTransformDeepSeek: BlockDefinition = createAiTransformBlock(
   "ai-openrouter-deepseek-free",
-  "DeepSeek (OpenRouter free)",
+  "DeepSeek",
   "openrouter",
-  "openrouter:deepseek"
+  "openrouter:deepseek",
+  "DeepSeekLogo"
 );
 
 export const aiTransformChatGPT: BlockDefinition = createAiTransformBlock(
   "ai-openai-chatgpt",
   "ChatGPT",
   "openai",
-  "gpt-4o-mini"
+  "gpt-4o-mini",
+  "ChatGPTLogo"
 );
 
 // Export all AI blocks

@@ -59,6 +59,12 @@ import zapper from "@/assets/blocks/Zapper.svg";
 import nexusmutual from "@/assets/blocks/NexusMutual.svg";
 import insurace from "@/assets/blocks/InsurAce.svg";
 
+// AI Model logos
+import qwen from "@/assets/blocks/Qwen.svg";
+import glm from "@/assets/blocks/GLM.svg";
+import deepseek from "@/assets/blocks/Deepseek.svg";
+import chatgpt from "@/assets/blocks/ChatGPT.svg";
+
 interface LogoProps {
   className?: string;
 }
@@ -422,6 +428,46 @@ export const InsurAceLogo = ({ className }: LogoProps) => (
   <Image
     src={insurace}
     alt="InsurAce"
+    className={className}
+    width={32}
+    height={32}
+  />
+);
+
+export const ChatGPTLogo = ({ className }: LogoProps) => (
+  <Image
+    src={chatgpt}
+    alt="ChatGPT"
+    className={className}
+    width={32}
+    height={32}
+  />
+);
+
+export const QwenLogo = ({ className }: LogoProps) => (
+  <Image
+    src={qwen}
+    alt="Qwen"
+    className={className}
+    width={32}
+    height={32}
+  />
+);
+
+export const GLMLogo = ({ className }: LogoProps) => (
+  <Image
+    src={glm}
+    alt="GLM"
+    className={className}
+    width={32}
+    height={32}
+  />
+);
+
+export const DeepSeekLogo = ({ className }: LogoProps) => (
+  <Image
+    src={deepseek}
+    alt="DeepSeek"
     className={className}
     width={32}
     height={32}

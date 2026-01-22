@@ -82,6 +82,10 @@ import {
   // Coming Soon - Insurance
   NexusMutualLogo,
   InsurAceLogo,
+  QwenLogo,
+  GLMLogo,
+  DeepSeekLogo,
+  ChatGPTLogo,
 } from "./logos/logos";
 
 // Re-export types
@@ -168,6 +172,10 @@ export const iconRegistry: IconRegistry = {
   Wallet, // Wallet category icon
   ArrowRightLeft, // DeFi category
   BrainCircuit, // AI category icon
+  QwenLogo,
+  GLMLogo,
+  DeepSeekLogo,
+  ChatGPTLogo,
 
   // Coming Soon category icons
   Eye, // Oracle
