@@ -15,20 +15,6 @@ interface EmailNodeConfigurationProps {
   login: () => void;
 }
 
-/**
- * Email Node Configuration Component
- *
- * Flow:
- * 1. User configures recipient email, subject, and body
- * 2. User can send test email to verify configuration
- * 3. When workflow executes, email will be sent with configured parameters
- *
- * Features:
- * - Simple form with three fields (to, subject, body)
- * - Test email functionality
- * - Real-time validation
- * - Notification feedback
- */
 function EmailNodeConfigurationInner({
   nodeData,
   handleDataChange,

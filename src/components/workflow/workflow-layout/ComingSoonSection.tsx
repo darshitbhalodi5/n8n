@@ -92,7 +92,7 @@ function ComingSoonCategoryCard({
             {/* Category Header */}
             <button
                 onClick={onToggle}
-                className={`w-full flex items-center justify-between gap-3 p-3 bg-gradient-to-r ${themeColor.categoryGradient} ${themeColor.categoryBorder} border rounded-xl transition-all duration-300`}
+                className={`w-full flex items-center justify-between gap-3 p-3 bg-linear-to-r ${themeColor.categoryGradient} ${themeColor.categoryBorder} border rounded-xl transition-all duration-300`}
             >
                 {/* Category Name */}
                 <span className="text-sm font-semibold text-white/90">

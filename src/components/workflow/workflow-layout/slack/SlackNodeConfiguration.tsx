@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Loader2, Plus } from "lucide-react";
-import { Card } from "@/components/ui/Card";
+import { SimpleCard } from "@/components/ui/SimpleCard";
 import { Button } from "@/components/ui/Button";
 import { Typography } from "@/components/ui/Typography";
 import { useSlackConnection } from "@/hooks/useSlackConnection";
@@ -27,21 +27,6 @@ interface SlackNodeConfigurationProps {
     login: () => void;
 }
 
-/**
- * Slack Node Configuration Component
- * Refactored to use custom hook and decomposed sub-components
- *
- * Flow:
- * 1. User creates webhook/OAuth connection (with testing during setup)
- * 2. User selects a connection for the node
- * 3. User configures the message that will be sent when workflow executes
- *
- * Features:
- * - Webhook and OAuth connection support
- * - Channel selection for OAuth connections
- * - Message template configuration for workflow execution
- * - Centralized notification handling
- */
 function SlackNodeConfigurationInner({
     nodeData,
     handleDataChange,
@@ -65,11 +50,16 @@ function SlackNodeConfigurationInner({
     return (
         <div className="space-y-4">
             {/* Connections Management Card */}
-            <Card className="p-4 space-y-3">
+            <SimpleCard className="p-5 space-y-4">
                 <div className="flex items-center justify-between">
-                    <Typography variant="bodySmall" className="font-semibold text-foreground">
-                        Slack Connections
-                    </Typography>
+                    <div className="space-y-1">
+                        <Typography variant="h5" className="font-semibold text-foreground">
+                            Slack Connections
+                        </Typography>
+                        <Typography variant="bodySmall" className="text-muted-foreground">
+                            Manage your Slack integrations
+                        </Typography>
+                    </div>
                     <Button
                         type="button"
                         onClick={() => slack.actions.setShowCreateForm(!slack.showCreateForm)}
@@ -82,7 +72,7 @@ function SlackNodeConfigurationInner({
 
                 {/* Create New Connection Form */}
                 {slack.showCreateForm && (
-                    <div className="space-y-3 p-3 border border-border rounded-lg bg-secondary/20">
+                    <div className="space-y-3 p-4 border border-white/20 rounded-lg bg-white/5">
                         <Typography variant="caption" className="text-muted-foreground">
                             Choose connection method:
                         </Typography>
@@ -166,7 +156,7 @@ function SlackNodeConfigurationInner({
 
                 {/* Centralized Notification Banner */}
                 <SlackNotificationBanner notification={slack.notification} />
-            </Card>
+            </SimpleCard>
 
             {/* Message Configuration Card - Shown after connection is selected */}
             {hasConnection && (
@@ -205,8 +195,8 @@ export function SlackNodeConfiguration(props: SlackNodeConfigurationProps) {
     return (
         <ErrorBoundary
             fallback={(error, reset) => (
-                <Card className="p-4 space-y-3">
-                    <Typography variant="bodySmall" className="font-semibold text-foreground">
+                <SimpleCard className="p-5 space-y-3">
+                    <Typography variant="h5" className="font-semibold text-foreground">
                         Slack Configuration Error
                     </Typography>
                     <Typography variant="caption" className="text-destructive">
@@ -215,7 +205,7 @@ export function SlackNodeConfiguration(props: SlackNodeConfigurationProps) {
                     <Button type="button" onClick={reset} className="w-full">
                         Try Again
                     </Button>
-                </Card>
+                </SimpleCard>
             )}
         >
             <SlackNodeConfigurationInner {...props} />

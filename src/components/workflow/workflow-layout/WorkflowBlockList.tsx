@@ -56,7 +56,7 @@ export function WorkflowBlockList({
 
   return (
     <div
-      className="w-[95%] mx-auto h-[80vh] overflow-y-auto scrollbar-hide mt-5"
+      className="w-[95%] mx-auto h-[90vh] overflow-y-auto scrollbar-hide mt-5"
       data-lenis-prevent
     >
       {/* Blocks Section - Grouped by category */}

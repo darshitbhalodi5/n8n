@@ -1,99 +1,48 @@
 "use client";
 
-import React from "react";
 import { Typography } from "@/components/ui/Typography";
-import { Card } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
-import { useWallets } from "@privy-io/react-auth";
+import { usePrivy, useWallets } from "@privy-io/react-auth";
 import { useSafeWalletContext } from "@/contexts/SafeWalletContext";
 import {
   CheckCircle2,
   XCircle,
   Loader2,
-  LogIn,
 } from "lucide-react";
-import { HiWallet, HiShieldCheck, HiCog } from "react-icons/hi2";
+import { HiCog } from "react-icons/hi2";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { AuthenticationStatus } from "../AuthenticationStatus";
+import { SimpleCard } from "@/components/ui/SimpleCard";
+import { Dropdown } from "@/components/ui/Dropdown";
 
-interface WalletNodeConfigurationProps {
-  authenticated: boolean;
-  login: () => void;
-}
-
-function WalletNodeConfigurationInner({
-  authenticated: authenticatedProp,
-  login,
-}: WalletNodeConfigurationProps) {
+function WalletNodeConfigurationInner() {
   const { wallets } = useWallets();
+  const { authenticated } = usePrivy();
   const embeddedWallet = wallets.find((w) => w.walletClientType === "privy");
-  const isConnected = authenticatedProp && embeddedWallet !== undefined;
+  const isConnected = authenticated && embeddedWallet !== undefined;
   const address = embeddedWallet?.address;
   const { selection, creation } = useSafeWalletContext();
 
   return (
     <div className="space-y-4">
       {/* Section A: Authentication Status */}
-      <Card className="p-5 bg-white/5 border border-white/20">
-        <div className="flex items-start gap-4 mb-4">
-          <div className="w-12 h-12 rounded-xl bg-linear-to-br from-blue-500 to-cyan-500 flex items-center justify-center shrink-0 shadow-lg shadow-blue-500/20">
-            <HiWallet className="w-6 h-6 text-white" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <Typography
-              variant="bodySmall"
-              className="font-semibold text-foreground mb-1"
-            >
-              Wallet Connection
-            </Typography>
-            <Typography
-              variant="caption"
-              className="text-muted-foreground"
-            >
-              Connect your wallet to manage Safe wallets and execute transactions
-            </Typography>
-          </div>
-        </div>
-        {!authenticatedProp || !embeddedWallet ? (
-          <Button onClick={login} className="w-full gap-2">
-            <LogIn className="w-4 h-4" />
-            Login / Sign Up
-          </Button>
-        ) : (
-          <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-secondary/50 border border-border">
-            <CheckCircle2 className="w-4 h-4 text-success" />
-            <div className="flex-1 min-w-0">
-              <Typography variant="caption" className="font-medium text-foreground">
-                Connected
-              </Typography>
-              <Typography variant="caption" className="text-muted-foreground text-xs block truncate">
-                {address ? `${address.slice(0, 6)}...${address.slice(-4)}` : "Wallet connected"}
-              </Typography>
-            </div>
-          </div>
-        )}
-      </Card>
+      <AuthenticationStatus />
 
       {/* Section B: Safe Wallet Info (shown after connect) */}
       {isConnected && address && (
-        <Card className="p-5 bg-white/5 border border-white/20">
-          <div className="flex items-start gap-4 mb-4">
-            <div className="w-12 h-12 rounded-xl bg-linear-to-br from-purple-500 to-pink-500 flex items-center justify-center shrink-0 shadow-lg shadow-purple-500/20">
-              <HiShieldCheck className="w-6 h-6 text-white" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <Typography
-                variant="bodySmall"
-                className="font-semibold text-foreground mb-1"
-              >
-                Safe Wallet
-              </Typography>
-              <Typography
-                variant="caption"
-                className="text-muted-foreground"
-              >
-                Multi-signature wallet for secure transaction execution
-              </Typography>
-            </div>
+        <SimpleCard className="p-5">
+          <div className="space-y-1 mb-4">
+            <Typography
+              variant="h5"
+              className="font-semibold text-foreground"
+            >
+              Safe Wallet
+            </Typography>
+            <Typography
+              variant="bodySmall"
+              className="text-muted-foreground"
+            >
+              Multi-signature wallet for secure transaction execution
+            </Typography>
           </div>
 
           {/* Loading state */}
@@ -120,23 +69,18 @@ function WalletNodeConfigurationInner({
             <div className="space-y-3">
               {selection.safeWallets.length > 0 ? (
                 <>
-                  <div>
-                    <select
-                      value={selection.selectedSafe || ""}
-                      onChange={(e) =>
-                        selection.selectSafe(e.target.value || null)
-                      }
-                      className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                      aria-label="Select Safe wallet"
-                    >
-                      <option value="">Select a Safe wallet...</option>
-                      {selection.safeWallets.map((safe) => (
-                        <option key={safe} value={safe}>
-                          {safe.slice(0, 6)}...{safe.slice(-4)}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  <Dropdown
+                    value={selection.selectedSafe || ""}
+                    onChange={(e) =>
+                      selection.selectSafe(e.target.value || null)
+                    }
+                    placeholder="Select a Safe wallet..."
+                    aria-label="Select Safe wallet"
+                    options={selection.safeWallets.map((safe) => ({
+                      value: safe,
+                      label: `${safe.slice(0, 10)}...${safe.slice(-4)}`,
+                    }))}
+                  />
                   {selection.selectedSafe && (
                     <div className="p-3 rounded-lg bg-secondary/30 border border-border">
                       <Typography variant="caption" className="text-muted-foreground text-xs mb-1">
@@ -162,12 +106,12 @@ function WalletNodeConfigurationInner({
               )}
             </div>
           )}
-        </Card>
+        </SimpleCard>
       )}
 
       {/* Section C: Module Status (when a Safe selected) */}
       {isConnected && selection.selectedSafe && (
-        <Card className="p-5 bg-white/5 border border-white/20">
+        <SimpleCard className="p-5">
           <div className="flex items-start gap-4 mb-4">
             <div className="w-12 h-12 rounded-xl bg-linear-to-br from-amber-500 to-orange-500 flex items-center justify-center shrink-0 shadow-lg shadow-amber-500/20">
               <HiCog className="w-6 h-6 text-white" />
@@ -244,12 +188,12 @@ function WalletNodeConfigurationInner({
               )}
             </div>
           )}
-        </Card>
+        </SimpleCard>
       )}
 
       {/* Creation flow status */}
       {creation.showCreateFlow && (
-        <Card className="p-5 bg-white/5 border border-white/20">
+        <SimpleCard className="p-5 bg-white/5 border border-white/20">
           <Typography
             variant="bodySmall"
             className="font-semibold text-foreground mb-4"
@@ -315,19 +259,16 @@ function WalletNodeConfigurationInner({
                 </Typography>
               </div>
             )}
-        </Card>
+        </SimpleCard>
       )}
     </div>
   );
 }
 
-/**
- * Wrapped with ErrorBoundary for isolated error handling
- */
-export function WalletNodeConfiguration(props: WalletNodeConfigurationProps) {
+export function WalletNodeConfiguration() {
   return (
     <ErrorBoundary>
-      <WalletNodeConfigurationInner {...props} />
+      <WalletNodeConfigurationInner />
     </ErrorBoundary>
   );
 }

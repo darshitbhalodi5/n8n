@@ -188,7 +188,6 @@ export const WorkflowToolbar = React.memo(function WorkflowToolbar({
         <Button
           onClick={handleSave}
           disabled={isSaving}
-          className="h-9 px-4 bg-black/50 border border-white/20 hover:bg-black/70 hover:border-white/30 text-white gap-2 transition-all disabled:opacity-50"
           title="Save (Ctrl + S)"
         >
           {isSaving ? (
@@ -205,7 +204,6 @@ export const WorkflowToolbar = React.memo(function WorkflowToolbar({
         {onShare && (
           <Button
             onClick={onShare}
-            className="hidden sm:flex h-9 px-4 bg-black/50 border border-white/20 hover:bg-black/70 hover:border-white/30 text-white gap-2 transition-all"
             title="Share"
           >
             <Share2 className="w-4 h-4" aria-hidden="true" />
@@ -217,7 +215,6 @@ export const WorkflowToolbar = React.memo(function WorkflowToolbar({
         <Button
           onClick={handleRun}
           disabled={!canRun}
-          className="h-9 px-5 bg-amber-600 hover:bg-amber-600/90 disabled:opacity-40 disabled:cursor-not-allowed text-black font-semibold gap-2 transition-all"
           title="Run Workflow (Ctrl + Enter)"
         >
           <Play className="w-4 h-4 fill-current" aria-hidden="true" />
@@ -234,7 +231,6 @@ export const WorkflowToolbar = React.memo(function WorkflowToolbar({
             ) : (
               <Button
                 onClick={login}
-                className="h-9 px-4 bg-black/50 border border-white/20 hover:bg-black/70 hover:border-white/30 text-white gap-2 transition-all"
                 title="Login / Sign Up"
               >
                 <LogIn className="w-4 h-4" aria-hidden="true" />

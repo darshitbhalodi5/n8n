@@ -200,7 +200,7 @@ export function WorkflowLayout({ onCategoryChange }: WorkflowLayoutProps) {
         {/* Workflow Canvas - 90vh Height */}
         <div
           ref={canvasContainerRef}
-          className="h-[88vh] w-full relative"
+          className="h-[90vh] w-full relative"
           onDragOver={onDragOver}
           onDrop={onDrop}
           onClick={(e) => {

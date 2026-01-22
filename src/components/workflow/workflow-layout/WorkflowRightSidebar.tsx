@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { Typography } from "@/components/ui/Typography";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -13,7 +13,6 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { HiPlay } from "react-icons/hi2";
 import { SlackNodeConfiguration } from "./slack/SlackNodeConfiguration";
 import { TelegramNodeConfiguration } from "./telegram/TelegramNodeConfiguration";
 import { EmailNodeConfiguration } from "./email/EmailNodeConfiguration";
@@ -22,6 +21,7 @@ import { SwitchNodeConfiguration } from "./switch/SwitchNodeConfiguration";
 import { SwapNodeConfiguration } from "./swap/SwapNodeConfiguration";
 import { WalletNodeConfiguration } from "./wallet/WalletNodeConfiguration";
 import { LendingNodeConfiguration } from "./lending/LendingNodeConfiguration";
+import { SimpleCard } from "@/components/ui/SimpleCard";
 
 export function WorkflowRightSidebar() {
   const {
@@ -128,6 +128,12 @@ export function WorkflowRightSidebar() {
     setShowDeleteDialog(false);
   };
 
+  const quickTips = [
+    "Drag blocks from the left panel onto the canvas",
+    "Connect blocks by dragging from output to input ports",
+    "Click any block to configure its settings",
+  ];
+
   return (
     <>
       <div className="h-full overflow-y-auto p-4 space-y-8">
@@ -170,32 +176,46 @@ export function WorkflowRightSidebar() {
 
         {/* Start Node - Simple info display */}
         {isStartNode ? (
-          <Card className="p-6 bg-white/5 border border-white/20 hover:bg-white/10 hover:border-amber-600/40 rounded-lg transition-all duration-200">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-xl bg-linear-to-br from-orange-500 to-amber-500 flex items-center justify-center shrink-0 shadow-lg shadow-orange-500/20">
-                <HiPlay className="w-7 h-7 text-white ml-0.5" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <Typography
-                  variant="bodySmall"
-                  className="font-semibold text-foreground mb-1"
-                >
-                  Start Node
-                </Typography>
-                <Typography
-                  variant="caption"
-                  className="text-muted-foreground"
-                >
-                  Connect blocks to begin your workflow
-                </Typography>
+          <SimpleCard className="p-5">
+            <div className="text-center mb-6">
+              <Typography
+                variant="h5"
+                className="font-semibold text-foreground mb-2"
+              >
+                Workflow Start
+              </Typography>
+              <Typography
+                variant="bodySmall"
+                className="text-muted-foreground"
+              >
+                This is where your automation begins. Connect blocks from the left panel to build your workflow.
+              </Typography>
+            </div>
+
+            <div className="space-y-3 pt-4 border-t border-border">
+              <Typography
+                variant="bodySmall"
+                className="font-medium text-foreground mb-3"
+              >
+                Quick Tips
+              </Typography>
+              <div className="space-y-2.5">
+                {quickTips.map((tip, index) => (
+                  <div key={index} className="flex items-start gap-3">
+                    <div className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-1.5 shrink-0" />
+                    <Typography
+                      variant="caption"
+                      className="text-muted-foreground"
+                    >
+                      {tip}
+                    </Typography>
+                  </div>
+                ))}
               </div>
             </div>
-          </Card>
+          </SimpleCard>
         ) : isWalletNode ? (
-          /* Wallet Node Configuration */
           <WalletNodeConfiguration
-            authenticated={authenticated}
-            login={login}
           />
         ) : isEmailNode ? (
           /* Email Node Configuration */
