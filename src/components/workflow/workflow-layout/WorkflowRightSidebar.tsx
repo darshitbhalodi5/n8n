@@ -14,14 +14,14 @@ import {
   X,
 } from "lucide-react";
 import { HiPlay } from "react-icons/hi2";
-import { SlackNodeConfiguration } from "./slack";
-import { TelegramNodeConfiguration } from "./telegram";
-import { EmailNodeConfiguration } from "./email";
-import { IfNodeConfiguration } from "./if";
-import { SwitchNodeConfiguration } from "./switch";
-import { SwapNodeConfiguration } from "./swap";
-import { WalletNodeConfiguration } from "./wallet";
-import { LendingNodeConfiguration } from "./lending";
+import { SlackNodeConfiguration } from "./slack/SlackNodeConfiguration";
+import { TelegramNodeConfiguration } from "./telegram/TelegramNodeConfiguration";
+import { EmailNodeConfiguration } from "./email/EmailNodeConfiguration";
+import { IfNodeConfiguration } from "./if/IfNodeConfiguration";
+import { SwitchNodeConfiguration } from "./switch/SwitchNodeConfiguration";
+import { SwapNodeConfiguration } from "./swap/SwapNodeConfiguration";
+import { WalletNodeConfiguration } from "./wallet/WalletNodeConfiguration";
+import { LendingNodeConfiguration } from "./lending/LendingNodeConfiguration";
 import { OracleNodeConfigurationV2 } from "./oracle";
 
 export function WorkflowRightSidebar() {

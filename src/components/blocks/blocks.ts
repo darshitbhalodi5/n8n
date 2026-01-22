@@ -8,12 +8,12 @@ import type {
   CategoryDefinition,
   IconRegistry,
 } from "./types";
-import { socialBlocks } from "./social";
-import { walletBlocks } from "./wallet";
-import { triggerBlocks, startBlock } from "./triggers";
-import { controlBlocks } from "./control";
-import { defiBlocks } from "./defi";
-import { oracleBlocks } from "./oracle";
+import { socialBlocks } from "./social/social-blocks";
+import { walletBlocks } from "./wallet/wallet-blocks";
+import { triggerBlocks, startBlock } from "./triggers/triggers";
+import { controlBlocks } from "./control/control-blocks";
+import { defiBlocks } from "./defi/defi-blocks";
+import { oracleBlocks } from "./oracle/oracle-blocks";
 import {
   Share2,
   Play,
