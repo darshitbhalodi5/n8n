@@ -22,7 +22,7 @@ import { SwitchNodeConfiguration } from "./switch/SwitchNodeConfiguration";
 import { SwapNodeConfiguration } from "./swap/SwapNodeConfiguration";
 import { WalletNodeConfiguration } from "./wallet/WalletNodeConfiguration";
 import { LendingNodeConfiguration } from "./lending/LendingNodeConfiguration";
-import { OracleNodeConfigurationV2 } from "./oracle";
+import { OracleNodeConfigurationV2 } from "./oracle/OracleNodeConfigurationV2";
 
 export function WorkflowRightSidebar() {
   const {
