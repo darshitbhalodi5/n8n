@@ -13,6 +13,7 @@ import { walletBlocks } from "./wallet/wallet-blocks";
 import { triggerBlocks, startBlock } from "./triggers/triggers";
 import { controlBlocks } from "./control/control-blocks";
 import { defiBlocks } from "./defi/defi-blocks";
+import { aiBlocks } from "./ai/ai-blocks";
 import {
   Share2,
   Play,
@@ -31,6 +32,7 @@ import {
   BarChart3,
   Shield,
   Clock,
+  BrainCircuit,
 } from "lucide-react";
 import {
   // Existing logos
@@ -165,6 +167,7 @@ export const iconRegistry: IconRegistry = {
   GitBranch, // Control category icon
   Wallet, // Wallet category icon
   ArrowRightLeft, // DeFi category
+  BrainCircuit, // AI category icon
 
   // Coming Soon category icons
   Eye, // Oracle
@@ -193,6 +196,12 @@ export const blockCategories: CategoryDefinition[] = [
     label: "Control",
     iconName: "GitBranch",
     blocks: controlBlocks,
+  },
+  {
+    id: "ai",
+    label: "AI",
+    iconName: "BrainCircuit",
+    blocks: aiBlocks,
   },
   {
     id: "social",

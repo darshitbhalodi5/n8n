@@ -22,6 +22,7 @@ import { SwitchNodeConfiguration } from "./switch/SwitchNodeConfiguration";
 import { SwapNodeConfiguration } from "./swap/SwapNodeConfiguration";
 import { WalletNodeConfiguration } from "./wallet/WalletNodeConfiguration";
 import { LendingNodeConfiguration } from "./lending/LendingNodeConfiguration";
+import { AiTransformNodeConfiguration } from "./ai/AiTransformNodeConfiguration";
 
 export function WorkflowRightSidebar() {
   const {
@@ -112,6 +113,9 @@ export function WorkflowRightSidebar() {
   const isLendingNode =
     nodeType === "aave" || blockId === "aave" ||
     nodeType === "compound" || blockId === "compound";
+
+  // Check if this is an AI Transform node
+  const isAiTransformNode = nodeType === "ai-transform" || blockId?.startsWith("ai-");
 
   const handleDeleteClick = () => {
     setShowDeleteDialog(true);
@@ -248,6 +252,12 @@ export function WorkflowRightSidebar() {
             handleDataChange={handleBatchDataChange}
             authenticated={authenticated}
             login={login}
+          />
+        ) : isAiTransformNode ? (
+          /* AI Transform Node Configuration */
+          <AiTransformNodeConfiguration
+            nodeData={nodeData}
+            handleDataChange={handleBatchDataChange}
           />
         ) : (
           /* Other Node Types - Basic Configuration */

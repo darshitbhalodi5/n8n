@@ -91,6 +91,9 @@ export const nodeTypes: NodeTypes = {
   aave: BaseNodeWrapper,
   compound: BaseNodeWrapper,
 
+  // AI Transform node - use base node visuals
+  "ai-transform": BaseNodeWrapper,
+
   // Wallet node (specialized)
   "wallet-node": WalletNodeWrapper,
 };
