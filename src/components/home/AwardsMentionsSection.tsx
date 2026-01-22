@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
+import { Button } from "@/components/ui/Button";
 
 // Import all protocol SVGs from assets/blocks
 import aave from "@/assets/blocks/Aave.svg";
@@ -40,52 +42,68 @@ import wallet from "@/assets/blocks/Wallet.svg";
 import yearn from "@/assets/blocks/Yearn.svg";
 import zapper from "@/assets/blocks/Zapper.svg";
 
-// Protocol data array
-const protocols = [
+// Currently working protocols
+const currentProtocols = [
+  { name: "Start", icon: start },
+  { name: "If/Else", icon: ifElse },
+  { name: "Switch", icon: switchIcon },
+  { name: "Telegram", icon: telegram },
+  { name: "Mail", icon: mail },
+  { name: "Slack", icon: slack },
+  { name: "Uniswap", icon: uniswap },
+  { name: "Relay", icon: relay },
+  { name: "1inch", icon: oneinch },
   { name: "Aave", icon: aave },
+  { name: "Compound", icon: compound },
+  { name: "Wallet", icon: wallet },
+];
+
+// Future integrations (coming soon)
+const futureProtocols = [
   { name: "Across", icon: across },
   { name: "Beefy", icon: beefy },
   { name: "Camelot", icon: camelot },
   { name: "Chainlink", icon: chainlink },
-  { name: "Compound", icon: compound },
   { name: "DefiLlama", icon: defillama },
   { name: "Frax", icon: frax },
   { name: "Gamma", icon: gamma },
   { name: "GMX", icon: gmx },
   { name: "Hyperliquid", icon: hyperliquid },
-  { name: "If/Else", icon: ifElse },
   { name: "InsurAce", icon: insurace },
   { name: "Lido", icon: lido },
-  { name: "Mail", icon: mail },
   { name: "Nexus Mutual", icon: nexusmutual },
-  { name: "1inch", icon: oneinch },
   { name: "OpenSea", icon: opensea },
   { name: "Ostium", icon: ostium },
   { name: "Pendle", icon: pendle },
   { name: "Pyth", icon: pyth },
   { name: "Radiant", icon: radiant },
-  { name: "Relay", icon: relay },
-  { name: "Slack", icon: slack },
   { name: "Snapshot", icon: snapshot },
   { name: "Stargate", icon: stargate },
-  { name: "Start", icon: start },
-  { name: "Switch", icon: switchIcon },
   { name: "Tally", icon: tally },
-  { name: "Telegram", icon: telegram },
   { name: "Treasure", icon: treasure },
-  { name: "Uniswap", icon: uniswap },
-  { name: "Wallet", icon: wallet },
   { name: "Yearn", icon: yearn },
   { name: "Zapper", icon: zapper },
 ];
 
 export function AwardsMentionsSection() {
+  const [showFutureIntegrations, setShowFutureIntegrations] = useState(false);
+
   const bannerItems = [
     { text: "CONNECT", icon: "∞" },
     { text: "ANYTHING", icon: "∞" },
+    { text: "AUTOMATE", icon: "∞" },
+    { text: "EVERYTHING", icon: "∞" }
   ];
 
   const duplicatedItems = [...bannerItems, ...bannerItems, ...bannerItems, ...bannerItems];
+
+  // Combine protocols based on toggle state
+  const displayedProtocols = showFutureIntegrations
+    ? [
+      ...currentProtocols.map((p) => ({ ...p, isFuture: false })),
+      ...futureProtocols.map((p) => ({ ...p, isFuture: true })),
+    ]
+    : currentProtocols.map((p) => ({ ...p, isFuture: false }));
 
   return (
     <section className="relative w-full bg-black py-24 px-8 z-30 overflow-x-hidden">
@@ -135,15 +153,31 @@ export function AwardsMentionsSection() {
               </h1>
             ))}
           </div>
+
+          {/* Group 3 (duplicate for seamless loop) */}
+          <div className="flex min-w-full shrink-0" aria-hidden="true">
+            {duplicatedItems.map((item, index) => (
+              <h1
+                key={`marquee-c-${index}`}
+                className="text-6xl md:text-8xl lg:text-9xl font-bold text-white uppercase tracking-tight flex items-center gap-3 md:gap-6 px-6 md:px-12"
+              >
+                <span className="text-5xl md:text-7xl lg:text-8xl text-zinc-500">
+                  {item.icon}
+                </span>
+                <span>{item.text}</span>
+              </h1>
+            ))}
+          </div>
         </motion.div>
       </div>
 
       {/* Protocols Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7 gap-8 md:gap-12 max-w-7xl mx-auto">
-        {protocols.map((protocol) => (
+        {displayedProtocols.map((protocol) => (
           <div
             key={protocol.name}
-            className="flex flex-col items-center justify-center gap-3 p-4 hover:opacity-80 transition-opacity"
+            className={`flex flex-col items-center justify-center gap-3 p-4 ${protocol.isFuture ? "opacity-50" : "hover:opacity-80 transition-opacity"
+              }`}
           >
             <div className="shrink-0 w-16 h-16 md:w-20 md:h-20 flex items-center justify-center">
               <Image
@@ -159,6 +193,17 @@ export function AwardsMentionsSection() {
             </p>
           </div>
         ))}
+      </div>
+
+      {/* Toggle Button */}
+      <div className="flex justify-center mt-12">
+        <Button
+          onClick={() => setShowFutureIntegrations(!showFutureIntegrations)}
+          variant="default"
+          className="bg-white/10 hover:bg-white/20 text-white border border-white/20"
+        >
+          {showFutureIntegrations ? "Hide Future Integrations" : "Show All Integrations"}
+        </Button>
       </div>
     </section>
   );
