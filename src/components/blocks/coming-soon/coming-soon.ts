@@ -6,7 +6,6 @@
 import type { ComingSoonBlockDefinition, ComingSoonCategoryDefinition } from "./types";
 
 // Import all category blocks
-import { oracleBlocks } from "./oracle";
 import { yieldBlocks } from "./yield";
 import { bridgeBlocks } from "./bridges";
 import { perpetualBlocks } from "./perpetuals";
@@ -22,7 +21,6 @@ import { insuranceBlocks } from "./insurance";
 export type { ComingSoonBlockDefinition, ComingSoonCategoryDefinition } from "./types";
 
 // Re-export individual blocks for direct access
-export * from "./oracle";
 export * from "./yield";
 export * from "./bridges";
 export * from "./perpetuals";
@@ -38,13 +36,6 @@ export * from "./insurance";
  * All "Coming Soon" categories with their blocks
  */
 export const comingSoonCategories: ComingSoonCategoryDefinition[] = [
-    {
-        id: "oracle",
-        label: "Oracle",
-        iconName: "Eye",
-        description: "Data Feeds & Off-chain Data",
-        blocks: oracleBlocks,
-    },
     {
         id: "yield",
         label: "Yield & Farming",

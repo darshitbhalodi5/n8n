@@ -8,11 +8,12 @@ import type {
   CategoryDefinition,
   IconRegistry,
 } from "./types";
-import { socialBlocks } from "./social/social-blocks";
-import { walletBlocks } from "./wallet/wallet-blocks";
-import { triggerBlocks, startBlock } from "./triggers/triggers";
-import { controlBlocks } from "./control/control-blocks";
-import { defiBlocks } from "./defi/defi-blocks";
+import { socialBlocks } from "./social";
+import { walletBlocks } from "./wallet";
+import { triggerBlocks, startBlock } from "./triggers";
+import { controlBlocks } from "./control";
+import { defiBlocks } from "./defi";
+import { oracleBlocks } from "./oracle";
 import {
   Share2,
   Play,
@@ -211,6 +212,12 @@ export const blockCategories: CategoryDefinition[] = [
     label: "DeFi",
     iconName: "ArrowRightLeft",
     blocks: defiBlocks,
+  },
+  {
+    id: "oracle",
+    label: "Oracle",
+    iconName: "Eye",
+    blocks: oracleBlocks,
   },
   // Note: triggers category intentionally excluded from sidebar
   // Start block is auto-added and cannot be manually placed

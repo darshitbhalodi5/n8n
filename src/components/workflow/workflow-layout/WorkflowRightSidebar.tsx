@@ -14,14 +14,15 @@ import {
   X,
 } from "lucide-react";
 import { HiPlay } from "react-icons/hi2";
-import { SlackNodeConfiguration } from "./slack/SlackNodeConfiguration";
-import { TelegramNodeConfiguration } from "./telegram/TelegramNodeConfiguration";
-import { EmailNodeConfiguration } from "./email/EmailNodeConfiguration";
-import { IfNodeConfiguration } from "./if/IfNodeConfiguration";
-import { SwitchNodeConfiguration } from "./switch/SwitchNodeConfiguration";
-import { SwapNodeConfiguration } from "./swap/SwapNodeConfiguration";
-import { WalletNodeConfiguration } from "./wallet/WalletNodeConfiguration";
-import { LendingNodeConfiguration } from "./lending/LendingNodeConfiguration";
+import { SlackNodeConfiguration } from "./slack";
+import { TelegramNodeConfiguration } from "./telegram";
+import { EmailNodeConfiguration } from "./email";
+import { IfNodeConfiguration } from "./if";
+import { SwitchNodeConfiguration } from "./switch";
+import { SwapNodeConfiguration } from "./swap";
+import { WalletNodeConfiguration } from "./wallet";
+import { LendingNodeConfiguration } from "./lending";
+import { OracleNodeConfigurationV2 } from "./oracle";
 
 export function WorkflowRightSidebar() {
   const {
@@ -112,6 +113,11 @@ export function WorkflowRightSidebar() {
   const isLendingNode =
     nodeType === "aave" || blockId === "aave" ||
     nodeType === "compound" || blockId === "compound";
+
+  // Check if this is an Oracle node (Chainlink or Pyth)
+  const isOracleNode =
+    nodeType === "chainlink" || blockId === "chainlink" ||
+    nodeType === "pyth" || blockId === "pyth";
 
   const handleDeleteClick = () => {
     setShowDeleteDialog(true);
@@ -244,6 +250,14 @@ export function WorkflowRightSidebar() {
         ) : isLendingNode ? (
           /* Lending Node Configuration (Aave/Compound) */
           <LendingNodeConfiguration
+            nodeData={nodeData}
+            handleDataChange={handleBatchDataChange}
+            authenticated={authenticated}
+            login={login}
+          />
+        ) : isOracleNode ? (
+          /* Oracle Node Configuration (Chainlink/Pyth) */
+          <OracleNodeConfigurationV2
             nodeData={nodeData}
             handleDataChange={handleBatchDataChange}
             authenticated={authenticated}
