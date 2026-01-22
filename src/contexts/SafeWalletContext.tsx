@@ -7,12 +7,14 @@ import React, {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
 } from "react";
 import { usePrivyEmbeddedWallet } from "@/hooks/usePrivyEmbeddedWallet";
 import { useSafeWallets } from "@/web3/hooks/useSafeWallets";
 import { useCreateSafeWallet } from "@/web3/hooks/useCreateSafeWallet";
 import { useSafeModuleStatus } from "@/web3/hooks/useSafeModuleStatus";
 import { verifyModuleEnabled } from "@/web3/onboarding";
+import { useOnboarding } from "@/contexts/OnboardingContext";
 
 // Placeholder types - will be properly typed when we port the hooks
 export interface SafeWalletSelection {
@@ -96,6 +98,9 @@ export const SafeWalletProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const { walletAddress, chainId, ethereumProvider, embeddedWallet } = usePrivyEmbeddedWallet();
 
+  // Get onboarding state to detect when onboarding completes
+  const { needsOnboarding: onboardingNeeded } = useOnboarding();
+
   // Core hooks
   const { safeWallets, isLoading, error, refetch } = useSafeWallets();
   const {
@@ -155,6 +160,38 @@ export const SafeWalletProvider: React.FC<{ children: React.ReactNode }> = ({
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setSelectedSafe(null);
   }, [chainId]);
+
+  // Track previous onboarding state to detect completion
+  const prevOnboardingNeededRef = useRef<boolean | undefined>(undefined);
+
+  // Refresh safe wallets after onboarding completes
+  useEffect(() => {
+    // Detect when onboarding transitions from needed to not needed (completion)
+    const wasOnboarding = prevOnboardingNeededRef.current;
+    const isOnboarding = onboardingNeeded;
+
+    // If onboarding just completed (was true, now false), refresh safe wallets
+    if (wasOnboarding === true && isOnboarding === false) {
+      // Wait a bit for blockchain state to propagate, then refetch
+      const timer = setTimeout(async () => {
+        await refetch();
+      }, 2000);
+
+      return () => clearTimeout(timer);
+    }
+
+    prevOnboardingNeededRef.current = isOnboarding;
+  }, [onboardingNeeded, refetch]);
+
+  // Auto-select first safe wallet if none is selected and wallets are available
+  useEffect(() => {
+    if (!selectedSafe && safeWallets.length > 0 && !isLoading) {
+      const timer = setTimeout(() => {
+        setSelectedSafe(safeWallets[0]);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [selectedSafe, safeWallets, isLoading]);
 
   // Refresh module status after selection
   const selectSafe = useCallback(

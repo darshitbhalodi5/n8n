@@ -24,7 +24,10 @@ export function UserMenu() {
   const { user, logout } = usePrivy();
   const { embeddedWallet, chainId } = usePrivyEmbeddedWallet();
   const { selection } = useSafeWalletContext();
-  const safeAddress = selection.selectedSafe || selection.safeWallets[0] || null;
+  // Safely get safe address - wait for loading to complete and ensure array has items
+  const safeAddress = selection.isLoading 
+    ? null 
+    : (selection.selectedSafe || (selection.safeWallets?.length > 0 ? selection.safeWallets[0] : null) || null);
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
