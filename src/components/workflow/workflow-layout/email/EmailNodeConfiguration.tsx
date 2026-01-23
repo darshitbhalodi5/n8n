@@ -56,6 +56,7 @@ function EmailNodeConfigurationInner({
         emailSubject={email.emailSubject}
         emailBody={email.emailBody}
         loading={email.loading.testing}
+        currentNodeId={(nodeData.id as string) || ""}
         onEmailToChange={email.actions.updateEmailTo}
         onEmailSubjectChange={email.actions.updateEmailSubject}
         onEmailBodyChange={email.actions.updateEmailBody}

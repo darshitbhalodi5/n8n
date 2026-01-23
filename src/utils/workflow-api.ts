@@ -35,6 +35,7 @@ function normalizeNodeType(frontendType: string): string {
     "wallet-node": "WALLET", // Wallet node
     chainlink: "CHAINLINK_PRICE_ORACLE", // Chainlink oracle node
     pyth: "PYTH_PRICE_ORACLE", // Pyth oracle node
+    "ai-transform": "LLM_TRANSFORM", // AI Transform node
   };
   // Default to the uppercase version if not in map, or TRIGGER as fallback
   return typeMap[frontendType] || frontendType.toUpperCase() || "TRIGGER";
@@ -51,7 +52,7 @@ function extractNodeConfig(node: Node): any {
     case "slack":
       return {
         connectionId: data.slackConnectionId,
-        message: data.testMessage || data.slackMessage || "",
+        message: data.slackMessage || data.testMessage || "",
         connectionType: data.slackConnectionType || "webhook",
         channelId: data.slackChannelId,
       };
@@ -107,6 +108,17 @@ function extractNodeConfig(node: Node): any {
         to: data.emailTo,
         subject: data.emailSubject,
         body: data.emailBody,
+      };
+
+    case "ai-transform":
+      return {
+        provider: data.llmProvider,
+        model: data.llmModel,
+        systemPrompt: data.systemPrompt,
+        userPromptTemplate: data.userPromptTemplate,
+        outputSchema: data.outputSchema,
+        temperature: data.temperature,
+        maxOutputTokens: data.maxOutputTokens,
       };
 
     case "start":
@@ -695,6 +707,16 @@ function transformNodeToCanvas(backendNode: BackendNode): Node {
       nodeData.emailTo = config.to;
       nodeData.emailSubject = config.subject;
       nodeData.emailBody = config.body;
+      break;
+
+    case "ai-transform":
+      nodeData.llmProvider = config.provider;
+      nodeData.llmModel = config.model;
+      nodeData.systemPrompt = config.systemPrompt;
+      nodeData.userPromptTemplate = config.userPromptTemplate;
+      nodeData.outputSchema = config.outputSchema;
+      nodeData.temperature = config.temperature;
+      nodeData.maxOutputTokens = config.maxOutputTokens;
       break;
   }
 

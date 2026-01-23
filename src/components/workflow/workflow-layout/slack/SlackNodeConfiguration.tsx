@@ -170,6 +170,7 @@ function SlackNodeConfigurationInner({
                     notification={slack.notification}
                     onMessageChange={slack.actions.updateSlackMessage}
                     onSendPreview={slack.actions.sendPreviewMessage}
+                    currentNodeId={(nodeData.id as string) || ""}
                 />
             )}
 

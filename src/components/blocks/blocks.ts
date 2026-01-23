@@ -14,6 +14,7 @@ import { triggerBlocks, startBlock } from "./triggers/triggers";
 import { controlBlocks } from "./control/control-blocks";
 import { defiBlocks } from "./defi/defi-blocks";
 import { oracleBlocks } from "./oracle/oracle-blocks";
+import { aiBlocks } from "./ai/ai-blocks";
 import {
   Share2,
   Play,
@@ -32,6 +33,7 @@ import {
   BarChart3,
   Shield,
   Clock,
+  BrainCircuit,
 } from "lucide-react";
 import {
   // Existing logos
@@ -81,6 +83,10 @@ import {
   // Coming Soon - Insurance
   NexusMutualLogo,
   InsurAceLogo,
+  QwenLogo,
+  GLMLogo,
+  DeepSeekLogo,
+  ChatGPTLogo,
 } from "./logos/logos";
 
 // Re-export types
@@ -166,6 +172,11 @@ export const iconRegistry: IconRegistry = {
   GitBranch, // Control category icon
   Wallet, // Wallet category icon
   ArrowRightLeft, // DeFi category
+  BrainCircuit, // AI category icon
+  QwenLogo,
+  GLMLogo,
+  DeepSeekLogo,
+  ChatGPTLogo,
 
   // Coming Soon category icons
   Eye, // Oracle
@@ -194,6 +205,12 @@ export const blockCategories: CategoryDefinition[] = [
     label: "Control",
     iconName: "GitBranch",
     blocks: controlBlocks,
+  },
+  {
+    id: "ai",
+    label: "AI",
+    iconName: "BrainCircuit",
+    blocks: aiBlocks,
   },
   {
     id: "social",

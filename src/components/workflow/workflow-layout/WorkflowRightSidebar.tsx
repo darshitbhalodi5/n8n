@@ -23,6 +23,7 @@ import { WalletNodeConfiguration } from "./wallet/WalletNodeConfiguration";
 import { LendingNodeConfiguration } from "./lending/LendingNodeConfiguration";
 import { OracleNodeConfigurationV2 } from "./oracle/OracleNodeConfigurationV2";
 import { SimpleCard } from "@/components/ui/SimpleCard";
+import { AiTransformNodeConfiguration } from "./ai/AiTransformNodeConfiguration";
 
 export function WorkflowRightSidebar() {
   const {
@@ -118,6 +119,9 @@ export function WorkflowRightSidebar() {
   const isOracleNode =
     nodeType === "chainlink" || blockId === "chainlink" ||
     nodeType === "pyth" || blockId === "pyth";
+
+  // Check if this is an AI Transform node
+  const isAiTransformNode = nodeType === "ai-transform" || blockId?.startsWith("ai-");
 
   const handleDeleteClick = () => {
     setShowDeleteDialog(true);
@@ -224,13 +228,13 @@ export function WorkflowRightSidebar() {
           <WalletNodeConfiguration />
         ) : isEmailNode ? (
           <EmailNodeConfiguration
-            nodeData={nodeData}
+            nodeData={{ ...nodeData, id: selectedNode.id }}
             handleDataChange={handleBatchDataChange}
           />
         ) : isSlackNode ? (
           /* Slack Node Configuration - Using refactored component with batched updates */
           <SlackNodeConfiguration
-            nodeData={nodeData}
+            nodeData={{ ...nodeData, id: selectedNode.id }}
             handleDataChange={handleBatchDataChange}
             authenticated={authenticated}
             login={login}
@@ -238,7 +242,7 @@ export function WorkflowRightSidebar() {
         ) : isTelegramNode ? (
           /* Telegram Node Configuration */
           <TelegramNodeConfiguration
-            nodeData={nodeData}
+            nodeData={{ ...nodeData, id: selectedNode.id }}
             handleDataChange={handleBatchDataChange}
             authenticated={authenticated}
             login={login}
@@ -278,6 +282,12 @@ export function WorkflowRightSidebar() {
             handleDataChange={handleBatchDataChange}
             authenticated={authenticated}
             login={login}
+          />
+        ) : isAiTransformNode ? (
+          /* AI Transform Node Configuration */
+          <AiTransformNodeConfiguration
+            nodeData={{ ...nodeData, id: selectedNode.id }}
+            handleDataChange={handleBatchDataChange}
           />
         ) : (
           /* Other Node Types - Basic Configuration */

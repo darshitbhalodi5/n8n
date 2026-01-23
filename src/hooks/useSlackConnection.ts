@@ -112,8 +112,9 @@ export function useSlackConnection({
     const [isTestSuccessful, setIsTestSuccessful] = useState(false);
 
     // Workflow message (synced with node data)
+    // Fallback to testMessage for backwards compatibility with older workflows
     const [slackMessage, setSlackMessage] = useState(
-        (nodeData.slackMessage as string) || ""
+        (nodeData.slackMessage as string) || (nodeData.testMessage as string) || ""
     );
 
     // Delete dialog state

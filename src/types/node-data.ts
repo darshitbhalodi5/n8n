@@ -77,6 +77,17 @@ export interface WalletNodeData extends BaseNodeData {
 // Start Node Data (type alias since it has no additional fields)
 export type StartNodeData = BaseNodeData;
 
+// AI Transform Node Data
+export interface AiTransformNodeData extends BaseNodeData {
+  llmProvider?: 'openai' | 'openrouter';
+  llmModel?: string;
+  systemPrompt?: string;
+  userPromptTemplate?: string;
+  outputSchema?: Record<string, unknown>;
+  temperature?: number;
+  maxOutputTokens?: number;
+}
+
 // Swap Node Data (for Uniswap, Relay, 1inch blocks)
 export interface SwapNodeData extends BaseNodeData {
   swapProvider?: "UNISWAP" | "RELAY" | "ONEINCH";
@@ -169,6 +180,7 @@ export type WorkflowNodeData =
   | ({ nodeType: "compound" } & LendingNodeData)
   | ({ nodeType: "chainlink" } & OracleNodeData)
   | ({ nodeType: "pyth" } & OracleNodeData)
+  | ({ nodeType: "ai-transform" } & AiTransformNodeData)
   | ({ nodeType: "base" } & BaseNodeData);
 
 // Type guard functions
@@ -236,3 +248,10 @@ export function isOracleNodeData(data: unknown): data is OracleNodeData {
   );
 }
 
+export function isAiTransformNodeData(data: unknown): data is AiTransformNodeData {
+  return (
+    typeof data === "object" &&
+    data !== null &&
+    ("llmProvider" in data || "llmModel" in data || "userPromptTemplate" in data)
+  );
+}

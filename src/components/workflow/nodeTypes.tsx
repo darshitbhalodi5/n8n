@@ -95,6 +95,9 @@ export const nodeTypes: NodeTypes = {
   chainlink: BaseNodeWrapper,
   pyth: BaseNodeWrapper,
 
+  // AI Transform node - use base node visuals
+  "ai-transform": BaseNodeWrapper,
+
   // Wallet node (specialized)
   "wallet-node": WalletNodeWrapper,
 };

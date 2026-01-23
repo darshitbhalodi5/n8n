@@ -1,10 +1,11 @@
 "use client";
 
-import React from "react";
+import React, { useRef } from "react";
 import { Loader2, Send, MessageSquare } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Typography } from "@/components/ui/Typography";
+import { TemplateFieldSelector } from "../shared/TemplateFieldSelector";
 import type { TelegramConnection } from "@/types/telegram";
 
 interface TelegramMessageInputProps {
@@ -16,6 +17,8 @@ interface TelegramMessageInputProps {
   isSending: boolean;
   /** Step number for display */
   stepNumber?: number;
+  /** Current node ID for template field selector */
+  currentNodeId: string;
   /** Called when message changes */
   onMessageChange: (message: string) => void;
   /** Called to send preview message */
@@ -37,11 +40,13 @@ export const TelegramMessageInput = React.memo(function TelegramMessageInput({
   message,
   isSending,
   stepNumber = 3,
+  currentNodeId,
   onMessageChange,
   onSendPreview,
   onViewMessages,
 }: TelegramMessageInputProps) {
   const canSend = message.trim().length > 0 && !isSending;
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   return (
     <Card className="p-4 space-y-3">
@@ -68,15 +73,40 @@ export const TelegramMessageInput = React.memo(function TelegramMessageInput({
         </span>
       </div>
 
+      {/* Template Field Selector */}
+      <TemplateFieldSelector
+        currentNodeId={currentNodeId}
+        onInsertField={(placeholder) => {
+          if (textareaRef.current) {
+            const textarea = textareaRef.current;
+            const start = textarea.selectionStart || 0;
+            const end = textarea.selectionEnd || 0;
+            const newValue = 
+              message.substring(0, start) + 
+              placeholder + 
+              message.substring(end);
+            onMessageChange(newValue);
+            setTimeout(() => {
+              textarea.focus();
+              textarea.setSelectionRange(start + placeholder.length, start + placeholder.length);
+            }, 0);
+          } else {
+            onMessageChange(message + placeholder);
+          }
+        }}
+        inputRef={textareaRef}
+      />
+
       <div className="space-y-2">
         <label htmlFor="telegram-message" className="sr-only">
           Telegram message template
         </label>
         <textarea
+          ref={textareaRef}
           id="telegram-message"
           value={message}
           onChange={(e) => onMessageChange(e.target.value)}
-          placeholder="Hello from FlowForge! 🚀"
+          placeholder="Hello from FlowForge! 🚀 Use the field selector above to insert dynamic values."
           rows={3}
           className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
           aria-describedby="telegram-message-hint"
