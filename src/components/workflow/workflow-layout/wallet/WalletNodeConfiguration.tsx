@@ -10,9 +10,9 @@ import {
 } from "lucide-react";
 import { HiCog } from "react-icons/hi2";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { AuthenticationStatus } from "../AuthenticationStatus";
 import { SimpleCard } from "@/components/ui/SimpleCard";
 import { Dropdown } from "@/components/ui/Dropdown";
+import { AuthenticationStatus } from "@/components/workflow/AuthenticationStatus";
 
 function WalletNodeConfigurationInner() {
   const { wallets } = useWallets();
@@ -22,12 +22,13 @@ function WalletNodeConfigurationInner() {
   const address = embeddedWallet?.address;
   const { selection, creation } = useSafeWalletContext();
 
+  if (!isConnected) {
+    return <AuthenticationStatus />;
+  }
+
   return (
     <div className="space-y-4">
-      {/* Section A: Authentication Status */}
-      <AuthenticationStatus />
-
-      {/* Section B: Safe Wallet Info (shown after connect) */}
+      {/* Section A: Safe Wallet Info (shown after connect) */}
       {isConnected && address && (
         <SimpleCard className="p-5">
           <div className="space-y-1 mb-4">
@@ -109,7 +110,7 @@ function WalletNodeConfigurationInner() {
         </SimpleCard>
       )}
 
-      {/* Section C: Module Status (when a Safe selected) */}
+      {/* Section B: Module Status (when a Safe selected) */}
       {isConnected && selection.selectedSafe && (
         <SimpleCard className="p-5">
           <div className="flex items-start gap-4 mb-4">

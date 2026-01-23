@@ -3,8 +3,7 @@
 import { Send } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Typography } from "@/components/ui/Typography";
-import { Input } from "@/components/ui/Input";
-import { Textarea } from "@/components/ui/Textarea";
+import { FormInput } from "@/components/ui/FormInput";
 
 interface EmailFormProps {
   emailTo: string;
@@ -17,10 +16,6 @@ interface EmailFormProps {
   onSendTest: () => Promise<void>;
 }
 
-/**
- * Email Form Component
- * Form for configuring email parameters (recipient, subject, body)
- */
 export function EmailForm({
   emailTo,
   emailSubject,
@@ -34,57 +29,45 @@ export function EmailForm({
   return (
     <div className="space-y-4">
       {/* Recipient Email */}
-      <div className="space-y-2">
-        <label className="block">
-          <Typography variant="caption" className="text-muted-foreground mb-1">
-            Recipient Email <span className="text-destructive">*</span>
-          </Typography>
-          <Input
-            type="email"
-            value={emailTo}
-            onChange={(e) => onEmailToChange(e.target.value)}
-            placeholder="recipient@example.com"
-            disabled={loading}
-            className="w-full"
-          />
-        </label>
-      </div>
+      <FormInput
+        label="Recipient Email"
+        type="email"
+        value={emailTo}
+        onChange={(e) => onEmailToChange(e.target.value)}
+        placeholder="recipient@example.com"
+        disabled={loading}
+        required
+      />
 
       {/* Subject */}
-      <div className="space-y-2">
-        <label className="block">
-          <Typography variant="caption" className="text-muted-foreground mb-1">
-            Subject <span className="text-destructive">*</span>
-          </Typography>
-          <Input
-            type="text"
-            value={emailSubject}
-            onChange={(e) => onEmailSubjectChange(e.target.value)}
-            placeholder="Email subject"
-            disabled={loading}
-            className="w-full"
-          />
-        </label>
-      </div>
+      <FormInput
+        label="Subject"
+        type="text"
+        value={emailSubject}
+        onChange={(e) => onEmailSubjectChange(e.target.value)}
+        placeholder="Email subject"
+        disabled={loading}
+        required
+      />
 
       {/* Body */}
       <div className="space-y-2">
-        <label className="block">
-          <Typography variant="caption" className="text-muted-foreground mb-1">
-            Message Body <span className="text-destructive">*</span>
-          </Typography>
-          <Textarea
-            value={emailBody}
-            onChange={(e) => onEmailBodyChange(e.target.value)}
-            placeholder="Enter your email message here..."
-            disabled={loading}
-            rows={6}
-            className="w-full resize-none"
-          />
-          <Typography variant="caption" className="text-muted-foreground mt-1">
-            {emailBody.length} / 10000 characters
-          </Typography>
-        </label>
+        <FormInput
+          label="Message Body"
+          as="textarea"
+          textareaProps={{
+            value: emailBody,
+            onChange: (e) => onEmailBodyChange(e.target.value),
+            placeholder: "Enter your email message here...",
+            disabled: loading,
+            rows: 6,
+            className: "resize-none",
+          }}
+          required
+        />
+        <Typography variant="caption" className="text-muted-foreground">
+          {emailBody.length} / 10000 characters
+        </Typography>
       </div>
 
       {/* Send Test Button */}

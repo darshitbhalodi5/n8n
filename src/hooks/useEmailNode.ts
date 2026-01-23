@@ -11,7 +11,6 @@ import type {
 interface UseEmailNodeProps {
     nodeData: Record<string, unknown>;
     onDataChange: (updates: Record<string, unknown>) => void;
-    authenticated: boolean;
 }
 
 interface UseEmailNodeReturn {
@@ -39,7 +38,6 @@ interface UseEmailNodeReturn {
 export function useEmailNode({
     nodeData,
     onDataChange,
-    // authenticated,
 }: UseEmailNodeProps): UseEmailNodeReturn {
     const { getPrivyAccessToken } = usePrivyWallet();
 

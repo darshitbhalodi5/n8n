@@ -13,6 +13,7 @@ import { walletBlocks } from "./wallet/wallet-blocks";
 import { triggerBlocks, startBlock } from "./triggers/triggers";
 import { controlBlocks } from "./control/control-blocks";
 import { defiBlocks } from "./defi/defi-blocks";
+import { oracleBlocks } from "./oracle/oracle-blocks";
 import {
   Share2,
   Play,
@@ -211,6 +212,12 @@ export const blockCategories: CategoryDefinition[] = [
     label: "DeFi",
     iconName: "ArrowRightLeft",
     blocks: defiBlocks,
+  },
+  {
+    id: "oracle",
+    label: "Oracle",
+    iconName: "Eye",
+    blocks: oracleBlocks,
   },
   // Note: triggers category intentionally excluded from sidebar
   // Start block is auto-added and cannot be manually placed

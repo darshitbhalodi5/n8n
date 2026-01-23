@@ -33,6 +33,8 @@ function normalizeNodeType(frontendType: string): string {
     relay: "SWAP", // Relay is a swap
     oneinch: "SWAP", // 1inch is a swap
     "wallet-node": "WALLET", // Wallet node
+    chainlink: "CHAINLINK_PRICE_ORACLE", // Chainlink oracle node
+    pyth: "PYTH_PRICE_ORACLE", // Pyth oracle node
   };
   // Default to the uppercase version if not in map, or TRIGGER as fallback
   return typeMap[frontendType] || frontendType.toUpperCase() || "TRIGGER";
@@ -112,6 +114,28 @@ function extractNodeConfig(node: Node): any {
 
     case "wallet-node":
       return {};
+
+    case "chainlink":
+      return {
+        provider: "CHAINLINK",
+        chain: data.oracleChain || "ARBITRUM_SEPOLIA",
+        aggregatorAddress: data.aggregatorAddress,
+        staleAfterSeconds: data.staleAfterSeconds || 3600,
+        // Include metadata for debugging
+        ...(data.symbol && { symbol: data.symbol }),
+        ...(data.feedName && { feedName: data.feedName }),
+      };
+
+    case "pyth":
+      return {
+        provider: "PYTH",
+        chain: data.oracleChain || "ARBITRUM_SEPOLIA",
+        priceFeedId: data.priceFeedId,
+        staleAfterSeconds: data.staleAfterSeconds || 3600,
+        // Include metadata for debugging
+        ...(data.symbol && { symbol: data.symbol }),
+        ...(data.feedName && { feedName: data.feedName }),
+      };
 
     default:
       // Fallback: extract common fields

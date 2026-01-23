@@ -168,6 +168,24 @@ export function useWorkflowExecution(
         const data: ExecutionEvent = JSON.parse(event.data);
         console.log("[SSE] Node completed:", data.nodeId, data.output);
 
+        // Log prices when Oracle nodes complete
+        if (data.nodeType === "chainlink" || data.nodeType === "pyth") {
+          const output = data.output;
+          if (output) {
+            console.log(`[Oracle] Price data received for ${data.nodeType.toUpperCase()} node (${data.nodeId}):`, {
+              price: output.price,
+              priceData: output.priceData,
+              formattedPrice: output.formattedPrice,
+              decimals: output.decimals,
+              timestamp: output.timestamp,
+              confidence: output.confidence, // For Pyth
+              symbol: output.symbol,
+              feedName: output.feedName,
+              fullOutput: output,
+            });
+          }
+        }
+
         setNodeStatuses((prev) => {
           const next = new Map(prev);
           next.set(data.nodeId!, {

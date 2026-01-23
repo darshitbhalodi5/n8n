@@ -91,6 +91,10 @@ export const nodeTypes: NodeTypes = {
   aave: BaseNodeWrapper,
   compound: BaseNodeWrapper,
 
+  // Oracle nodes (Chainlink, Pyth) - use base node visuals
+  chainlink: BaseNodeWrapper,
+  pyth: BaseNodeWrapper,
+
   // Wallet node (specialized)
   "wallet-node": WalletNodeWrapper,
 };

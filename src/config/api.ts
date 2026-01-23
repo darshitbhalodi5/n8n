@@ -64,6 +64,10 @@ export const API_CONFIG = {
         META: {
             RUNTIME_CONFIG: "/meta/runtime-config",
         },
+        ORACLE: {
+            FEEDS: "/oracle/feeds",
+            CONFIG: "/oracle/config",
+        },
     },
 
     // OAuth polling configuration

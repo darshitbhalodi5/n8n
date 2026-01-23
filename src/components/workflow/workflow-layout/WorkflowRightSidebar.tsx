@@ -21,6 +21,7 @@ import { SwitchNodeConfiguration } from "./switch/SwitchNodeConfiguration";
 import { SwapNodeConfiguration } from "./swap/SwapNodeConfiguration";
 import { WalletNodeConfiguration } from "./wallet/WalletNodeConfiguration";
 import { LendingNodeConfiguration } from "./lending/LendingNodeConfiguration";
+import { OracleNodeConfigurationV2 } from "./oracle/OracleNodeConfigurationV2";
 import { SimpleCard } from "@/components/ui/SimpleCard";
 
 export function WorkflowRightSidebar() {
@@ -112,6 +113,11 @@ export function WorkflowRightSidebar() {
   const isLendingNode =
     nodeType === "aave" || blockId === "aave" ||
     nodeType === "compound" || blockId === "compound";
+
+  // Check if this is an Oracle node (Chainlink or Pyth)
+  const isOracleNode =
+    nodeType === "chainlink" || blockId === "chainlink" ||
+    nodeType === "pyth" || blockId === "pyth";
 
   const handleDeleteClick = () => {
     setShowDeleteDialog(true);
@@ -215,15 +221,11 @@ export function WorkflowRightSidebar() {
             </div>
           </SimpleCard>
         ) : isWalletNode ? (
-          <WalletNodeConfiguration
-          />
+          <WalletNodeConfiguration />
         ) : isEmailNode ? (
-          /* Email Node Configuration */
           <EmailNodeConfiguration
             nodeData={nodeData}
             handleDataChange={handleBatchDataChange}
-            authenticated={authenticated}
-            login={login}
           />
         ) : isSlackNode ? (
           /* Slack Node Configuration - Using refactored component with batched updates */
@@ -264,6 +266,14 @@ export function WorkflowRightSidebar() {
         ) : isLendingNode ? (
           /* Lending Node Configuration (Aave/Compound) */
           <LendingNodeConfiguration
+            nodeData={nodeData}
+            handleDataChange={handleBatchDataChange}
+            authenticated={authenticated}
+            login={login}
+          />
+        ) : isOracleNode ? (
+          /* Oracle Node Configuration (Chainlink/Pyth) */
+          <OracleNodeConfigurationV2
             nodeData={nodeData}
             handleDataChange={handleBatchDataChange}
             authenticated={authenticated}

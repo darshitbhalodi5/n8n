@@ -125,6 +125,34 @@ export interface LendingNodeData extends BaseNodeData {
   lastExecutedAt?: string;
 }
 
+// Oracle Node Data (for Chainlink, Pyth blocks)
+export interface OracleNodeData extends BaseNodeData {
+  oracleProvider?: "CHAINLINK" | "PYTH";
+  oracleChain?: "ARBITRUM" | "ARBITRUM_SEPOLIA";
+  
+  // Chainlink specific
+  aggregatorAddress?: string;
+  
+  // Pyth specific
+  priceFeedId?: string;
+  
+  // Common fields
+  selectedPriceFeed?: string; // Symbol like "ETH/USD"
+  staleAfterSeconds?: number;
+  outputMapping?: Record<string, string>;
+  
+  // Output data (populated after execution)
+  priceData?: string;
+  formattedPrice?: string;
+  confidence?: string; // For Pyth
+  timestamp?: string;
+  decimals?: number;
+  
+  // Execution settings
+  simulateFirst?: boolean;
+  lastFetchedAt?: string;
+}
+
 // Discriminated union for all node types
 export type WorkflowNodeData =
   | ({ nodeType: "slack" } & SlackNodeData)
@@ -139,6 +167,8 @@ export type WorkflowNodeData =
   | ({ nodeType: "oneinch" } & SwapNodeData)
   | ({ nodeType: "aave" } & LendingNodeData)
   | ({ nodeType: "compound" } & LendingNodeData)
+  | ({ nodeType: "chainlink" } & OracleNodeData)
+  | ({ nodeType: "pyth" } & OracleNodeData)
   | ({ nodeType: "base" } & BaseNodeData);
 
 // Type guard functions
@@ -195,6 +225,14 @@ export function isLendingNodeData(data: unknown): data is LendingNodeData {
     typeof data === "object" &&
     data !== null &&
     ("lendingProvider" in data || "assetAddress" in data || "lendingAmount" in data)
+  );
+}
+
+export function isOracleNodeData(data: unknown): data is OracleNodeData {
+  return (
+    typeof data === "object" &&
+    data !== null &&
+    ("oracleProvider" in data || "assetPair" in data || "priceData" in data)
   );
 }
 
