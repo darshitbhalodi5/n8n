@@ -204,7 +204,7 @@ export function WorkflowRightSidebar() {
         ) : isEmailNode ? (
           /* Email Node Configuration */
           <EmailNodeConfiguration
-            nodeData={nodeData}
+            nodeData={{ ...nodeData, id: selectedNode.id }}
             handleDataChange={handleBatchDataChange}
             authenticated={authenticated}
             login={login}
@@ -212,7 +212,7 @@ export function WorkflowRightSidebar() {
         ) : isSlackNode ? (
           /* Slack Node Configuration - Using refactored component with batched updates */
           <SlackNodeConfiguration
-            nodeData={nodeData}
+            nodeData={{ ...nodeData, id: selectedNode.id }}
             handleDataChange={handleBatchDataChange}
             authenticated={authenticated}
             login={login}
@@ -220,7 +220,7 @@ export function WorkflowRightSidebar() {
         ) : isTelegramNode ? (
           /* Telegram Node Configuration */
           <TelegramNodeConfiguration
-            nodeData={nodeData}
+            nodeData={{ ...nodeData, id: selectedNode.id }}
             handleDataChange={handleBatchDataChange}
             authenticated={authenticated}
             login={login}
@@ -256,7 +256,7 @@ export function WorkflowRightSidebar() {
         ) : isAiTransformNode ? (
           /* AI Transform Node Configuration */
           <AiTransformNodeConfiguration
-            nodeData={nodeData}
+            nodeData={{ ...nodeData, id: selectedNode.id }}
             handleDataChange={handleBatchDataChange}
           />
         ) : (

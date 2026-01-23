@@ -5,6 +5,7 @@ import { Loader2, RefreshCw, Bot, Send, Trash2, MessageSquare, X, Plus, Copy, Ch
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Typography } from "@/components/ui/Typography";
+import { TemplateFieldSelector } from "../shared/TemplateFieldSelector";
 import { useTelegramConnection } from "@/hooks/useTelegramConnection";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { usePrivyWallet } from "@/hooks/usePrivyWallet";
@@ -339,10 +340,18 @@ function TelegramNodeConfigurationInner({
                         Sending to: {selectedConnection.chatTitle}
                     </div>
 
+                    {/* Template Field Selector */}
+                    <TemplateFieldSelector
+                        currentNodeId={(nodeData.id as string) || ""}
+                        onInsertField={(placeholder) => {
+                            actions.updateMessage(telegramMessage + placeholder);
+                        }}
+                    />
+
                     <textarea
                         value={telegramMessage}
                         onChange={(e) => actions.updateMessage(e.target.value)}
-                        placeholder="Hello from FlowForge! 🚀"
+                        placeholder="Hello from FlowForge! 🚀 Use the field selector above to insert dynamic values."
                         className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
                         rows={3}
                     />

@@ -50,7 +50,7 @@ function extractNodeConfig(node: Node): any {
     case "slack":
       return {
         connectionId: data.slackConnectionId,
-        message: data.testMessage || data.slackMessage || "",
+        message: data.slackMessage || data.testMessage || "",
         connectionType: data.slackConnectionType || "webhook",
         channelId: data.slackChannelId,
       };

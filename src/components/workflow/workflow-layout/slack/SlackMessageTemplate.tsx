@@ -1,11 +1,13 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useRef } from "react";
 import { Loader2, Send, MessageSquare, CheckCircle2 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Typography } from "@/components/ui/Typography";
 import { SlackNotificationBanner } from "./SlackNotificationBanner";
+import { TemplateFieldSelector } from "../shared/TemplateFieldSelector";
+import { useWorkflow } from "@/contexts/WorkflowContext";
 import type { SlackNotification, SlackLoadingState } from "@/types/slack";
 
 interface SlackMessageTemplateProps {
@@ -27,6 +29,8 @@ interface SlackMessageTemplateProps {
     onMessageChange: (message: string) => void;
     /** Called to send a preview message */
     onSendPreview: () => Promise<void>;
+    /** Current node ID for template field selector */
+    currentNodeId: string;
 }
 
 /**
@@ -51,8 +55,11 @@ export const SlackMessageTemplate = React.memo(function SlackMessageTemplate({
     notification,
     onMessageChange,
     onSendPreview,
+    currentNodeId,
 }: SlackMessageTemplateProps) {
     const [isSending, setIsSending] = useState(false);
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const { nodes, edges } = useWorkflow();
 
     const isOAuthWithoutChannel = connectionType === "oauth" && !channelId;
     const canSend = messageTemplate.trim() && !loading.processing && !isSending && !isOAuthWithoutChannel;
@@ -60,6 +67,71 @@ export const SlackMessageTemplate = React.memo(function SlackMessageTemplate({
 
     // Remove redundant "OAuth" suffix from connection name (we show it in the badge)
     const displayName = connectionName?.replace(/\s*OAuth\s*$/i, "").trim() || connectionName;
+
+    // Auto-detect upstream AI nodes and suggest template
+    const upstreamAiNodes = React.useMemo(() => {
+        const getAllUpstreamNodes = (nodeId: string): typeof nodes => {
+            const visited = new Set<string>();
+            const queue: string[] = [nodeId];
+            const upstreamNodes: typeof nodes = [];
+
+            while (queue.length > 0) {
+                const currentId = queue.shift()!;
+
+                if (visited.has(currentId)) {
+                    continue;
+                }
+
+                visited.add(currentId);
+
+                const incomingEdges = edges.filter(
+                    (edge: any) => edge.target === currentId
+                );
+
+                for (const edge of incomingEdges) {
+                    const sourceNodeId = edge.source;
+
+                    if (sourceNodeId !== nodeId && !visited.has(sourceNodeId)) {
+                        const sourceNode = nodes.find((n: any) => n.id === sourceNodeId);
+                        if (sourceNode) {
+                            upstreamNodes.push(sourceNode);
+                            queue.push(sourceNodeId);
+                        }
+                    }
+                }
+            }
+
+            return upstreamNodes;
+        };
+
+        const upstream = getAllUpstreamNodes(currentNodeId);
+        return upstream.filter((node: any) => node.type === "ai-transform");
+    }, [nodes, edges, currentNodeId]);
+
+    // Auto-fill template if message is empty or default and there's an AI node upstream
+    // Use ref to track if we've already auto-filled to prevent overwriting user edits
+    const hasAutoFilledRef = useRef(false);
+
+    React.useEffect(() => {
+        // Skip if we've already auto-filled or if there are no AI nodes
+        if (hasAutoFilledRef.current || upstreamAiNodes.length === 0) {
+            return;
+        }
+
+        const isDefaultMessage = !messageTemplate ||
+            messageTemplate === "Hello from FlowForge! 🚀" ||
+            messageTemplate === "Hello from FlowForge!";
+
+        // Only auto-fill if message is default AND doesn't already contain a template
+        const hasTemplate = messageTemplate && messageTemplate.includes("{{");
+
+        if (isDefaultMessage && !hasTemplate) {
+            const aiNodeId = upstreamAiNodes[0].id;
+            const suggestedTemplate = `{{blocks.${aiNodeId}.text}}`;
+            hasAutoFilledRef.current = true;
+            onMessageChange(suggestedTemplate);
+        }
+    }, [messageTemplate, upstreamAiNodes, onMessageChange]);
 
     const handleSendPreview = useCallback(async () => {
         if (!canSend) return;
@@ -84,7 +156,7 @@ export const SlackMessageTemplate = React.memo(function SlackMessageTemplate({
 
                 {/* Connection Summary */}
                 <div className="flex items-center gap-2 p-2 rounded-lg bg-secondary/30">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-success flex-shrink-0" />
+                    <CheckCircle2 className="w-3.5 h-3.5 text-success shrink-0" />
                     <div className="flex-1 min-w-0">
                         <Typography variant="caption" className="text-foreground font-medium truncate block">
                             {displayName}
@@ -115,6 +187,32 @@ export const SlackMessageTemplate = React.memo(function SlackMessageTemplate({
                 </div>
             )}
 
+            {/* Template Field Selector */}
+            <TemplateFieldSelector
+                currentNodeId={currentNodeId}
+                onInsertField={(placeholder) => {
+                    // Insert at cursor or append
+                    if (textareaRef.current) {
+                        const textarea = textareaRef.current;
+                        const start = textarea.selectionStart || 0;
+                        const end = textarea.selectionEnd || 0;
+                        const newValue =
+                            messageTemplate.substring(0, start) +
+                            placeholder +
+                            messageTemplate.substring(end);
+                        onMessageChange(newValue);
+                        // Set cursor after inserted text
+                        setTimeout(() => {
+                            textarea.focus();
+                            textarea.setSelectionRange(start + placeholder.length, start + placeholder.length);
+                        }, 0);
+                    } else {
+                        onMessageChange(messageTemplate + placeholder);
+                    }
+                }}
+                inputRef={textareaRef}
+            />
+
             {/* Message Template Input */}
             <div className="space-y-2">
                 <label className="block">
@@ -127,11 +225,12 @@ export const SlackMessageTemplate = React.memo(function SlackMessageTemplate({
                         </Typography>
                     </div>
                     <textarea
+                        ref={textareaRef}
                         value={messageTemplate}
                         onChange={(e) => onMessageChange(e.target.value)}
                         disabled={isOAuthWithoutChannel}
                         className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none disabled:opacity-50 disabled:cursor-not-allowed"
-                        placeholder="Enter the message you want to send when this workflow runs..."
+                        placeholder="Enter the message you want to send when this workflow runs... Use the field selector above to insert dynamic values."
                         rows={4}
                         aria-label="Slack message template"
                     />

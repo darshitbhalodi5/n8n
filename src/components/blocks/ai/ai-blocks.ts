@@ -67,7 +67,7 @@ export const aiTransformChatGPT: BlockDefinition = createAiTransformBlock(
   "ai-openai-chatgpt",
   "ChatGPT",
   "openai",
-  "gpt-4o-mini",
+  "gpt-5-nano",
   "ChatGPTLogo"
 );
 
