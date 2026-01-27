@@ -16,6 +16,8 @@ export interface WorkflowSummary {
     is_draft: boolean;
     category: string | null;
     tags: string[] | null;
+    is_public?: boolean;
+    published_at?: string | null;
     created_at: string;
     updated_at: string;
     last_executed_at: string | null;
@@ -25,6 +27,18 @@ export interface WorkflowSummary {
     failed_count: number;
     last_execution_status: ExecutionStatus | null;
     last_execution_at: string | null;
+}
+
+export interface PublicWorkflowSummary {
+    id: string;
+    name: string;
+    description: string | null;
+    category: string | null;
+    tags: string[] | null;
+    published_at: string | null;
+    updated_at: string;
+    created_at: string;
+    usage_count: number;
 }
 
 // ===========================================
@@ -40,6 +54,25 @@ export interface WorkflowDetail {
     is_draft: boolean;
     category: string | null;
     tags: string[] | null;
+    is_public?: boolean;
+    published_at?: string | null;
+    trigger_node_id: string | null;
+    created_at: string;
+    updated_at: string;
+    nodes: BackendNode[];
+    edges: BackendEdge[];
+}
+
+export interface PublicWorkflowDetail {
+    id: string;
+    name: string;
+    description: string | null;
+    is_active: boolean;
+    is_draft: boolean;
+    category: string | null;
+    tags: string[] | null;
+    is_public: boolean;
+    published_at: string | null;
     trigger_node_id: string | null;
     created_at: string;
     updated_at: string;
@@ -198,12 +231,40 @@ export interface SaveWorkflowParams {
     edges: unknown[]; // React Flow edges
     category?: string;
     tags?: string[];
+    isPublic?: boolean;
 }
 
 export interface SaveWorkflowResponse {
     success: boolean;
     workflowId: string;
     data?: WorkflowDetail;
+    error?: {
+        message: string;
+        code?: string;
+    };
+}
+
+export interface PublicWorkflowListResponse {
+    success: boolean;
+    data: PublicWorkflowSummary[];
+    meta: {
+        timestamp: string;
+        total: number;
+        limit: number;
+        offset: number;
+    };
+    error?: {
+        message: string;
+        code?: string;
+    };
+}
+
+export interface PublicWorkflowDetailResponse {
+    success: boolean;
+    data: PublicWorkflowDetail;
+    meta: {
+        timestamp: string;
+    };
     error?: {
         message: string;
         code?: string;

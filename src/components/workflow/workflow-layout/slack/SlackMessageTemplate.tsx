@@ -84,15 +84,13 @@ export const SlackMessageTemplate = React.memo(function SlackMessageTemplate({
 
                 visited.add(currentId);
 
-                const incomingEdges = edges.filter(
-                    (edge: any) => edge.target === currentId
-                );
+                const incomingEdges = edges.filter((edge) => edge.target === currentId);
 
                 for (const edge of incomingEdges) {
                     const sourceNodeId = edge.source;
 
                     if (sourceNodeId !== nodeId && !visited.has(sourceNodeId)) {
-                        const sourceNode = nodes.find((n: any) => n.id === sourceNodeId);
+                        const sourceNode = nodes.find((n) => n.id === sourceNodeId);
                         if (sourceNode) {
                             upstreamNodes.push(sourceNode);
                             queue.push(sourceNodeId);
@@ -105,7 +103,7 @@ export const SlackMessageTemplate = React.memo(function SlackMessageTemplate({
         };
 
         const upstream = getAllUpstreamNodes(currentNodeId);
-        return upstream.filter((node: any) => node.type === "ai-transform");
+        return upstream.filter((node) => node.type === "ai-transform");
     }, [nodes, edges, currentNodeId]);
 
     // Auto-fill template if message is empty or default and there's an AI node upstream
