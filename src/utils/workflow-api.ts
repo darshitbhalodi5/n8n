@@ -6,6 +6,7 @@
 
 import type { Node, Edge } from "reactflow";
 import { api, formatErrorWithRequestId, ApiClientError } from "@/lib/api-client";
+import { getAiModelConfig } from "@/config/ai";
 import type {
   WorkflowListResponse,
   WorkflowDetailResponse,
@@ -115,15 +116,19 @@ function extractNodeConfig(node: Node): any {
       };
 
     case "ai-transform":
-      return {
-        provider: data.llmProvider,
-        model: data.llmModel,
-        systemPrompt: data.systemPrompt,
-        userPromptTemplate: data.userPromptTemplate,
-        outputSchema: data.outputSchema,
-        temperature: data.temperature,
-        maxOutputTokens: data.maxOutputTokens,
-      };
+      {
+        const aiConfig = getAiModelConfig(data.llmModel);
+
+        return {
+          provider: data.llmProvider,
+          model: data.llmModel,
+          userPromptTemplate: data.userPromptTemplate,
+          outputSchema: data.outputSchema,
+          // Temperature and max tokens are enforced by internal config
+          temperature: aiConfig.temperature,
+          maxOutputTokens: aiConfig.maxOutputTokens,
+        };
+      }
 
     case "start":
       return {};
@@ -718,15 +723,20 @@ function transformNodeToCanvas(backendNode: BackendNode): Node {
       nodeData.emailBody = config.body;
       break;
 
-    case "ai-transform":
+    case "ai-transform": {
       nodeData.llmProvider = config.provider;
       nodeData.llmModel = config.model;
-      nodeData.systemPrompt = config.systemPrompt;
       nodeData.userPromptTemplate = config.userPromptTemplate;
       nodeData.outputSchema = config.outputSchema;
-      nodeData.temperature = config.temperature;
-      nodeData.maxOutputTokens = config.maxOutputTokens;
+
+      const aiConfig = getAiModelConfig(config.model as string | undefined);
+      // Use backend-provided values if present, otherwise fall back to internal config
+      nodeData.temperature =
+        (config.temperature as number | undefined) ?? aiConfig.temperature;
+      nodeData.maxOutputTokens =
+        (config.maxOutputTokens as number | undefined) ?? aiConfig.maxOutputTokens;
       break;
+    }
   }
 
   return {

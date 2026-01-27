@@ -81,7 +81,6 @@ export type StartNodeData = BaseNodeData;
 export interface AiTransformNodeData extends BaseNodeData {
   llmProvider?: 'openai' | 'openrouter';
   llmModel?: string;
-  systemPrompt?: string;
   userPromptTemplate?: string;
   outputSchema?: Record<string, unknown>;
   temperature?: number;
