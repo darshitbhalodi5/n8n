@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, ArrowLeft, Copy } from "lucide-react";
+import { Loader2, ArrowLeft, Copy, Share2 } from "lucide-react";
 import { usePrivy } from "@privy-io/react-auth";
 import { usePrivyWallet } from "@/hooks/usePrivyWallet";
 import {
@@ -20,6 +20,7 @@ import {
 } from "reactflow";
 import "reactflow/dist/style.css";
 import { nodeTypes } from "../workflow/nodeTypes";
+import { PREVIEW_EDGE_OPTIONS, PREVIEW_BACKGROUND_CONFIG } from "@/constants/workflow";
 import type { PublicWorkflowDetail } from "@/types/workflow";
 
 interface PublicWorkflowPreviewProps {
@@ -59,6 +60,34 @@ function PublicWorkflowPreviewInner({ workflowId }: PublicWorkflowPreviewProps) 
 
     fetchWorkflow();
   }, [workflowId]);
+
+  const handleShare = async () => {
+    const shareData = {
+      title: workflow?.name || 'Workflow',
+      text: workflow?.description || 'Check out this automation workflow',
+      url: window.location.href,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        // Fallback to clipboard
+        await navigator.clipboard.writeText(window.location.href);
+        alert('Link copied to clipboard!');
+      }
+    } catch (err) {
+      if (err instanceof Error && err.name !== 'AbortError') {
+        // Try clipboard as fallback
+        try {
+          await navigator.clipboard.writeText(window.location.href);
+          alert('Link copied to clipboard!');
+        } catch (clipboardErr) {
+          console.error('Failed to share:', clipboardErr);
+        }
+      }
+    }
+  };
 
   const handleUseWorkflow = async () => {
     if (!authenticated) {
@@ -104,6 +133,14 @@ function PublicWorkflowPreviewInner({ workflowId }: PublicWorkflowPreviewProps) 
     router.push("/public-workflows");
   };
 
+  // Memoize canvas transformation to prevent unnecessary re-renders
+  // Must be called before early returns (React hooks rules)
+  const canvasData = useMemo(
+    () => workflow ? transformWorkflowToCanvas(workflow) : { nodes: [], edges: [] },
+    [workflow]
+  );
+  const { nodes, edges } = canvasData;
+
   // Loading State
   if (isLoading) {
     return (
@@ -132,9 +169,6 @@ function PublicWorkflowPreviewInner({ workflowId }: PublicWorkflowPreviewProps) 
     );
   }
 
-  // Transform nodes and edges for display
-  const { nodes, edges } = transformWorkflowToCanvas(workflow);
-
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header */}
@@ -151,23 +185,34 @@ function PublicWorkflowPreviewInner({ workflowId }: PublicWorkflowPreviewProps) 
                   {workflow.name}
                 </h1>
               </div>
-              <Button
-                onClick={handleUseWorkflow}
-                disabled={isCloning}
-                className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 gap-2"
-              >
-                {isCloning ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Cloning...
-                  </>
-                ) : (
-                  <>
-                    <Copy className="w-4 h-4" />
-                    Use This Workflow
-                  </>
-                )}
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  onClick={handleShare}
+                  className="gap-2"
+                  border
+                  title="Share this workflow"
+                >
+                  <Share2 className="w-4 h-4" />
+                  <span className="hidden sm:inline">Share</span>
+                </Button>
+                <Button
+                  onClick={handleUseWorkflow}
+                  disabled={isCloning}
+                  className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 gap-2"
+                >
+                  {isCloning ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Cloning...
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-4 h-4" />
+                      <span className="hidden sm:inline">Use This Workflow</span>
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
 
             {/* Metadata */}
@@ -210,20 +255,13 @@ function PublicWorkflowPreviewInner({ workflowId }: PublicWorkflowPreviewProps) 
               zoomOnPinch={true}
               panOnScroll={false}
               panOnDrag={true}
-              defaultEdgeOptions={{
-                type: "smoothstep",
-                animated: true,
-                style: {
-                  stroke: "#ffffff",
-                  strokeWidth: 1,
-                },
-              }}
+              defaultEdgeOptions={PREVIEW_EDGE_OPTIONS}
             >
               <Background
                 variant={BackgroundVariant.Dots}
-                gap={20}
-                size={2}
-                color="rgba(255, 255, 255, 0.08)"
+                gap={PREVIEW_BACKGROUND_CONFIG.gap}
+                size={PREVIEW_BACKGROUND_CONFIG.size}
+                color={PREVIEW_BACKGROUND_CONFIG.color}
               />
             </ReactFlow>
           </div>

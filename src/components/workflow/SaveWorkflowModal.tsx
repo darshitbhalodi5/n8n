@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
 import { Label } from "@/components/ui/Label";
+import { generateTagsFromNodes } from "@/utils/workflow-tags";
+import { WORKFLOW_CONSTANTS } from "@/constants/workflow";
 import type { Node } from "reactflow";
 
 interface SaveWorkflowModalProps {
@@ -20,52 +22,6 @@ interface SaveWorkflowModalProps {
     workflowName: string;
     currentDescription?: string;
     nodes: Node[];
-}
-
-// Maximum description length for public workflows
-const MAX_DESCRIPTION_LENGTH = 250;
-
-/**
- * Generate tags from workflow nodes based on their types
- */
-function generateTagsFromNodes(nodes: Node[]): string[] {
-    const tagMap: Record<string, string> = {
-        email: "email",
-        mail: "email",
-        slack: "slack",
-        telegram: "telegram",
-        uniswap: "uniswap",
-        oneinch: "1inch",
-        relay: "relay",
-        if: "conditional",
-        switch: "switch",
-        "wallet-node": "wallet",
-        wallet: "wallet",
-        aave: "aave",
-        compound: "compound",
-        "ai-transform": "ai",
-    };
-
-    const tags = new Set<string>();
-
-    nodes.forEach((node) => {
-        // Skip the start node
-        if (node.type === "start" || node.id === "start-node") {
-            return;
-        }
-
-        // Check node type
-        if (node.type && tagMap[node.type]) {
-            tags.add(tagMap[node.type]);
-        }
-
-        // Check blockId in node data
-        if (node.data?.blockId && tagMap[node.data.blockId]) {
-            tags.add(tagMap[node.data.blockId]);
-        }
-    });
-
-    return Array.from(tags).sort();
 }
 
 export function SaveWorkflowModal({
@@ -94,7 +50,7 @@ export function SaveWorkflowModal({
         const newValue = e.target.value;
 
         // Only enforce limit for public workflows
-        if (visibility === "public" && newValue.length > MAX_DESCRIPTION_LENGTH) {
+        if (visibility === "public" && newValue.length > WORKFLOW_CONSTANTS.MAX_DESCRIPTION_LENGTH) {
             return;
         }
 
@@ -268,7 +224,7 @@ export function SaveWorkflowModal({
                                 />
                                 {!errors.description && (
                                     <p className="text-xs text-muted-foreground">
-                                        {description.length}/{MAX_DESCRIPTION_LENGTH} characters
+                                        {description.length}/{WORKFLOW_CONSTANTS.MAX_DESCRIPTION_LENGTH} characters
                                     </p>
                                 )}
                             </div>

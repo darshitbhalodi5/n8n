@@ -9,7 +9,7 @@ export interface InputProps
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ({ className, type, error, ...props }, ref) => {
     const hasNoBorder = className?.includes("border-none") || className?.includes("!border-none");
-    
+
     return (
       <div className="w-full">
         <input
@@ -42,4 +42,3 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
 Input.displayName = "Input";
 
 export { Input };
-

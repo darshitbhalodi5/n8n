@@ -1,62 +1,48 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Search, Grid, List, Loader2 } from "lucide-react";
+import { Search, Grid, List, FileQuestion, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/Input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { listPublicWorkflows } from "@/utils/workflow-api";
-import type { PublicWorkflowSummary } from "@/types/workflow";
+import { WorkflowCardSkeleton } from "@/components/workflow/WorkflowCardSkeleton";
+import { useWorkflowSearch } from "@/hooks/useWorkflowSearch";
+import { extractUniqueTags } from "@/utils/workflow-tags";
+import { WORKFLOW_CONSTANTS } from "@/constants/workflow";
 
 export function PublicWorkflowsGallery() {
   const router = useRouter();
-  const [workflows, setWorkflows] = useState<PublicWorkflowSummary[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
-  // Fetch workflows
-  useEffect(() => {
-    const fetchWorkflows = async () => {
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        const result = await listPublicWorkflows({
-          q: searchQuery || undefined,
-          tag: selectedTag || undefined,
-        });
-
-        if (result.success) {
-          setWorkflows(result.data || []);
-        } else {
-          setError(result.error?.message || "Failed to load public workflows");
-        }
-      } catch (err) {
-        setError("An unexpected error occurred");
-        console.error(err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchWorkflows();
-  }, [searchQuery, selectedTag]);
+  // Use custom search hook with built-in debouncing
+  const {
+    workflows,
+    isLoading,
+    error,
+    searchQuery,
+    setSearchQuery,
+    selectedTag,
+    setSelectedTag,
+    isPending,
+  } = useWorkflowSearch();
 
   // Extract unique tags from all workflows
-  const allTags = useMemo(() => {
-    const tagSet = new Set<string>();
-    workflows.forEach((workflow) => {
-      if (workflow.tags && Array.isArray(workflow.tags)) {
-        workflow.tags.forEach((tag) => tagSet.add(tag));
+  const allTags = useMemo(() => extractUniqueTags(workflows), [workflows]);
+
+  // Keyboard shortcut for search focus (Ctrl+K)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.key === 'k') {
+        e.preventDefault();
+        searchInputRef.current?.focus();
       }
-    });
-    return Array.from(tagSet).sort();
-  }, [workflows]);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const handlePreview = (workflowId: string) => {
     router.push(`/public-workflows/${workflowId}`);
@@ -77,14 +63,21 @@ export function PublicWorkflowsGallery() {
       {/* Search and Filters */}
       <div className="flex flex-col sm:flex-row gap-4 mb-6">
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground z-10" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground z-10 pointer-events-none" />
           <Input
+            ref={searchInputRef}
             type="text"
-            placeholder="Search workflows..."
+            placeholder="Search workflows... (Ctrl+K)"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"
+            aria-label="Search workflows"
           />
+          {isPending && (
+            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+              <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            </div>
+          )}
         </div>
 
         <div className="flex items-center gap-2">
@@ -99,6 +92,8 @@ export function PublicWorkflowsGallery() {
                   : "hover:bg-secondary/50"
               )}
               title="Grid view"
+              aria-label="Switch to grid view"
+              aria-pressed={viewMode === "grid"}
             >
               <Grid className="w-4 h-4" />
             </button>
@@ -111,6 +106,8 @@ export function PublicWorkflowsGallery() {
                   : "hover:bg-secondary/50"
               )}
               title="List view"
+              aria-label="Switch to list view"
+              aria-pressed={viewMode === "list"}
             >
               <List className="w-4 h-4" />
             </button>
@@ -123,17 +120,29 @@ export function PublicWorkflowsGallery() {
         <div className="flex flex-wrap gap-2 mb-6">
           <Button
             onClick={() => setSelectedTag(null)}
-            className="px-3 py-1.5 h-auto text-sm rounded-full"
+            className={cn(
+              "px-3 py-1.5 h-auto text-sm rounded-full transition-all",
+              selectedTag === null
+                ? "bg-primary text-primary-foreground shadow-lg scale-105"
+                : "bg-secondary/30 hover:bg-secondary/50"
+            )}
           >
             All
+            {selectedTag === null && <Check className="w-3 h-3 ml-1" />}
           </Button>
           {allTags.map((tag) => (
             <Button
               key={tag}
               onClick={() => setSelectedTag(tag)}
-              className="px-3 py-1.5 h-auto text-sm rounded-full"
+              className={cn(
+                "px-3 py-1.5 h-auto text-sm rounded-full transition-all",
+                selectedTag === tag
+                  ? "bg-primary text-primary-foreground shadow-lg scale-105"
+                  : "bg-secondary/30 hover:bg-secondary/50"
+              )}
             >
               {tag}
+              {selectedTag === tag && <Check className="w-3 h-3 ml-1" />}
             </Button>
           ))}
         </div>
@@ -148,22 +157,44 @@ export function PublicWorkflowsGallery() {
         </Card>
       )}
 
-      {/* Loading State */}
+      {/* Loading State with Skeletons */}
       {isLoading && (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <div
+          className={cn(
+            viewMode === "grid"
+              ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
+              : "space-y-3"
+          )}
+        >
+          {Array.from({ length: WORKFLOW_CONSTANTS.SKELETON_CARDS_COUNT }).map((_, i) => (
+            <WorkflowCardSkeleton key={i} viewMode={viewMode} />
+          ))}
         </div>
       )}
 
       {/* Empty State */}
       {!isLoading && workflows.length === 0 && (
         <Card>
-          <CardContent className="text-center py-12">
-            <p className="text-muted-foreground">
-              {searchQuery || selectedTag
-                ? "No workflows found matching your criteria"
-                : "No public workflows available yet"}
-            </p>
+          <CardContent className="text-center py-16 space-y-4">
+            <div className="w-16 h-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
+              <FileQuestion className="w-8 h-8 text-muted-foreground" />
+            </div>
+            <div>
+              <p className="text-lg font-semibold mb-2">No workflows found</p>
+              <p className="text-sm text-muted-foreground">
+                {searchQuery || selectedTag
+                  ? "Try adjusting your filters or search terms"
+                  : "Be the first to share a workflow with the community!"}
+              </p>
+            </div>
+            {!searchQuery && !selectedTag && (
+              <Button
+                onClick={() => router.push('/automation-builder')}
+                className="mt-4"
+              >
+                Create First Public Workflow
+              </Button>
+            )}
           </CardContent>
         </Card>
       )}
