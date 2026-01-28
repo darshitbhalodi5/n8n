@@ -207,6 +207,11 @@ export const WorkflowCard = React.memo(function WorkflowCard({
                             {getStatusIcon(workflow.last_execution_status)}
                         </span>
                         <span>{workflow.execution_count} runs</span>
+                        {workflow.version && workflow.version > 1 && (
+                            <span className="ml-1 px-1.5 py-0.5 text-xs bg-blue-500/20 text-blue-400 rounded">
+                                v.{workflow.version}
+                            </span>
+                        )}
                     </div>
 
                     <div className="text-xs text-muted-foreground">

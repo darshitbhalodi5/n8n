@@ -22,6 +22,8 @@ interface SaveWorkflowModalProps {
     workflowName: string;
     currentDescription?: string;
     nodes: Node[];
+    currentVersion?: number;
+    currentWorkflowId?: string | null;
 }
 
 export function SaveWorkflowModal({
@@ -31,6 +33,8 @@ export function SaveWorkflowModal({
     workflowName,
     currentDescription = "",
     nodes,
+    currentVersion = 1,
+    currentWorkflowId,
 }: SaveWorkflowModalProps) {
     const [editedName, setEditedName] = useState(workflowName);
     const [visibility, setVisibility] = useState<"private" | "public">("private");
@@ -127,12 +131,23 @@ export function SaveWorkflowModal({
             >
                 {/* Header */}
                 <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
-                    <h2
-                        id="save-workflow-title"
-                        className="text-xl font-semibold text-foreground"
-                    >
-                        Save Workflow
-                    </h2>
+                    <div className="flex items-center gap-3">
+                        <h2
+                            id="save-workflow-title"
+                            className="text-xl font-semibold text-foreground"
+                        >
+                            Save Workflow
+                        </h2>
+                        {currentWorkflowId ? (
+                            <span className="px-2 py-0.5 text-xs bg-blue-500/20 text-blue-400 rounded-full">
+                                v.{currentVersion} → v.{currentVersion + 1}
+                            </span>
+                        ) : (
+                            <span className="px-2 py-0.5 text-xs bg-green-500/20 text-green-400 rounded-full">
+                                New
+                            </span>
+                        )}
+                    </div>
                     <button
                         onClick={onClose}
                         className="text-muted-foreground hover:text-foreground transition-colors rounded-lg p-1 hover:bg-white/5"

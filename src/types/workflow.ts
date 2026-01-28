@@ -18,6 +18,8 @@ export interface WorkflowSummary {
     tags: string[] | null;
     is_public?: boolean;
     published_at?: string | null;
+    version?: number;
+    version_created_at?: string | null;
     created_at: string;
     updated_at: string;
     last_executed_at: string | null;
@@ -56,6 +58,8 @@ export interface WorkflowDetail {
     tags: string[] | null;
     is_public?: boolean;
     published_at?: string | null;
+    version?: number;
+    version_created_at?: string | null;
     trigger_node_id: string | null;
     created_at: string;
     updated_at: string;

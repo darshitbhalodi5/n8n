@@ -963,3 +963,106 @@ export async function clonePublicWorkflow(params: {
     requestId: response.requestId,
   };
 }
+
+// ===========================================
+// WORKFLOW VERSION HISTORY
+// ===========================================
+
+export interface WorkflowVersionSummary {
+  id: string;
+  version_number: number;
+  change_summary: string | null;
+  created_at: string;
+  created_by: string | null;
+}
+
+export interface WorkflowVersionDetail {
+  id: string;
+  workflowId: string;
+  versionNumber: number;
+  changeSummary: string | null;
+  nodes: BackendNode[];
+  edges: BackendEdge[];
+  metadata: Record<string, any> | null;
+  createdAt: string;
+  createdBy: string | null;
+}
+
+/**
+ * Get workflow version history
+ */
+export async function getWorkflowVersions(params: {
+  workflowId: string;
+  accessToken: string;
+}): Promise<{
+  success: boolean;
+  currentVersion?: number;
+  versions?: WorkflowVersionSummary[];
+  error?: ApiError;
+  requestId?: string;
+}> {
+  const response = await api.get<{
+    data: { currentVersion: number; versions: WorkflowVersionSummary[] };
+  }>(`/workflows/${params.workflowId}/versions`, {
+    accessToken: params.accessToken,
+  });
+
+  if (!response.ok) {
+    console.error(
+      `[${response.requestId}] Error fetching workflow versions:`,
+      formatErrorWithRequestId(response.error!)
+    );
+    return {
+      success: false,
+      error: response.error as ApiError,
+      requestId: response.requestId,
+    };
+  }
+
+  return {
+    success: true,
+    currentVersion: response.data?.data?.currentVersion,
+    versions: response.data?.data?.versions || [],
+    requestId: response.requestId,
+  };
+}
+
+/**
+ * Restore workflow to a previous version
+ */
+export async function restoreWorkflowVersion(params: {
+  workflowId: string;
+  versionNumber: number;
+  accessToken: string;
+}): Promise<{
+  success: boolean;
+  newVersion?: number;
+  error?: ApiError;
+  requestId?: string;
+}> {
+  const response = await api.post<{
+    data: { workflowId: string; restoredFromVersion: number; newVersion: number };
+  }>(
+    `/workflows/${params.workflowId}/versions/${params.versionNumber}/restore`,
+    {},
+    { accessToken: params.accessToken }
+  );
+
+  if (!response.ok) {
+    console.error(
+      `[${response.requestId}] Error restoring workflow version:`,
+      formatErrorWithRequestId(response.error!)
+    );
+    return {
+      success: false,
+      error: response.error as ApiError,
+      requestId: response.requestId,
+    };
+  }
+
+  return {
+    success: true,
+    newVersion: response.data?.data?.newVersion,
+    requestId: response.requestId,
+  };
+}

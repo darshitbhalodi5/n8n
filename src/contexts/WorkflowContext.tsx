@@ -71,6 +71,7 @@ export interface WorkflowContextType {
   // Workflow management state
   currentWorkflowId: string | null;
   setCurrentWorkflowId: (id: string | null) => void;
+  workflowVersion: number;
   isSaving: boolean;
   isLoading: boolean;
 
@@ -150,6 +151,7 @@ export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Workflow management state
   const [currentWorkflowId, setCurrentWorkflowId] = useState<string | null>(null);
+  const [workflowVersion, setWorkflowVersion] = useState<number>(1);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
@@ -277,6 +279,13 @@ export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({
         if (result.workflowId && !currentWorkflowId) {
           setCurrentWorkflowId(result.workflowId);
         }
+        // Increment version after save (backend increments on update)
+        if (result.data?.version) {
+          setWorkflowVersion(result.data.version);
+        } else if (currentWorkflowId) {
+          // If updating existing workflow, increment local version
+          setWorkflowVersion((prev) => prev + 1);
+        }
         console.log("Workflow saved successfully!", result);
       } else {
         console.error("Failed to save workflow:", result.error);
@@ -379,6 +388,7 @@ export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({
         setEdges(loadedEdges);
         setWorkflowName(result.data.name);
         setCurrentWorkflowId(workflowId);
+        setWorkflowVersion(result.data.version || 1);
         setLastSaved(new Date(result.data.updated_at));
         setSelectedNode(null);
 
@@ -403,6 +413,7 @@ export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({
     setNodes(initialNodes);
     setEdges(initialEdges);
     setCurrentWorkflowId(null);
+    setWorkflowVersion(1);
     setWorkflowName("Untitled Workflow");
     setLastSaved(null);
     setSelectedNode(null);
@@ -849,6 +860,7 @@ export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({
       // Workflow management state
       currentWorkflowId,
       setCurrentWorkflowId,
+      workflowVersion,
       isSaving,
       isLoading,
       canvasDimensions,
@@ -891,6 +903,7 @@ export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({
       workflowName,
       zoomLevel,
       currentWorkflowId,
+      workflowVersion,
       isSaving,
       isLoading,
       canvasDimensions,
@@ -934,6 +947,8 @@ export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({
           onSave={handleSaveConfirm}
           workflowName={workflowName}
           nodes={nodes}
+          currentVersion={workflowVersion}
+          currentWorkflowId={currentWorkflowId}
         />
       )}
     </WorkflowContext.Provider>

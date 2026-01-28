@@ -7,6 +7,7 @@ import { usePrivy } from "@privy-io/react-auth";
 import { Button } from "@/components/ui/Button";
 import { UserMenu } from "@/components/user-menu/UserMenu";
 import { useWorkflow } from "@/contexts/WorkflowContext";
+import { WorkflowVersionHistory } from "@/components/workflow/WorkflowVersionHistory";
 import { formatDistanceToNow } from "date-fns";
 
 interface WorkflowToolbarProps {
@@ -29,6 +30,7 @@ export const WorkflowToolbar = React.memo(function WorkflowToolbar({
     isSaving,
     lastSaved,
     currentWorkflowId,
+    // workflowVersion,
   } = useWorkflow();
 
   const { ready, authenticated, login } = usePrivy();
@@ -157,6 +159,20 @@ export const WorkflowToolbar = React.memo(function WorkflowToolbar({
           >
             <Pencil className="w-4 h-4" />
           </Button>
+        </div>
+
+        {/* Version Badge / History Dropdown */}
+        <div className="hidden sm:flex items-center">
+          {currentWorkflowId ? (
+            <WorkflowVersionHistory />
+          ) : (
+            <span
+              className="px-2.5 py-1 text-xs font-medium rounded-full bg-zinc-700/50 text-zinc-400 border border-zinc-600/30"
+              title="New workflow (not saved yet)"
+            >
+              v.0
+            </span>
+          )}
         </div>
 
         {/* Save Status */}
