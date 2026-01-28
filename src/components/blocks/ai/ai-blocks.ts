@@ -4,11 +4,12 @@
  */
 
 import type { BlockDefinition } from "../types";
+import { getAiModelConfig } from "@/config/ai";
 
 /**
  * AI Transform Blocks
- * These are generated from the runtime config's llmModels list
- * Each model gets its own block with pre-configured provider/model defaults
+ * Each model gets its own block with pre-configured provider/model defaults.
+ * Model-specific limits (temperature, max tokens) are derived from local config.
  */
 
 // Base AI Transform block (used as template)
@@ -18,25 +19,29 @@ export const createAiTransformBlock = (
   provider: string,
   model: string,
   iconName: string
-): BlockDefinition => ({
-  id,
-  label,
-  iconName,
-  description: `AI-powered data transformation using ${label}`,
-  category: "ai",
-  nodeType: "ai-transform",
-  defaultData: {
+): BlockDefinition => {
+  const modelConfig = getAiModelConfig(model);
+
+  return {
+    id,
     label,
-    description: "Transform data with AI",
-    status: "idle" as const,
-    llmProvider: provider,
-    llmModel: model,
-    systemPrompt: "",
-    userPromptTemplate: "",
-    temperature: 0.7,
-    maxOutputTokens: 1000,
-  },
-});
+    iconName,
+    description: `AI-powered data transformation using ${label}`,
+    category: "ai",
+    nodeType: "ai-transform",
+    defaultData: {
+      label,
+      description: "Transform data with AI",
+      status: "idle" as const,
+      llmProvider: provider,
+      llmModel: model,
+      userPromptTemplate: "",
+      // Neutral defaults come from internal config, not user input
+      temperature: modelConfig.temperature,
+      maxOutputTokens: modelConfig.maxOutputTokens,
+    },
+  };
+};
 
 // Static blocks for the 4 hardcoded models
 export const aiTransformQwen: BlockDefinition = createAiTransformBlock(

@@ -16,6 +16,7 @@ import {
 import { BiLinkExternal } from 'react-icons/bi';
 import { LuLogOut } from 'react-icons/lu';
 import { TbLayoutGrid } from 'react-icons/tb';
+import { FaEye } from "react-icons/fa6";
 // import { TfiCreditCard } from 'react-icons/tfi';
 import { BiLink } from "react-icons/bi";
 import { Button } from '../ui/Button';
@@ -25,8 +26,8 @@ export function UserMenu() {
   const { embeddedWallet, chainId } = usePrivyEmbeddedWallet();
   const { selection } = useSafeWalletContext();
   // Safely get safe address - wait for loading to complete and ensure array has items
-  const safeAddress = selection.isLoading 
-    ? null 
+  const safeAddress = selection.isLoading
+    ? null
     : (selection.selectedSafe || (selection.safeWallets?.length > 0 ? selection.safeWallets[0] : null) || null);
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -178,6 +179,15 @@ export function UserMenu() {
             >
               <TbLayoutGrid className="shrink-0 w-5 h-5" />
               <span className="flex-1">My Workflows</span>
+              <BiLinkExternal className="w-4 h-4" />
+            </Link>
+            <Link
+              href="/public-workflows"
+              onClick={() => setIsOpen(false)}
+              className="w-full px-4 py-3 flex items-center gap-3 text-sm font-medium transition-all duration-200 text-left cursor-pointer text-white/70 hover:text-white hover:bg-amber-800/10 hover:translate-x-1"
+            >
+              <FaEye className="shrink-0 w-5 h-5" />
+              <span className="flex-1">Public Workflows</span>
               <BiLinkExternal className="w-4 h-4" />
             </Link>
           </div>

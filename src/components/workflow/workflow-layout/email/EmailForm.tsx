@@ -5,6 +5,8 @@ import { Send } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { FormInput } from "@/components/ui/FormInput";
 import { TemplateFieldSelector } from "../shared/TemplateFieldSelector";
+import { IoMdArrowDropdown } from "react-icons/io";
+import { IoInformationCircle } from "react-icons/io5";
 
 interface EmailFormProps {
   emailTo: string;
@@ -112,21 +114,37 @@ export function EmailForm({
         />
       </div>
 
-      {/* Send Test Button */}
-      <Button
-        onClick={onSendTest}
-        disabled={loading || !emailTo || !emailSubject || !emailBody}
-        className="w-full"
-      >
-        {loading ? (
-          <>Sending Test...</>
-        ) : (
-          <>
-            <Send className="w-4 h-4 mr-2" />
-            Send Test Email
-          </>
-        )}
-      </Button>
+      {/* Test Email Section */}
+      <details className="group border border-white/10 rounded-lg overflow-hidden transition-all duration-200">
+        <summary className="flex items-center justify-between p-3 cursor-pointer hover:bg-white/5 transition-colors select-none text-sm text-gray-400 font-medium">
+          <span>Test Email Configuration</span>
+          <span className="transform group-open:rotate-180 transition-transform duration-200">
+            <IoMdArrowDropdown className="w-4 h-4" />
+          </span>
+        </summary>
+
+        <div className="p-4 space-y-4 border-t border-white/10 bg-white/5">
+          <div className="flex items-start gap-3 text-sm text-gray-400">
+            <IoInformationCircle className="w-5 h-5 shrink-0 mt-0.5" />
+            <span className="leading-snug">Dynamic content may not be replaced in test emails.</span>
+          </div>
+
+          <Button
+            onClick={onSendTest}
+            disabled={loading || !emailTo || !emailSubject || !emailBody}
+            className="w-full h-auto py-2.5"
+          >
+            {loading ? (
+              <>Sending Test...</>
+            ) : (
+              <div className="flex items-center justify-center gap-2">
+                <Send className="w-4 h-4 shrink-0" />
+                <span>Send Test Email</span>
+              </div>
+            )}
+          </Button>
+        </div>
+      </details>
     </div>
   );
 }

@@ -6,6 +6,7 @@
 
 import type { Node, Edge } from "reactflow";
 import { api, formatErrorWithRequestId, ApiClientError } from "@/lib/api-client";
+import { getAiModelConfig } from "@/config/ai";
 import type {
   WorkflowListResponse,
   WorkflowDetailResponse,
@@ -15,6 +16,10 @@ import type {
   BackendEdge,
   ExecutionListResponse,
   WorkflowExecution,
+  PublicWorkflowListResponse,
+  PublicWorkflowDetailResponse,
+  PublicWorkflowSummary,
+  PublicWorkflowDetail,
 } from "@/types/workflow";
 
 /**
@@ -111,15 +116,19 @@ function extractNodeConfig(node: Node): any {
       };
 
     case "ai-transform":
-      return {
-        provider: data.llmProvider,
-        model: data.llmModel,
-        systemPrompt: data.systemPrompt,
-        userPromptTemplate: data.userPromptTemplate,
-        outputSchema: data.outputSchema,
-        temperature: data.temperature,
-        maxOutputTokens: data.maxOutputTokens,
-      };
+      {
+        const aiConfig = getAiModelConfig(data.llmModel);
+
+        return {
+          provider: data.llmProvider,
+          model: data.llmModel,
+          userPromptTemplate: data.userPromptTemplate,
+          outputSchema: data.outputSchema,
+          // Temperature and max tokens are enforced by internal config
+          temperature: aiConfig.temperature,
+          maxOutputTokens: aiConfig.maxOutputTokens,
+        };
+      }
 
     case "start":
       return {};
@@ -204,6 +213,8 @@ export async function createWorkflow(params: {
   description?: string;
   nodes: Node[];
   edges: Edge[];
+  isPublic?: boolean;
+  tags?: string[];
 }): Promise<{ success: boolean; data?: any; error?: ApiError; requestId?: string }> {
   // Find trigger node (start node)
   const startNode = params.nodes.find(
@@ -219,7 +230,8 @@ export async function createWorkflow(params: {
       edges: params.edges.map(transformEdgeToBackend),
       triggerNodeId: startNode?.id,
       category: "automation",
-      tags: ["if-else", "conditional"],
+      tags: params.tags || [],
+      isPublic: params.isPublic || false,
     },
     { accessToken: params.accessToken }
   );
@@ -505,6 +517,7 @@ export async function fullUpdateWorkflow(params: {
   edges: Edge[];
   category?: string;
   tags?: string[];
+  isPublic?: boolean;
 }): Promise<{
   success: boolean;
   data?: WorkflowDetail;
@@ -526,6 +539,7 @@ export async function fullUpdateWorkflow(params: {
       triggerNodeId: startNode?.id,
       category: params.category || "automation",
       tags: params.tags || [],
+      isPublic: params.isPublic,
     },
     { accessToken: params.accessToken }
   );
@@ -636,7 +650,7 @@ export async function getWorkflowExecutions(params: {
 /**
  * Transform backend node to React Flow format
  */
-function transformNodeToCanvas(backendNode: BackendNode): Node {
+export function transformNodeToCanvas(backendNode: BackendNode): Node {
   const metadata = backendNode.metadata || {};
   const config = backendNode.config || {};
 
@@ -709,15 +723,20 @@ function transformNodeToCanvas(backendNode: BackendNode): Node {
       nodeData.emailBody = config.body;
       break;
 
-    case "ai-transform":
+    case "ai-transform": {
       nodeData.llmProvider = config.provider;
       nodeData.llmModel = config.model;
-      nodeData.systemPrompt = config.systemPrompt;
       nodeData.userPromptTemplate = config.userPromptTemplate;
       nodeData.outputSchema = config.outputSchema;
-      nodeData.temperature = config.temperature;
-      nodeData.maxOutputTokens = config.maxOutputTokens;
+
+      const aiConfig = getAiModelConfig(config.model as string | undefined);
+      // Use backend-provided values if present, otherwise fall back to internal config
+      nodeData.temperature =
+        (config.temperature as number | undefined) ?? aiConfig.temperature;
+      nodeData.maxOutputTokens =
+        (config.maxOutputTokens as number | undefined) ?? aiConfig.maxOutputTokens;
       break;
+    }
   }
 
   return {
@@ -732,7 +751,7 @@ function transformNodeToCanvas(backendNode: BackendNode): Node {
 /**
  * Transform backend edge to React Flow format
  */
-function transformEdgeToCanvas(backendEdge: BackendEdge): Edge {
+export function transformEdgeToCanvas(backendEdge: BackendEdge): Edge {
   return {
     id: backendEdge.id,
     source: backendEdge.source_node_id,
@@ -747,7 +766,9 @@ function transformEdgeToCanvas(backendEdge: BackendEdge): Edge {
 /**
  * Transform complete backend workflow to canvas format
  */
-export function transformWorkflowToCanvas(workflow: WorkflowDetail): {
+export function transformWorkflowToCanvas(
+  workflow: Pick<WorkflowDetail, "nodes" | "edges">
+): {
   nodes: Node[];
   edges: Edge[];
 } {
@@ -769,6 +790,7 @@ export async function saveWorkflow(params: {
   edges: Edge[];
   category?: string;
   tags?: string[];
+  isPublic?: boolean;
 }): Promise<{
   success: boolean;
   workflowId?: string;
@@ -788,6 +810,7 @@ export async function saveWorkflow(params: {
       edges: params.edges,
       category: params.category,
       tags: params.tags,
+      isPublic: params.isPublic,
     });
 
     return {
@@ -802,6 +825,8 @@ export async function saveWorkflow(params: {
       description: params.description,
       nodes: params.nodes,
       edges: params.edges,
+      isPublic: params.isPublic,
+      tags: params.tags,
     });
 
     return {
@@ -813,4 +838,319 @@ export async function saveWorkflow(params: {
       isNew: true,
     };
   }
+}
+
+/**
+ * List public workflows (no authentication required)
+ */
+export async function listPublicWorkflows(params: {
+  q?: string;
+  tag?: string;
+  limit?: number;
+  offset?: number;
+}): Promise<{
+  success: boolean;
+  data?: PublicWorkflowSummary[];
+  total?: number;
+  error?: ApiError;
+  requestId?: string;
+}> {
+  const queryParams = new URLSearchParams();
+  if (params.q) queryParams.set("q", params.q);
+  if (params.tag) queryParams.set("tag", params.tag);
+  if (params.limit) queryParams.set("limit", params.limit.toString());
+  if (params.offset) queryParams.set("offset", params.offset.toString());
+
+  const queryString = queryParams.toString();
+  const url = `/workflows/public${queryString ? `?${queryString}` : ""}`;
+
+  const response = await api.get<PublicWorkflowListResponse>(url, {
+    // No accessToken required
+  });
+
+  if (!response.ok) {
+    console.error(
+      `[${response.requestId}] Error listing public workflows:`,
+      formatErrorWithRequestId(response.error!)
+    );
+    return {
+      success: false,
+      error: response.error as ApiError,
+      requestId: response.requestId,
+    };
+  }
+
+  return {
+    success: true,
+    data: response.data?.data || [],
+    total: response.data?.meta?.total || 0,
+    requestId: response.requestId,
+  };
+}
+
+/**
+ * Get a public workflow detail (no authentication required)
+ */
+export async function getPublicWorkflow(params: {
+  workflowId: string;
+}): Promise<{
+  success: boolean;
+  data?: PublicWorkflowDetail;
+  error?: ApiError;
+  requestId?: string;
+}> {
+  const response = await api.get<PublicWorkflowDetailResponse>(
+    `/workflows/public/${params.workflowId}`,
+    {
+      // No accessToken required
+    }
+  );
+
+  if (!response.ok) {
+    console.error(
+      `[${response.requestId}] Error getting public workflow:`,
+      formatErrorWithRequestId(response.error!)
+    );
+    return {
+      success: false,
+      error: response.error as ApiError,
+      requestId: response.requestId,
+    };
+  }
+
+  return {
+    success: true,
+    data: response.data?.data,
+    requestId: response.requestId,
+  };
+}
+
+/**
+ * Get version history for a public workflow (no authentication required)
+ */
+export async function getPublicWorkflowVersions(params: {
+  workflowId: string;
+}): Promise<{
+  success: boolean;
+  currentVersion?: number;
+  versions?: WorkflowVersionSummary[];
+  error?: ApiError;
+  requestId?: string;
+}> {
+  const response = await api.get<{
+    data: { currentVersion: number; versions: WorkflowVersionSummary[] };
+  }>(`/workflows/public/${params.workflowId}/versions`, {
+    // No accessToken required
+  });
+
+  if (!response.ok) {
+    console.error(
+      `[${response.requestId}] Error fetching public workflow versions:`,
+      formatErrorWithRequestId(response.error!)
+    );
+    return {
+      success: false,
+      error: response.error as ApiError,
+      requestId: response.requestId,
+    };
+  }
+
+  return {
+    success: true,
+    currentVersion: response.data?.data?.currentVersion,
+    versions: response.data?.data?.versions || [],
+    requestId: response.requestId,
+  };
+}
+
+export interface PublicWorkflowVersionDetail {
+  versionNumber: number;
+  isCurrent: boolean;
+  nodes: BackendNode[];
+  edges: BackendEdge[];
+  metadata: {
+    name?: string;
+    description?: string;
+  };
+  createdAt?: string;
+}
+
+/**
+ * Get a specific version of a public workflow (no authentication required)
+ */
+export async function getPublicWorkflowVersion(params: {
+  workflowId: string;
+  versionNumber: number;
+}): Promise<{
+  success: boolean;
+  data?: PublicWorkflowVersionDetail;
+  error?: ApiError;
+  requestId?: string;
+}> {
+  const response = await api.get<{ data: PublicWorkflowVersionDetail }>(
+    `/workflows/public/${params.workflowId}/versions/${params.versionNumber}`,
+    {
+      // No accessToken required
+    }
+  );
+
+  if (!response.ok) {
+    console.error(
+      `[${response.requestId}] Error fetching public workflow version:`,
+      formatErrorWithRequestId(response.error!)
+    );
+    return {
+      success: false,
+      error: response.error as ApiError,
+      requestId: response.requestId,
+    };
+  }
+
+  return {
+    success: true,
+    data: response.data?.data,
+    requestId: response.requestId,
+  };
+}
+
+/**
+ * Clone a public workflow to the user's account
+ */
+export async function clonePublicWorkflow(params: {
+  workflowId: string;
+  accessToken: string;
+}): Promise<{
+  success: boolean;
+  newWorkflowId?: string;
+  data?: WorkflowDetail;
+  error?: ApiError;
+  requestId?: string;
+}> {
+  const response = await api.post<{ data: WorkflowDetail }>(
+    `/workflows/public/${params.workflowId}/clone`,
+    {},
+    { accessToken: params.accessToken }
+  );
+
+  if (!response.ok) {
+    console.error(
+      `[${response.requestId}] Error cloning public workflow:`,
+      formatErrorWithRequestId(response.error!)
+    );
+    return {
+      success: false,
+      error: response.error as ApiError,
+      requestId: response.requestId,
+    };
+  }
+
+  return {
+    success: true,
+    newWorkflowId: response.data?.data?.id,
+    data: response.data?.data,
+    requestId: response.requestId,
+  };
+}
+
+// ===========================================
+// WORKFLOW VERSION HISTORY
+// ===========================================
+
+export interface WorkflowVersionSummary {
+  id: string;
+  version_number: number;
+  change_summary: string | null;
+  created_at: string;
+  created_by: string | null;
+}
+
+export interface WorkflowVersionDetail {
+  id: string;
+  workflowId: string;
+  versionNumber: number;
+  changeSummary: string | null;
+  nodes: BackendNode[];
+  edges: BackendEdge[];
+  metadata: Record<string, any> | null;
+  createdAt: string;
+  createdBy: string | null;
+}
+
+/**
+ * Get workflow version history
+ */
+export async function getWorkflowVersions(params: {
+  workflowId: string;
+  accessToken: string;
+}): Promise<{
+  success: boolean;
+  currentVersion?: number;
+  versions?: WorkflowVersionSummary[];
+  error?: ApiError;
+  requestId?: string;
+}> {
+  const response = await api.get<{
+    data: { currentVersion: number; versions: WorkflowVersionSummary[] };
+  }>(`/workflows/${params.workflowId}/versions`, {
+    accessToken: params.accessToken,
+  });
+
+  if (!response.ok) {
+    console.error(
+      `[${response.requestId}] Error fetching workflow versions:`,
+      formatErrorWithRequestId(response.error!)
+    );
+    return {
+      success: false,
+      error: response.error as ApiError,
+      requestId: response.requestId,
+    };
+  }
+
+  return {
+    success: true,
+    currentVersion: response.data?.data?.currentVersion,
+    versions: response.data?.data?.versions || [],
+    requestId: response.requestId,
+  };
+}
+
+/**
+ * Restore workflow to a previous version
+ */
+export async function restoreWorkflowVersion(params: {
+  workflowId: string;
+  versionNumber: number;
+  accessToken: string;
+}): Promise<{
+  success: boolean;
+  newVersion?: number;
+  error?: ApiError;
+  requestId?: string;
+}> {
+  const response = await api.post<{
+    data: { workflowId: string; restoredFromVersion: number; newVersion: number };
+  }>(
+    `/workflows/${params.workflowId}/versions/${params.versionNumber}/restore`,
+    {},
+    { accessToken: params.accessToken }
+  );
+
+  if (!response.ok) {
+    console.error(
+      `[${response.requestId}] Error restoring workflow version:`,
+      formatErrorWithRequestId(response.error!)
+    );
+    return {
+      success: false,
+      error: response.error as ApiError,
+      requestId: response.requestId,
+    };
+  }
+
+  return {
+    success: true,
+    newVersion: response.data?.data?.newVersion,
+    requestId: response.requestId,
+  };
 }

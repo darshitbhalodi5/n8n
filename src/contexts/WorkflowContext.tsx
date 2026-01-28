@@ -31,6 +31,7 @@ import { usePrivyEmbeddedWallet } from "@/hooks/usePrivyEmbeddedWallet";
 import { usePrivyWallet } from "@/hooks/usePrivyWallet";
 import { isTestnet, isMainnet } from "@/web3/chains";
 import { CheckSquare, Clock } from "lucide-react";
+import { SaveWorkflowModal } from "@/components/workflow/SaveWorkflowModal";
 
 // The Start node ID - used to identify and protect it from deletion
 const START_NODE_ID = "start-node";
@@ -64,14 +65,21 @@ export interface WorkflowContextType {
   mobileMenuOpen: boolean;
   workflowName: string;
   setWorkflowName: (name: string) => void;
+  workflowDescription: string;
+  setWorkflowDescription: (description: string) => void;
+  workflowTags: string[];
+  setWorkflowTags: (tags: string[]) => void;
   zoomLevel: number;
   setZoomLevel: (level: number) => void;
 
   // Workflow management state
   currentWorkflowId: string | null;
   setCurrentWorkflowId: (id: string | null) => void;
+  workflowVersion: number;
   isSaving: boolean;
   isLoading: boolean;
+  isPublic: boolean;
+  setIsPublic: (isPublic: boolean) => void;
 
   // Canvas dimensions
   canvasDimensions: ReturnType<typeof useCanvasDimensions>;
@@ -145,12 +153,17 @@ export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [workflowName, setWorkflowName] = useState<string>("Untitled Workflow");
+  const [workflowDescription, setWorkflowDescription] = useState<string>("");
+  const [workflowTags, setWorkflowTags] = useState<string[]>([]);
   const [zoomLevel, setZoomLevel] = useState<number>(100);
 
   // Workflow management state
   const [currentWorkflowId, setCurrentWorkflowId] = useState<string | null>(null);
+  const [workflowVersion, setWorkflowVersion] = useState<number>(1);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isPublic, setIsPublic] = useState(false);
+  const [showSaveModal, setShowSaveModal] = useState(false);
 
   // Refs to track the selected node without causing re-renders
   const selectedNodeIdRef = useRef<string | null>(null);
@@ -234,14 +247,26 @@ export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({
       return;
     }
 
+    // Open the save modal
+    setShowSaveModal(true);
+  }, [authenticated]);
+
+  const handleSaveConfirm = useCallback(async (params: {
+    workflowName: string;
+    isPublic: boolean;
+    description?: string;
+    tags?: string[];
+  }) => {
     // Get the access token
     const accessToken = await getPrivyAccessToken();
     if (!accessToken) {
       alert("Unable to authenticate. Please try logging in again.");
+      setShowSaveModal(false);
       return;
     }
 
     setIsSaving(true);
+    setShowSaveModal(false);
 
     try {
       const { saveWorkflow } = await import("@/utils/workflow-api");
@@ -249,15 +274,26 @@ export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({
       const result = await saveWorkflow({
         workflowId: currentWorkflowId,
         accessToken,
-        name: workflowName,
+        name: params.workflowName, // Use the workflow name from modal
+        description: params.description,
+        tags: params.tags,
         nodes,
         edges,
+        isPublic: params.isPublic,
       });
 
       if (result.success) {
         setLastSaved(new Date());
+        setWorkflowName(params.workflowName); // Update context with new name
         if (result.workflowId && !currentWorkflowId) {
           setCurrentWorkflowId(result.workflowId);
+        }
+        // Increment version after save (backend increments on update)
+        if (result.data?.version) {
+          setWorkflowVersion(result.data.version);
+        } else if (currentWorkflowId) {
+          // If updating existing workflow, increment local version
+          setWorkflowVersion((prev) => prev + 1);
         }
         console.log("Workflow saved successfully!", result);
       } else {
@@ -270,7 +306,7 @@ export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({
     } finally {
       setIsSaving(false);
     }
-  }, [nodes, edges, workflowName, currentWorkflowId, authenticated, getPrivyAccessToken]);
+  }, [nodes, edges, currentWorkflowId, getPrivyAccessToken]);
 
   const handleRun = useCallback(() => {
     const executeWorkflowHandler = async () => {
@@ -360,7 +396,11 @@ export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({
         setNodes(loadedNodes);
         setEdges(loadedEdges);
         setWorkflowName(result.data.name);
+        setWorkflowDescription(result.data.description || "");
+        setWorkflowTags(result.data.tags || []);
         setCurrentWorkflowId(workflowId);
+        setWorkflowVersion(result.data.version || 1);
+        setIsPublic(result.data.is_public || false);
         setLastSaved(new Date(result.data.updated_at));
         setSelectedNode(null);
 
@@ -385,7 +425,11 @@ export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({
     setNodes(initialNodes);
     setEdges(initialEdges);
     setCurrentWorkflowId(null);
+    setWorkflowVersion(1);
+    setIsPublic(false);
     setWorkflowName("Untitled Workflow");
+    setWorkflowDescription("");
+    setWorkflowTags([]);
     setLastSaved(null);
     setSelectedNode(null);
   }, [setNodes, setEdges]);
@@ -826,13 +870,20 @@ export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({
       mobileMenuOpen,
       workflowName,
       setWorkflowName,
+      workflowDescription,
+      setWorkflowDescription,
+      workflowTags,
+      setWorkflowTags,
       zoomLevel,
       setZoomLevel,
       // Workflow management state
       currentWorkflowId,
       setCurrentWorkflowId,
+      workflowVersion,
       isSaving,
       isLoading,
+      isPublic,
+      setIsPublic,
       canvasDimensions,
       setNodes,
       setEdges,
@@ -873,6 +924,7 @@ export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({
       workflowName,
       zoomLevel,
       currentWorkflowId,
+      workflowVersion,
       isSaving,
       isLoading,
       canvasDimensions,
@@ -903,12 +955,29 @@ export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({
       isSwapBlockDisabled,
       categories,
       hasUnsavedChanges,
+      isPublic,
+      workflowDescription,
+      workflowTags,
     ]
   );
 
   return (
     <WorkflowContext.Provider value={contextValue}>
       {children}
+      {showSaveModal && (
+        <SaveWorkflowModal
+          isOpen={showSaveModal}
+          onClose={() => setShowSaveModal(false)}
+          onSave={handleSaveConfirm}
+          workflowName={workflowName}
+          currentDescription={workflowDescription}
+          currentTags={workflowTags}
+          isPublic={isPublic}
+          nodes={nodes}
+          currentVersion={workflowVersion}
+          currentWorkflowId={currentWorkflowId}
+        />
+      )}
     </WorkflowContext.Provider>
   );
 };
