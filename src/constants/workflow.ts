@@ -23,28 +23,28 @@ export type WorkflowViewMode = typeof WORKFLOW_VIEW_MODES[keyof typeof WORKFLOW_
  */
 export const TAG_MAPPINGS = {
     // DeFi protocols
-    uniswap: ['defi', 'dex', 'swap'],
-    aave: ['defi', 'lending'],
-    compound: ['defi', 'lending'],
-    oneinch: ['defi', 'aggregator'],
-    relay: ['defi', 'bridge'],
+    uniswap: ['uniswap'],
+    aave: ['aave'],
+    compound: ['compound'],
+    oneinch: ['1inch'],
+    relay: ['relay'],
 
     // Communication & Notifications
-    email: ['notification', 'communication'],
-    mail: ['notification', 'communication'],
-    slack: ['notification', 'team', 'communication'],
-    telegram: ['notification', 'messaging', 'communication'],
+    email: ['email'],
+    mail: ['email'],
+    slack: ['slack'],
+    telegram: ['telegram'],
 
     // Logic nodes
-    if: ['logic', 'conditional'],
-    switch: ['logic', 'conditional'],
+    if: ['logic'],
+    switch: ['logic'],
 
     // Wallet operations
-    'wallet-node': ['wallet', 'crypto'],
-    wallet: ['wallet', 'crypto'],
+    'wallet-node': ['wallet'],
+    wallet: ['wallet'],
 
     // AI & Automation
-    'ai-transform': ['ai', 'automation', 'transform'],
+    'ai-transform': ['ai'],
 } as const;
 
 /**

@@ -24,6 +24,8 @@ interface SaveWorkflowModalProps {
     nodes: Node[];
     currentVersion?: number;
     currentWorkflowId?: string | null;
+    currentTags?: string[];
+    isPublic?: boolean;
 }
 
 export function SaveWorkflowModal({
@@ -35,9 +37,11 @@ export function SaveWorkflowModal({
     nodes,
     currentVersion = 1,
     currentWorkflowId,
+    // currentTags = [], // Not currently used as we auto-generate
+    isPublic = false,
 }: SaveWorkflowModalProps) {
     const [editedName, setEditedName] = useState(workflowName);
-    const [visibility, setVisibility] = useState<"private" | "public">("private");
+    const [visibility, setVisibility] = useState<"private" | "public">(isPublic ? "public" : "private");
     const [description, setDescription] = useState(currentDescription);
     const [errors, setErrors] = useState<{
         name?: string;

@@ -6,6 +6,7 @@
 import type { Node } from "reactflow";
 import type { PublicWorkflowSummary } from "@/types/workflow";
 import { TAG_MAPPINGS } from "@/constants/workflow";
+import { getAiModelConfig } from "@/config/ai";
 
 /**
  * Extract unique tags from a list of workflows
@@ -47,10 +48,18 @@ export function generateTagsFromNodes(nodes: Node[]): string[] {
             mappedTags.forEach((tag) => tagSet.add(tag));
         }
 
-        // Always add the primary node type as a tag (cleaned up)
-        const primaryTag = nodeType.replace(/-/g, ' ').replace(/node/g, '').trim();
-        if (primaryTag) {
-            tagSet.add(primaryTag);
+        // Special handling for AI nodes to get provider/model name
+        if (nodeType === 'ai-transform') {
+            const data = node.data as Record<string, unknown>;
+            const modelId = data?.llmModel as string | undefined;
+
+            if (modelId) {
+                const config = getAiModelConfig(modelId);
+
+                if (config && config.displayName && config.displayName !== 'Default') {
+                    tagSet.add(config.displayName.toLowerCase());
+                }
+            }
         }
     });
 

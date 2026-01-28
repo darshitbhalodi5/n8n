@@ -78,6 +78,7 @@ export interface PublicWorkflowDetail {
     is_public: boolean;
     published_at: string | null;
     trigger_node_id: string | null;
+    version: number;
     created_at: string;
     updated_at: string;
     nodes: BackendNode[];

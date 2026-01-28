@@ -65,6 +65,10 @@ export interface WorkflowContextType {
   mobileMenuOpen: boolean;
   workflowName: string;
   setWorkflowName: (name: string) => void;
+  workflowDescription: string;
+  setWorkflowDescription: (description: string) => void;
+  workflowTags: string[];
+  setWorkflowTags: (tags: string[]) => void;
   zoomLevel: number;
   setZoomLevel: (level: number) => void;
 
@@ -74,6 +78,8 @@ export interface WorkflowContextType {
   workflowVersion: number;
   isSaving: boolean;
   isLoading: boolean;
+  isPublic: boolean;
+  setIsPublic: (isPublic: boolean) => void;
 
   // Canvas dimensions
   canvasDimensions: ReturnType<typeof useCanvasDimensions>;
@@ -147,6 +153,8 @@ export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [workflowName, setWorkflowName] = useState<string>("Untitled Workflow");
+  const [workflowDescription, setWorkflowDescription] = useState<string>("");
+  const [workflowTags, setWorkflowTags] = useState<string[]>([]);
   const [zoomLevel, setZoomLevel] = useState<number>(100);
 
   // Workflow management state
@@ -154,6 +162,7 @@ export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({
   const [workflowVersion, setWorkflowVersion] = useState<number>(1);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isPublic, setIsPublic] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
 
   // Refs to track the selected node without causing re-renders
@@ -387,8 +396,11 @@ export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({
         setNodes(loadedNodes);
         setEdges(loadedEdges);
         setWorkflowName(result.data.name);
+        setWorkflowDescription(result.data.description || "");
+        setWorkflowTags(result.data.tags || []);
         setCurrentWorkflowId(workflowId);
         setWorkflowVersion(result.data.version || 1);
+        setIsPublic(result.data.is_public || false);
         setLastSaved(new Date(result.data.updated_at));
         setSelectedNode(null);
 
@@ -414,7 +426,10 @@ export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({
     setEdges(initialEdges);
     setCurrentWorkflowId(null);
     setWorkflowVersion(1);
+    setIsPublic(false);
     setWorkflowName("Untitled Workflow");
+    setWorkflowDescription("");
+    setWorkflowTags([]);
     setLastSaved(null);
     setSelectedNode(null);
   }, [setNodes, setEdges]);
@@ -855,6 +870,10 @@ export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({
       mobileMenuOpen,
       workflowName,
       setWorkflowName,
+      workflowDescription,
+      setWorkflowDescription,
+      workflowTags,
+      setWorkflowTags,
       zoomLevel,
       setZoomLevel,
       // Workflow management state
@@ -863,6 +882,8 @@ export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({
       workflowVersion,
       isSaving,
       isLoading,
+      isPublic,
+      setIsPublic,
       canvasDimensions,
       setNodes,
       setEdges,
@@ -934,6 +955,9 @@ export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({
       isSwapBlockDisabled,
       categories,
       hasUnsavedChanges,
+      isPublic,
+      workflowDescription,
+      workflowTags,
     ]
   );
 
@@ -946,6 +970,9 @@ export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({
           onClose={() => setShowSaveModal(false)}
           onSave={handleSaveConfirm}
           workflowName={workflowName}
+          currentDescription={workflowDescription}
+          currentTags={workflowTags}
+          isPublic={isPublic}
           nodes={nodes}
           currentVersion={workflowVersion}
           currentWorkflowId={currentWorkflowId}

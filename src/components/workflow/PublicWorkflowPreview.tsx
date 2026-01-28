@@ -1,14 +1,17 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, ArrowLeft, Copy, Share2 } from "lucide-react";
 import { usePrivy } from "@privy-io/react-auth";
 import { usePrivyWallet } from "@/hooks/usePrivyWallet";
 import {
   getPublicWorkflow,
+  getPublicWorkflowVersion,
   clonePublicWorkflow,
   transformWorkflowToCanvas,
+  transformNodeToCanvas,
+  transformEdgeToCanvas,
 } from "@/utils/workflow-api";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -17,11 +20,14 @@ import {
   ReactFlowProvider,
   Background,
   BackgroundVariant,
+  Node,
+  Edge,
 } from "reactflow";
 import "reactflow/dist/style.css";
 import { nodeTypes } from "../workflow/nodeTypes";
 import { PREVIEW_EDGE_OPTIONS, PREVIEW_BACKGROUND_CONFIG } from "@/constants/workflow";
 import type { PublicWorkflowDetail } from "@/types/workflow";
+import { PublicVersionSelector } from "./PublicVersionSelector";
 
 interface PublicWorkflowPreviewProps {
   workflowId: string;
@@ -36,6 +42,13 @@ function PublicWorkflowPreviewInner({ workflowId }: PublicWorkflowPreviewProps) 
   const [isCloning, setIsCloning] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Version state
+  const [currentVersion, setCurrentVersion] = useState(1);
+  const [selectedVersion, setSelectedVersion] = useState(1);
+  const [versionNodes, setVersionNodes] = useState<Node[]>([]);
+  const [versionEdges, setVersionEdges] = useState<Edge[]>([]);
+  const [isLoadingVersion, setIsLoadingVersion] = useState(false);
+
   // Fetch workflow
   useEffect(() => {
     const fetchWorkflow = async () => {
@@ -47,6 +60,14 @@ function PublicWorkflowPreviewInner({ workflowId }: PublicWorkflowPreviewProps) 
 
         if (result.success && result.data) {
           setWorkflow(result.data);
+          const version = result.data.version || 1;
+          setCurrentVersion(version);
+          setSelectedVersion(version);
+
+          // Set initial canvas data
+          const { nodes, edges } = transformWorkflowToCanvas(result.data);
+          setVersionNodes(nodes);
+          setVersionEdges(edges);
         } else {
           setError(result.error?.message || "Failed to load workflow");
         }
@@ -60,6 +81,33 @@ function PublicWorkflowPreviewInner({ workflowId }: PublicWorkflowPreviewProps) 
 
     fetchWorkflow();
   }, [workflowId]);
+
+  // Load specific version
+  const handleVersionChange = useCallback(async (version: number) => {
+    if (version === selectedVersion) return;
+
+    setSelectedVersion(version);
+    setIsLoadingVersion(true);
+
+    try {
+      const result = await getPublicWorkflowVersion({
+        workflowId,
+        versionNumber: version,
+      });
+
+      if (result.success && result.data) {
+        // Transform nodes and edges from version snapshot
+        const nodes = result.data.nodes.map(node => transformNodeToCanvas(node));
+        const edges = result.data.edges.map(edge => transformEdgeToCanvas(edge));
+        setVersionNodes(nodes);
+        setVersionEdges(edges);
+      }
+    } catch (err) {
+      console.error("Error loading version:", err);
+    } finally {
+      setIsLoadingVersion(false);
+    }
+  }, [workflowId, selectedVersion]);
 
   const handleShare = async () => {
     const shareData = {
@@ -133,14 +181,6 @@ function PublicWorkflowPreviewInner({ workflowId }: PublicWorkflowPreviewProps) 
     router.push("/public-workflows");
   };
 
-  // Memoize canvas transformation to prevent unnecessary re-renders
-  // Must be called before early returns (React hooks rules)
-  const canvasData = useMemo(
-    () => workflow ? transformWorkflowToCanvas(workflow) : { nodes: [], edges: [] },
-    [workflow]
-  );
-  const { nodes, edges } = canvasData;
-
   // Loading State
   if (isLoading) {
     return (
@@ -180,10 +220,16 @@ function PublicWorkflowPreviewInner({ workflowId }: PublicWorkflowPreviewProps) 
                 <ArrowLeft className="w-4 h-4" />
                 Back
               </Button>
-              <div className="flex-1">
+              <div className="flex-1 flex items-center gap-3">
                 <h1 className="text-2xl font-bold text-foreground">
                   {workflow.name}
                 </h1>
+                <PublicVersionSelector
+                  workflowId={workflowId}
+                  currentVersion={currentVersion}
+                  selectedVersion={selectedVersion}
+                  onVersionChange={handleVersionChange}
+                />
               </div>
               <div className="flex items-center gap-2">
                 <Button
@@ -240,10 +286,19 @@ function PublicWorkflowPreviewInner({ workflowId }: PublicWorkflowPreviewProps) 
       {/* Canvas */}
       <div className="flex-1 relative">
         <div className="absolute inset-0 m-4">
-          <div className="w-full h-full rounded-xl border border-border bg-card overflow-hidden">
+          <div className="w-full h-full rounded-xl border border-border bg-card overflow-hidden relative">
+            {/* Version loading overlay */}
+            {isLoadingVersion && (
+              <div className="absolute inset-0 bg-black/50 z-10 flex items-center justify-center">
+                <div className="flex items-center gap-2 bg-zinc-800 px-4 py-2 rounded-lg">
+                  <Loader2 className="w-4 h-4 animate-spin text-blue-400" />
+                  <span className="text-sm text-white">Loading version...</span>
+                </div>
+              </div>
+            )}
             <ReactFlow
-              nodes={nodes}
-              edges={edges}
+              nodes={versionNodes}
+              edges={versionEdges}
               nodeTypes={nodeTypes}
               fitView
               nodesDraggable={false}

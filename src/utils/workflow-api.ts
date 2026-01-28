@@ -650,7 +650,7 @@ export async function getWorkflowExecutions(params: {
 /**
  * Transform backend node to React Flow format
  */
-function transformNodeToCanvas(backendNode: BackendNode): Node {
+export function transformNodeToCanvas(backendNode: BackendNode): Node {
   const metadata = backendNode.metadata || {};
   const config = backendNode.config || {};
 
@@ -751,7 +751,7 @@ function transformNodeToCanvas(backendNode: BackendNode): Node {
 /**
  * Transform backend edge to React Flow format
  */
-function transformEdgeToCanvas(backendEdge: BackendEdge): Edge {
+export function transformEdgeToCanvas(backendEdge: BackendEdge): Edge {
   return {
     id: backendEdge.id,
     source: backendEdge.source_node_id,
@@ -909,6 +909,94 @@ export async function getPublicWorkflow(params: {
   if (!response.ok) {
     console.error(
       `[${response.requestId}] Error getting public workflow:`,
+      formatErrorWithRequestId(response.error!)
+    );
+    return {
+      success: false,
+      error: response.error as ApiError,
+      requestId: response.requestId,
+    };
+  }
+
+  return {
+    success: true,
+    data: response.data?.data,
+    requestId: response.requestId,
+  };
+}
+
+/**
+ * Get version history for a public workflow (no authentication required)
+ */
+export async function getPublicWorkflowVersions(params: {
+  workflowId: string;
+}): Promise<{
+  success: boolean;
+  currentVersion?: number;
+  versions?: WorkflowVersionSummary[];
+  error?: ApiError;
+  requestId?: string;
+}> {
+  const response = await api.get<{
+    data: { currentVersion: number; versions: WorkflowVersionSummary[] };
+  }>(`/workflows/public/${params.workflowId}/versions`, {
+    // No accessToken required
+  });
+
+  if (!response.ok) {
+    console.error(
+      `[${response.requestId}] Error fetching public workflow versions:`,
+      formatErrorWithRequestId(response.error!)
+    );
+    return {
+      success: false,
+      error: response.error as ApiError,
+      requestId: response.requestId,
+    };
+  }
+
+  return {
+    success: true,
+    currentVersion: response.data?.data?.currentVersion,
+    versions: response.data?.data?.versions || [],
+    requestId: response.requestId,
+  };
+}
+
+export interface PublicWorkflowVersionDetail {
+  versionNumber: number;
+  isCurrent: boolean;
+  nodes: BackendNode[];
+  edges: BackendEdge[];
+  metadata: {
+    name?: string;
+    description?: string;
+  };
+  createdAt?: string;
+}
+
+/**
+ * Get a specific version of a public workflow (no authentication required)
+ */
+export async function getPublicWorkflowVersion(params: {
+  workflowId: string;
+  versionNumber: number;
+}): Promise<{
+  success: boolean;
+  data?: PublicWorkflowVersionDetail;
+  error?: ApiError;
+  requestId?: string;
+}> {
+  const response = await api.get<{ data: PublicWorkflowVersionDetail }>(
+    `/workflows/public/${params.workflowId}/versions/${params.versionNumber}`,
+    {
+      // No accessToken required
+    }
+  );
+
+  if (!response.ok) {
+    console.error(
+      `[${response.requestId}] Error fetching public workflow version:`,
       formatErrorWithRequestId(response.error!)
     );
     return {

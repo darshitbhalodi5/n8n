@@ -16,7 +16,7 @@ interface WorkflowVersionHistoryProps {
 }
 
 export function WorkflowVersionHistory({ className = "" }: WorkflowVersionHistoryProps) {
-    const { currentWorkflowId, workflowVersion, loadWorkflow } = useWorkflow();
+    const { currentWorkflowId, workflowVersion, loadWorkflow, isPublic } = useWorkflow();
     const { getAccessToken } = usePrivy();
 
     const [isOpen, setIsOpen] = useState(false);
@@ -70,6 +70,12 @@ export function WorkflowVersionHistory({ className = "" }: WorkflowVersionHistor
 
     const handleRestore = async (versionNumber: number) => {
         if (!currentWorkflowId || isRestoring !== null) return;
+
+        // Block rollback for public workflows
+        if (isPublic) {
+            alert("Cannot rollback public workflows. Unpublish the workflow first to restore previous versions.");
+            return;
+        }
 
         const confirmed = window.confirm(
             `Roll back to version ${versionNumber}? This will restore the workflow to v.${versionNumber} and remove any newer versions.`
@@ -188,9 +194,12 @@ export function WorkflowVersionHistory({ className = "" }: WorkflowVersionHistor
                                             {version.version_number !== workflowVersion && (
                                                 <button
                                                     onClick={() => handleRestore(version.version_number)}
-                                                    disabled={isRestoring !== null}
-                                                    className="flex items-center gap-1 px-2 py-1 text-xs text-amber-400 hover:bg-amber-500/10 rounded transition-colors disabled:opacity-50"
-                                                    title={`Restore to version ${version.version_number}`}
+                                                    disabled={isRestoring !== null || isPublic}
+                                                    className={`flex items-center gap-1 px-2 py-1 text-xs rounded transition-colors ${isPublic
+                                                            ? "text-zinc-600 cursor-not-allowed"
+                                                            : "text-amber-400 hover:bg-amber-500/10 disabled:opacity-50"
+                                                        }`}
+                                                    title={isPublic ? "Unpublish to restore versions" : `Restore to version ${version.version_number}`}
                                                 >
                                                     {isRestoring === version.version_number ? (
                                                         <Loader2 className="w-3 h-3 animate-spin" />
@@ -211,7 +220,10 @@ export function WorkflowVersionHistory({ className = "" }: WorkflowVersionHistor
                     {versions.length > 0 && (
                         <div className="px-4 py-2 border-t border-zinc-700/50 bg-zinc-800/30">
                             <p className="text-[10px] text-zinc-500">
-                                Rolling back removes newer versions permanently
+                                {isPublic
+                                    ? "Rollback disabled while workflow is public"
+                                    : "Rolling back removes newer versions permanently"
+                                }
                             </p>
                         </div>
                     )}
