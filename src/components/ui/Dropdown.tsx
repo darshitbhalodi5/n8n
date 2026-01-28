@@ -69,7 +69,7 @@ const Dropdown = React.forwardRef<HTMLSelectElement, DropdownProps>(
             onClick={() => !disabled && setDropdownOpen(!dropdownOpen)}
             disabled={disabled}
             className={cn(
-              "w-full px-3 py-2.5 text-sm border border-white/20 rounded-lg bg-white/5 text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer transition-all duration-200 hover:bg-white/10 hover:border-amber-600/40 flex items-center justify-between gap-2 text-left",
+              "w-full px-3 py-2.5 text-sm border border-white/20 rounded-lg bg-white/5 text-foreground disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer transition-all duration-200 hover:bg-white/10 hover:border-amber-600/40 flex items-center justify-between gap-2 text-left",
               error && "border-destructive/50 focus:ring-destructive/50 focus:border-destructive",
               className
             )}
@@ -86,8 +86,8 @@ const Dropdown = React.forwardRef<HTMLSelectElement, DropdownProps>(
             />
           </button>
           {dropdownOpen && (
-            <div className="absolute top-full left-0 right-0 mt-2 bg-white/50 backdrop-blur-sm border border-white/20 rounded-lg shadow-xl z-50 overflow-hidden">
-              <div className="max-h-[300px] overflow-y-auto scrollbar-hide">
+            <div className="absolute top-full left-0 right-0 mt-2 bg-[#121212] backdrop-blur-sm border border-white/20 rounded-lg shadow-xl z-50 overflow-hidden">
+              <div className="">
                 {options.map((option) => (
                   <button
                     key={option.value}
@@ -96,11 +96,11 @@ const Dropdown = React.forwardRef<HTMLSelectElement, DropdownProps>(
                     className={cn(
                       "w-full px-4 py-3 text-sm font-medium transition-all duration-200 text-left cursor-pointer group",
                       value === option.value
-                        ? "bg-amber-800/5  text-white"
-                        : "text-white/70 hover:text-white hover:bg-amber-800/10 hover:translate-x-1"
+                        ? "bg-white/5  text-white"
+                        : "text-white/70 hover:text-white hover:bg-white/10"
                     )}
                   >
-                    <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center justify-between gap-2 group-hover:translate-x-1">
                       <span className="flex-1">{option.label}</span>
                       {value === option.value && (
                         <div className="w-1.5 h-1.5 rounded-full bg-amber-200 shrink-0" />

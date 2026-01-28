@@ -29,8 +29,8 @@ export function EmailForm({
   onEmailBodyChange,
   onSendTest,
 }: EmailFormProps) {
-  const subjectRef = useRef<HTMLInputElement>(null);
-  const bodyRef = useRef<HTMLTextAreaElement>(null);
+  const subjectRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
+  const bodyRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
 
   const insertIntoField = (
     field: "subject" | "body",
@@ -51,7 +51,9 @@ export function EmailForm({
       onChange(newValue);
       setTimeout(() => {
         input.focus();
-        input.setSelectionRange(start + placeholder.length, start + placeholder.length);
+        if (input instanceof HTMLInputElement || input instanceof HTMLTextAreaElement) {
+          input.setSelectionRange(start + placeholder.length, start + placeholder.length);
+        }
       }, 0);
     } else {
       onChange(currentValue + placeholder);
@@ -82,7 +84,7 @@ export function EmailForm({
 
       {/* Subject */}
       <FormInput
-        ref={subjectRef as any}
+        ref={subjectRef}
         label="Subject"
         type="text"
         value={emailSubject}
@@ -95,7 +97,7 @@ export function EmailForm({
       {/* Body */}
       <div className="space-y-2">
         <FormInput
-          ref={bodyRef as any}
+          ref={bodyRef}
           label="Message Body"
           as="textarea"
           textareaProps={{

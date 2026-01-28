@@ -1,12 +1,13 @@
 "use client";
 
 import React, { useCallback, useMemo } from "react";
-import { GitMerge, Plus, Trash2, AlertCircle } from "lucide-react";
-import { Card } from "@/components/ui/Card";
+import { Plus, Trash2, AlertCircle } from "lucide-react";
+import { SimpleCard } from "@/components/ui/SimpleCard";
 import { Typography } from "@/components/ui/Typography";
-import { Label } from "@/components/ui/Label";
+import { FormInput } from "@/components/ui/FormInput";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { Dropdown, type DropdownOption } from "@/components/ui/Dropdown";
 import {
   MAX_SWITCH_CASES,
   createNewCase,
@@ -21,7 +22,7 @@ interface SwitchNodeConfigurationProps {
   handleDataChange: (updates: Partial<SwitchNodeData>) => void;
 }
 
-const OPERATORS = [
+const OPERATORS: DropdownOption[] = [
   { value: "equals", label: "Equals (==)" },
   { value: "notEquals", label: "Not Equals (!=)" },
   { value: "contains", label: "Contains" },
@@ -31,7 +32,7 @@ const OPERATORS = [
   { value: "lte", label: "Less or Equal (<=)" },
   { value: "isEmpty", label: "Is Empty" },
   { value: "regex", label: "Regex Match" },
-] as const;
+];
 
 // Color mapping for case labels/badges
 const CASE_COLORS = [
@@ -63,18 +64,6 @@ const DEFAULT_CASE_COLOR = {
   border: "border-gray-500/30",
 };
 
-/**
- * Switch Node Configuration Component
- *
- * Allows users to configure multi-branch routing:
- * - valuePath: path to value to test (e.g., "input.status")
- * - cases: array of case conditions (max 5, including default)
- *
- * Features:
- * - One default case that cannot be removed
- * - Add up to 4 additional cases
- * - Each case has its own operator and compare value
- */
 export const SwitchNodeConfiguration = React.memo(
   function SwitchNodeConfiguration({
     nodeData,
@@ -159,36 +148,27 @@ export const SwitchNodeConfiguration = React.memo(
     return (
       <div className="space-y-4">
         {/* Value Path Configuration */}
-        <Card className="p-4 space-y-4">
-          <div className="flex items-center gap-2">
-            <GitMerge className="w-4 h-4 text-primary" />
+        <SimpleCard className="space-y-4 p-5">
+          <div className="space-y-1 mb-4">
             <Typography
-              variant="bodySmall"
+              variant="h5"
               className="font-semibold text-foreground"
             >
               Switch Configuration
             </Typography>
           </div>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="switch-value-path" className="text-xs">
-              Value Path
-            </Label>
-            <Input
-              id="switch-value-path"
-              value={valuePath}
-              onChange={handleValuePathChange}
-              placeholder="100"
-              className="text-sm"
-            />
-            <Typography variant="caption" className="text-muted-foreground">
-              Value to compare
-            </Typography>
-          </div>
-        </Card>
+          <FormInput
+            label="Value Path(Value to compare)"
+            type="text"
+            value={valuePath}
+            onChange={handleValuePathChange}
+            placeholder="100"
+          />
+        </SimpleCard>
 
         {/* Cases Configuration */}
-        <Card className="p-4 space-y-4">
+        <SimpleCard className="space-y-4 p-5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Typography
@@ -223,13 +203,13 @@ export const SwitchNodeConfiguration = React.memo(
               return (
                 <div
                   key={switchCase.id}
-                  className={`p-3 rounded-lg ${color.bg} space-y-3`}
+                  className={`pl-2 py-2 space-y-2 border-l-2 ${color.border}`}
                 >
                   {/* Case header */}
-                  <div className="flex items-center justify-between gap-2 pb-3 border-b border-border/50">
-                    <div className="flex items-center gap-2 flex-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
                       <div
-                        className={`w-2.5 h-2.5 rounded-full shrink-0 ${color.bg.replace(
+                        className={`w-2 h-2 rounded-full shrink-0 ${color.bg.replace(
                           "/20",
                           ""
                         )}`}
@@ -249,56 +229,44 @@ export const SwitchNodeConfiguration = React.memo(
                     </div>
                     <Button
                       onClick={() => handleRemoveCase(switchCase.id)}
-                      className="h-7 w-7 p-0 text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
+                      className="h-6 w-6 p-0 text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
                       aria-label={`Remove ${switchCase.label}`}
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
+                      <Trash2 className="w-3 h-3" />
                     </Button>
                   </div>
 
                   {/* Operator selection */}
-                  <div className="space-y-1">
-                    <Label className="text-xs text-muted-foreground">
-                      Operator
-                    </Label>
-                    <select
-                      value={switchCase.operator}
-                      onChange={(e) =>
-                        handleCaseChange(
-                          switchCase.id,
-                          "operator",
-                          e.target.value
-                        )
-                      }
-                      className="w-full h-8 px-2 text-xs rounded-md border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
-                    >
-                      {OPERATORS.map((op) => (
-                        <option key={op.value} value={op.value}>
-                          {op.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  <Dropdown
+                    label="Operator"
+                    value={switchCase.operator}
+                    onChange={(e) =>
+                      handleCaseChange(
+                        switchCase.id,
+                        "operator",
+                        e.target.value
+                      )
+                    }
+                    options={OPERATORS}
+                    placeholder="Select operator"
+                    aria-label="Comparison operator"
+                  />
 
                   {/* Compare value (not shown for isEmpty) */}
                   {switchCase.operator !== "isEmpty" && (
-                    <div className="space-y-1">
-                      <Label className="text-xs text-muted-foreground">
-                        Compare Value
-                      </Label>
-                      <Input
-                        value={switchCase.compareValue}
-                        onChange={(e) =>
-                          handleCaseChange(
-                            switchCase.id,
-                            "compareValue",
-                            e.target.value
-                          )
-                        }
-                        placeholder="value to match"
-                        className="h-8 text-xs"
-                      />
-                    </div>
+                    <FormInput
+                      label="Compare Value(Value to compare against)"
+                      type="text"
+                      value={switchCase.compareValue}
+                      onChange={(e) =>
+                        handleCaseChange(
+                          switchCase.id,
+                          "compareValue",
+                          e.target.value
+                        )
+                      }
+                      placeholder="value to match"
+                    />
                   )}
                 </div>
               );
@@ -307,27 +275,33 @@ export const SwitchNodeConfiguration = React.memo(
             {/* Default case - always last, cannot be removed */}
             {defaultCase && (
               <div
-                className={`p-3 rounded-lg border ${DEFAULT_CASE_COLOR.border} ${DEFAULT_CASE_COLOR.bg} space-y-2`}
+                className={`p-2 rounded-md border border-dashed ${DEFAULT_CASE_COLOR.border} bg-background/40`}
               >
-                <div className="flex items-center gap-2">
-                  <div className="w-2.5 h-2.5 rounded-full bg-gray-400" />
-                  <Typography
-                    variant="bodySmall"
-                    className={`font-medium ${DEFAULT_CASE_COLOR.text}`}
-                  >
-                    Default Case
-                  </Typography>
-                  <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
-                    Required
-                  </span>
+                <div className="flex items-start gap-2">
+                  <div className="w-5 h-5 rounded-full bg-amber-500/10 flex items-center justify-center">
+                    <AlertCircle className="w-3 h-3 text-amber-500" />
+                  </div>
+                  <div className="flex-1 space-y-0.5">
+                    <div className="flex items-center justify-between gap-1.5 flex-wrap">
+                      <Typography
+                        variant="bodySmall"
+                        className={`font-semibold ${DEFAULT_CASE_COLOR.text}`}
+                      >
+                        Default path
+                      </Typography>
+                      <span className="text-[8px] uppercase tracking-wide text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded-full">
+                        Fallback
+                      </span>
+                    </div>
+                    <Typography variant="bodySmall">
+                      Used when no other case matches.
+                    </Typography>
+                  </div>
                 </div>
-                <Typography variant="caption" className="text-muted-foreground">
-                  Executes when no other case matches
-                </Typography>
               </div>
             )}
           </div>
-        </Card>
+        </SimpleCard>
       </div>
     );
   }
