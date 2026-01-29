@@ -50,8 +50,8 @@ function SlackNodeConfigurationInner({
     return (
         <div className="space-y-4">
             {/* Connections Management Card */}
-            <SimpleCard className="p-5 space-y-4">
-                <div className="flex items-center justify-between">
+            <SimpleCard className="p-5">
+                <div className="flex flex-col items-start justify-between gap-4">
                     <div className="space-y-1">
                         <Typography variant="h5" className="font-semibold text-foreground">
                             Slack Connections
@@ -63,51 +63,12 @@ function SlackNodeConfigurationInner({
                     <Button
                         type="button"
                         onClick={() => slack.actions.setShowCreateForm(!slack.showCreateForm)}
-                        className="gap-1"
+                        className="gap-1 w-full"
                     >
                         <Plus className="w-3 h-3" />
                         {slack.showCreateForm ? "Cancel" : "New"}
                     </Button>
                 </div>
-
-                {/* Create New Connection Form */}
-                {slack.showCreateForm && (
-                    <div className="space-y-3 p-4 border border-white/20 rounded-lg bg-white/5">
-                        <Typography variant="caption" className="text-muted-foreground">
-                            Choose connection method:
-                        </Typography>
-
-                        <SlackConnectionTypeSelector
-                            connectionType={slack.connectionType}
-                            onTypeChange={slack.actions.setConnectionType}
-                        />
-
-                        {/* Webhook Form */}
-                        {slack.connectionType === "webhook" && (
-                            <SlackWebhookForm
-                                webhookUrl={slack.webhookUrl}
-                                connectionName={slack.connectionName}
-                                testMessage={slack.testMessage}
-                                isTestSuccessful={slack.isTestSuccessful}
-                                loading={slack.loading}
-                                onWebhookUrlChange={slack.actions.setWebhookUrl}
-                                onConnectionNameChange={slack.actions.setConnectionName}
-                                onTestMessageChange={slack.actions.setTestMessage}
-                                onTest={() => slack.actions.testWebhook(slack.webhookUrl, slack.testMessage)}
-                                onSave={slack.actions.saveWebhook}
-                                onResetTestState={slack.actions.resetTestState}
-                            />
-                        )}
-
-                        {/* OAuth Form */}
-                        {slack.connectionType === "oauth" && (
-                            <SlackOAuthForm
-                                loading={slack.loading}
-                                onAuthorize={slack.actions.authorizeOAuth}
-                            />
-                        )}
-                    </div>
-                )}
 
                 {/* Existing Connections List */}
                 {slack.loading.connections ? (
@@ -147,16 +108,68 @@ function SlackNodeConfigurationInner({
                         ))}
                     </div>
                 ) : !slack.showCreateForm ? (
-                    <div className="text-center py-4">
-                        <Typography variant="caption" className="text-muted-foreground">
+                    <div className="text-center py-1">
+                        <Typography variant="caption">
                             No connections configured yet. Click &quot;New&quot; to add one.
                         </Typography>
                     </div>
                 ) : null}
-
-                {/* Centralized Notification Banner */}
-                <SlackNotificationBanner notification={slack.notification} />
             </SimpleCard>
+
+            {/* Notification Banner - below connections when form is closed */}
+            {!slack.showCreateForm && slack.notification && (
+                <div className="rounded-lg border border-white/10 bg-white/5 p-3">
+                    <SlackNotificationBanner notification={slack.notification} />
+                </div>
+            )}
+
+            {/* Create New Connection Form - separate card */}
+            {slack.showCreateForm && (
+                <SimpleCard className="p-5">
+                    <div className="space-y-3">
+                        <Typography variant="bodySmall" className="text-muted-foreground">
+                            Choose connection method:
+                        </Typography>
+
+                        <SlackConnectionTypeSelector
+                            connectionType={slack.connectionType}
+                            onTypeChange={slack.actions.setConnectionType}
+                        />
+
+                        {/* Webhook Form */}
+                        {slack.connectionType === "webhook" && (
+                            <SlackWebhookForm
+                                webhookUrl={slack.webhookUrl}
+                                connectionName={slack.connectionName}
+                                testMessage={slack.testMessage}
+                                isTestSuccessful={slack.isTestSuccessful}
+                                loading={slack.loading}
+                                onWebhookUrlChange={slack.actions.setWebhookUrl}
+                                onConnectionNameChange={slack.actions.setConnectionName}
+                                onTestMessageChange={slack.actions.setTestMessage}
+                                onTest={() => slack.actions.testWebhook(slack.webhookUrl, slack.testMessage)}
+                                onSave={slack.actions.saveWebhook}
+                                onResetTestState={slack.actions.resetTestState}
+                            />
+                        )}
+
+                        {/* OAuth Form */}
+                        {slack.connectionType === "oauth" && (
+                            <SlackOAuthForm
+                                loading={slack.loading}
+                                onAuthorize={slack.actions.authorizeOAuth}
+                            />
+                        )}
+
+                        {/* Notification Banner - below form */}
+                        {slack.notification && (
+                            <div className="pt-3 mt-3 border-t border-white/10">
+                                <SlackNotificationBanner notification={slack.notification} />
+                            </div>
+                        )}
+                    </div>
+                </SimpleCard>
+            )}
 
             {/* Message Configuration Card - Shown after connection is selected */}
             {hasConnection && (

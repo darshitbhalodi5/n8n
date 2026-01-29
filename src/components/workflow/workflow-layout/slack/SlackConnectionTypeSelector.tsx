@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback } from "react";
-import { Typography } from "@/components/ui/Typography";
+import { Link2, KeyRound } from "lucide-react";
 import type { ConnectionType } from "@/types/slack";
 
 interface SlackConnectionTypeSelectorProps {
@@ -9,70 +9,54 @@ interface SlackConnectionTypeSelectorProps {
     onTypeChange: (type: ConnectionType) => void;
 }
 
-/**
- * Connection type selector (Webhook vs OAuth)
- * Accessible toggle buttons with proper ARIA attributes and keyboard navigation
- */
+const OPTIONS: { type: ConnectionType; label: string; description: string; icon: React.ElementType }[] = [
+    { type: "webhook", label: "Webhook", description: "Use webhook URL", icon: Link2 },
+    { type: "oauth", label: "OAuth", description: "Workspace & channel", icon: KeyRound },
+];
+
 export const SlackConnectionTypeSelector = React.memo(function SlackConnectionTypeSelector({
     connectionType,
     onTypeChange,
 }: SlackConnectionTypeSelectorProps) {
-    /**
-     * Handle keyboard navigation for radiogroup
-     * Arrow Left/Right switches between options (ARIA best practice)
-     */
     const handleKeyDown = useCallback(
-        (e: React.KeyboardEvent<HTMLButtonElement>) => {
+        (e: React.KeyboardEvent<HTMLButtonElement>, type: ConnectionType) => {
             if (e.key === "ArrowLeft" || e.key === "ArrowRight" || e.key === "ArrowUp" || e.key === "ArrowDown") {
                 e.preventDefault();
-                // Toggle between the two options
-                onTypeChange(connectionType === "webhook" ? "oauth" : "webhook");
+                onTypeChange(type === "webhook" ? "oauth" : "webhook");
             }
         },
-        [connectionType, onTypeChange]
+        [onTypeChange]
     );
 
     return (
-        <div className="flex gap-2" role="radiogroup" aria-label="Connection type">
-            <button
-                type="button"
-                role="radio"
-                aria-checked={connectionType === "webhook"}
-                onClick={() => onTypeChange("webhook")}
-                onKeyDown={handleKeyDown}
-                tabIndex={connectionType === "webhook" ? 0 : -1}
-                className={`flex-1 px-4 py-3 rounded-lg border transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${connectionType === "webhook"
-                    ? "border-primary bg-primary/10 text-primary"
-                    : "border-border hover:border-primary/50"
-                    }`}
-            >
-                <Typography variant="bodySmall" className="font-medium">
-                    Webhook
-                </Typography>
-                <Typography variant="caption" className="text-muted-foreground">
-                    Use webhook URL
-                </Typography>
-            </button>
-
-            <button
-                type="button"
-                role="radio"
-                aria-checked={connectionType === "oauth"}
-                onClick={() => onTypeChange("oauth")}
-                onKeyDown={handleKeyDown}
-                tabIndex={connectionType === "oauth" ? 0 : -1}
-                className={`flex-1 px-4 py-3 rounded-lg border transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${connectionType === "oauth"
-                    ? "border-primary bg-primary/10 text-primary"
-                    : "border-border hover:border-primary/50"
-                    }`}
-            >
-                <Typography variant="bodySmall" className="font-medium">
-                    OAuth
-                </Typography>
-                <Typography variant="caption" className="text-muted-foreground">
-                    Select workspace &amp; channel
-                </Typography>
-            </button>
+        <div
+            className="flex p-1 rounded-lg bg-white/5 border border-white/10 gap-0.5"
+            role="radiogroup"
+            aria-label="Connection type"
+        >
+            {OPTIONS.map(({ type, label, description, icon: Icon }) => {
+                const isSelected = connectionType === type;
+                return (
+                    <button
+                        key={type}
+                        type="button"
+                        role="radio"
+                        aria-checked={isSelected}
+                        aria-label={`${label}: ${description}`}
+                        onClick={() => onTypeChange(type)}
+                        onKeyDown={(e) => handleKeyDown(e, type)}
+                        tabIndex={isSelected ? 0 : -1}
+                        className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg text-sm font-medium outline-none transition-all duration-200 focus:border-white/50 ${
+                            isSelected
+                                ? "bg-white/5 text-white border border-white/50"
+                                : "text-white border border-transparent hover:bg-white/5 hover:border-white/10"
+                        }`}
+                    >
+                        <Icon className="w-4 h-4 shrink-0" aria-hidden />
+                        <span>{label}</span>
+                    </button>
+                );
+            })}
         </div>
     );
 });

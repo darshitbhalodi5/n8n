@@ -1004,7 +1004,7 @@ export function SwapNodeConfiguration({
 
                 {quoteState.error && (
                     <div className="flex items-start gap-2 p-2 rounded-lg bg-destructive/10 border border-destructive/20">
-                        <AlertCircle className="w-4 h-4 text-destructive mt-0.5 flex-shrink-0" />
+                        <AlertCircle className="w-4 h-4 text-destructive mt-0.5 shrink-0" />
                         <Typography variant="caption" className="text-destructive">
                             {quoteState.error}
                         </Typography>
@@ -1090,7 +1090,7 @@ export function SwapNodeConfiguration({
 
                         {!embeddedWallet && (
                             <div className="flex items-start gap-2 p-2 rounded-lg bg-warning/10 border border-warning/20">
-                                <AlertCircle className="w-4 h-4 text-warning mt-0.5 flex-shrink-0" />
+                                <AlertCircle className="w-4 h-4 text-warning mt-0.5 shrink-0" />
                                 <Typography variant="caption" className="text-warning">
                                     No embedded wallet found. Please ensure you are logged in with Privy.
                                 </Typography>
@@ -1099,7 +1099,7 @@ export function SwapNodeConfiguration({
 
                         {executionState.error && (
                             <div className="flex items-start gap-2 p-2 rounded-lg bg-destructive/10 border border-destructive/20">
-                                <AlertCircle className="w-4 h-4 text-destructive mt-0.5 flex-shrink-0" />
+                                <AlertCircle className="w-4 h-4 text-destructive mt-0.5 shrink-0" />
                                 <Typography variant="caption" className="text-destructive">
                                     {executionState.error}
                                 </Typography>

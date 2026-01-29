@@ -63,7 +63,7 @@ const FormInput = React.forwardRef<
               <input
                 type={type}
                 className={twMerge(
-                  "w-full text-sm xs:text-sm sm:text-base bg-white/5 text-white py-3 px-4 rounded-lg border border-white/10 placeholder-gray-400 outline-none focus:border-white/50",
+                  "w-full text-xs bg-white/5 text-white py-3 px-4 rounded-lg border border-white/10 placeholder-gray-400 outline-none focus:border-white/50",
                   "[&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]",
                   error ? "border-red-500" : "",
                   className,

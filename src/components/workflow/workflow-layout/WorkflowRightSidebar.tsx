@@ -146,7 +146,7 @@ export function WorkflowRightSidebar() {
 
   return (
     <>
-      <div className="h-full overflow-y-auto p-4 space-y-8">
+      <div className="max-h-full overflow-y-auto p-4 space-y-8">
         {/* Header */}
         <div className="pb-6 border-b border-white/60 flex items-center justify-between gap-4">
           <div className="flex flex-col items-start gap-1">

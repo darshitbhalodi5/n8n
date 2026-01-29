@@ -4,6 +4,7 @@ import React from "react";
 import { Loader2, Send, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Typography } from "@/components/ui/Typography";
+import { FormInput } from "@/components/ui/FormInput";
 import type { SlackLoadingState } from "@/types/slack";
 
 /**
@@ -54,7 +55,7 @@ export const SlackWebhookForm = React.memo(function SlackWebhookForm({
 
     return (
         <>
-            <div className="flex items-start justify-between">
+            <div className="flex flex-col items-start justify-between">
                 <Typography variant="caption" className="text-muted-foreground">
                     Create a new Slack webhook connection
                 </Typography>
@@ -66,69 +67,40 @@ export const SlackWebhookForm = React.memo(function SlackWebhookForm({
             </div>
 
             {/* Connection Name */}
-            <div className="space-y-2">
-                <label className="block">
-                    <Typography variant="caption" className="text-muted-foreground mb-1">
-                        Connection Name (Optional)
-                    </Typography>
-                    <input
-                        type="text"
-                        value={connectionName}
-                        onChange={(e) => onConnectionNameChange(e.target.value)}
-                        className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                        placeholder="My Slack Workspace"
-                    />
-                </label>
-            </div>
+            <FormInput
+                label="Connection Name (Optional)"
+                value={connectionName}
+                onValueChange={onConnectionNameChange}
+                placeholder="My Slack Workspace"
+            />
 
             {/* Webhook URL */}
-            <div className="space-y-2">
-                <label className="block">
-                    <Typography variant="caption" className="text-muted-foreground mb-1">
-                        Webhook URL
-                    </Typography>
-                    <input
-                        type="url"
-                        value={webhookUrl}
-                        onChange={(e) => {
-                            onWebhookUrlChange(e.target.value);
-                            onResetTestState();
-                        }}
-                        className={`w-full px-3 py-2 text-xs border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary font-mono ${hasUrl && !isValidUrl ? "border-destructive" : "border-border"
-                            }`}
-                        placeholder="https://hooks.slack.com/services/..."
-                        aria-invalid={hasUrl && !isValidUrl}
-                        aria-describedby={hasUrl && !isValidUrl ? "webhook-url-error" : undefined}
-                    />
-                </label>
-                {/* Validation Error */}
-                {hasUrl && !isValidUrl && (
-                    <Typography
-                        id="webhook-url-error"
-                        variant="caption"
-                        className="text-destructive"
-                        role="alert"
-                    >
-                        ⚠️ Invalid Slack webhook URL format. Expected: https://hooks.slack.com/services/T.../B.../...
-                    </Typography>
-                )}
-            </div>
+            <FormInput
+                label="Webhook URL"
+                type="url"
+                value={webhookUrl}
+                onValueChange={(value) => {
+                    onWebhookUrlChange(value);
+                    onResetTestState();
+                }}
+                placeholder="https://hooks.slack.com/services/..."
+                error={
+                    hasUrl && !isValidUrl
+                        ? "Invalid Slack webhook URL format. Expected: https://hooks.slack.com/services/T.../B.../..."
+                        : undefined
+                }
+                className="text-xs"
+            />
 
             {/* Test Message */}
-            <div className="space-y-2">
-                <label className="block">
-                    <Typography variant="caption" className="text-muted-foreground mb-1">
-                        Test Message
-                    </Typography>
-                    <textarea
-                        value={testMessage}
-                        onChange={(e) => onTestMessageChange(e.target.value)}
-                        className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
-                        placeholder="Hello from FlowForge! 🚀"
-                        rows={2}
-                    />
-                </label>
-            </div>
+            <FormInput
+                label="Test Message"
+                as="textarea"
+                value={testMessage}
+                onValueChange={onTestMessageChange}
+                placeholder="Hello from FlowForge! 🚀"
+                textareaProps={{ rows: 2, className: "min-h-0 resize-none" }}
+            />
 
             {/* Action Buttons */}
             <div className="flex gap-2">
