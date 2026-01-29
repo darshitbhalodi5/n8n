@@ -87,9 +87,9 @@ export interface AiTransformNodeData extends BaseNodeData {
   maxOutputTokens?: number;
 }
 
-// Swap Node Data (for Uniswap, Relay, 1inch blocks)
+// Swap Node Data (for Uniswap, Relay, 1inch, LIFI blocks)
 export interface SwapNodeData extends BaseNodeData {
-  swapProvider?: "UNISWAP" | "RELAY" | "ONEINCH";
+  swapProvider?: "UNISWAP" | "RELAY" | "ONEINCH" | "LIFI";
   swapChain?: "ARBITRUM" | "ARBITRUM_SEPOLIA";
   swapType?: "EXACT_INPUT" | "EXACT_OUTPUT";
   sourceTokenAddress?: string;

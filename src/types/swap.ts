@@ -14,6 +14,7 @@ export enum SwapProvider {
     UNISWAP = 'UNISWAP',
     RELAY = 'RELAY',
     ONEINCH = 'ONEINCH',
+    LIFI = 'LIFI',
 }
 
 // Swap Type (exact in vs exact out)
@@ -200,6 +201,7 @@ export const PROVIDER_LABELS: Record<SwapProvider, string> = {
     [SwapProvider.UNISWAP]: 'Uniswap',
     [SwapProvider.RELAY]: 'Relay',
     [SwapProvider.ONEINCH]: '1inch',
+    [SwapProvider.LIFI]: 'LI.FI',
 };
 
 export const SWAP_TYPE_LABELS: Record<SwapType, string> = {

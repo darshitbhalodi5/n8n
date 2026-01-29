@@ -11,6 +11,7 @@ import switchIcon from "@/assets/blocks/Switch.svg";
 import uniswap from "@/assets/blocks/Uniswap.svg";
 import relay from "@/assets/blocks/Relay.svg";
 import oneinch from "@/assets/blocks/OneInch.svg";
+import lifi from "@/assets/blocks/LiFi.svg";
 import aave from "@/assets/blocks/Aave.svg";
 import compound from "@/assets/blocks/Compound.svg";
 
@@ -132,6 +133,16 @@ export const OneInchLogo = ({ className }: LogoProps) => (
   <Image
     src={oneinch}
     alt="1inch"
+    className={className}
+    width={32}
+    height={32}
+  />
+);
+
+export const LiFiLogo = ({ className }: LogoProps) => (
+  <Image
+    src={lifi}
+    alt="LI.FI"
     className={className}
     width={32}
     height={32}

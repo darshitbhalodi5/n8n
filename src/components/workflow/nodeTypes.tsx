@@ -82,10 +82,11 @@ export const nodeTypes: NodeTypes = {
   mail: BaseNodeWrapper,
   slack: BaseNodeWrapper,
 
-  // DeFi / swap nodes (Uniswap, Relay, 1inch) - use base node visuals
+  // DeFi / swap nodes (Uniswap, Relay, 1inch, LiFi) - use base node visuals
   uniswap: BaseNodeWrapper,
   relay: BaseNodeWrapper,
   oneinch: BaseNodeWrapper,
+  lifi: BaseNodeWrapper,
 
   // DeFi / lending nodes (Aave, Compound) - use base node visuals
   aave: BaseNodeWrapper,

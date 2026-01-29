@@ -87,6 +87,7 @@ import {
   GLMLogo,
   DeepSeekLogo,
   ChatGPTLogo,
+  LiFiLogo,
 } from "./logos/logos";
 
 // Re-export types
@@ -120,6 +121,7 @@ export const iconRegistry: IconRegistry = {
   OneInchLogo,
   AaveLogo,
   CompoundLogo,
+  LiFiLogo,
 
   // Coming Soon - Oracle
   ChainlinkLogo,

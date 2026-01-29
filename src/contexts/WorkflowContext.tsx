@@ -745,6 +745,11 @@ export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({
         return !isMainnetChain;
       }
 
+      // LiFi only supports mainnet chains - their API doesn't support testnets
+      if (blockId === "lifi") {
+        return !isMainnetChain;
+      }
+
       if (blockId === "uniswap") {
         return false;
       }

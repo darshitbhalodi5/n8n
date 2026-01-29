@@ -18,7 +18,8 @@ function categorizeDefiBlocks(blocks: typeof blockCategories[0]["blocks"]) {
     (block) =>
       block.nodeType === "uniswap" ||
       block.nodeType === "relay" ||
-      block.nodeType === "oneinch"
+      block.nodeType === "oneinch" ||
+      block.nodeType === "lifi"
   );
   const lendingBlocks = blocks.filter(
     (block) => block.nodeType === "aave" || block.nodeType === "compound"

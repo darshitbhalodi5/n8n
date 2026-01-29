@@ -24,6 +24,7 @@ import { LendingNodeConfiguration } from "./lending/LendingNodeConfiguration";
 import { OracleNodeConfigurationV2 } from "./oracle/OracleNodeConfigurationV2";
 import { SimpleCard } from "@/components/ui/SimpleCard";
 import { AiTransformNodeConfiguration } from "./ai/AiTransformNodeConfiguration";
+import { SwapProvider } from "@/types/swap";
 
 export function WorkflowRightSidebar() {
   const {
@@ -103,12 +104,13 @@ export function WorkflowRightSidebar() {
   // Check if this is the Start node (cannot be deleted)
   const isStartNode = nodeType === "start" || blockId === "start";
 
-  // Check if this is a Swap/DEX node (Uniswap, Relay, or 1inch)
+  // Check if this is a Swap/DEX node (Uniswap, Relay, 1inch, or LiFi)
   const isSwapNode =
     nodeType === "swap" || blockId === "swap" ||
     nodeType === "uniswap" || blockId === "uniswap" ||
     nodeType === "relay" || blockId === "relay" ||
-    nodeType === "oneinch" || blockId === "oneinch";
+    nodeType === "oneinch" || blockId === "oneinch" ||
+    nodeType === "lifi" || blockId === "lifi";
 
   // Check if this is a Lending node (Aave or Compound)
   const isLendingNode =
@@ -266,6 +268,7 @@ export function WorkflowRightSidebar() {
             handleDataChange={handleBatchDataChange}
             authenticated={authenticated}
             login={login}
+            forcedProvider={nodeType === "lifi" || blockId === "lifi" ? SwapProvider.LIFI : undefined}
           />
         ) : isLendingNode ? (
           /* Lending Node Configuration (Aave/Compound) */
