@@ -40,6 +40,8 @@ export const API_CONFIG = {
         SWAP: {
             QUOTE: "/swaps/quote",
             BUILD_TRANSACTION: "/swaps/build-transaction",
+            BUILD_SAFE_TRANSACTION: "/swaps/build-safe-transaction",
+            EXECUTE_WITH_SIGNATURE: "/swaps/execute-with-signature",
             PROVIDERS: "/swaps/providers",
             EXECUTIONS: "/swaps/executions",
         },

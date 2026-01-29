@@ -72,8 +72,10 @@ function extractNodeConfig(node: Node): any {
     case "uniswap":
     case "relay":
     case "oneinch":
+    case "lifi":
       return {
-        provider: data.swapProvider,
+        // Ensure provider is always persisted; LI.FI blocks should never fall back to UNISWAP.
+        provider: data.swapProvider || (type === "lifi" ? "LIFI" : undefined),
         chain: data.swapChain,
         inputConfig: {
           sourceToken: {
@@ -687,6 +689,7 @@ export function transformNodeToCanvas(backendNode: BackendNode): Node {
     case "uniswap":
     case "relay":
     case "oneinch":
+    case "lifi":
       nodeData.swapProvider = config.provider;
       nodeData.swapChain = config.chain;
       if (config.inputConfig) {

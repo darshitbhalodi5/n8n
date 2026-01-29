@@ -20,6 +20,8 @@ import { useWallets } from "@privy-io/react-auth";
 import { ethers } from "ethers";
 import { useSafeWalletContext } from "@/contexts/SafeWalletContext";
 import { usePrivyEmbeddedWallet } from "@/hooks/usePrivyEmbeddedWallet";
+import { usePrivyWallet } from "@/hooks/usePrivyWallet";
+import Safe from "@safe-global/protocol-kit";
 import { isTestnet } from "@/web3/chains";
 import {
     SwapProvider,
@@ -38,6 +40,7 @@ interface SwapNodeConfigurationProps {
     handleDataChange: (updates: Record<string, unknown>) => void;
     authenticated: boolean;
     login: () => void;
+    forcedProvider?: SwapProvider;
 }
 
 interface QuoteState {
@@ -120,6 +123,7 @@ export function SwapNodeConfiguration({
     handleDataChange,
     authenticated,
     login,
+    forcedProvider,
 }: SwapNodeConfigurationProps) {
     const { wallets } = useWallets();
     const embeddedWallet = wallets.find((w) => w.walletClientType === "privy");
@@ -128,8 +132,11 @@ export function SwapNodeConfiguration({
     const { selection } = useSafeWalletContext();
     const selectedSafe = selection.selectedSafe;
 
+    // Get access token for authenticated API calls
+    const { getPrivyAccessToken } = usePrivyWallet();
+
     // Get chain from user menu (via Privy embedded wallet)
-    const { chainId } = usePrivyEmbeddedWallet();
+    const { chainId, ethereumProvider } = usePrivyEmbeddedWallet();
 
     // Convert chainId to SupportedChain enum
     const getChainFromChainId = useCallback((chainId: number | null): SupportedChain => {
@@ -178,7 +185,18 @@ export function SwapNodeConfiguration({
     }, [swapChain]);
 
     // Extract current configuration from node data
-    const swapProvider = (nodeData.swapProvider as SwapProvider) || SwapProvider.UNISWAP;
+    const swapProvider =
+        forcedProvider ||
+        (nodeData.swapProvider as SwapProvider) ||
+        SwapProvider.UNISWAP;
+
+    // Ensure forced provider is persisted into node data so future saves/loads are consistent
+    React.useEffect(() => {
+        if (forcedProvider && nodeData.swapProvider !== forcedProvider) {
+            handleDataChange({ swapProvider: forcedProvider });
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [forcedProvider]);
     // Note: swapType is always EXACT_INPUT (locked) - using SwapType.EXACT_INPUT directly
     const sourceTokenAddress = (nodeData.sourceTokenAddress as string) || "";
     const sourceTokenSymbol = (nodeData.sourceTokenSymbol as string) || "";
@@ -470,10 +488,178 @@ export function SwapNodeConfiguration({
         handleDataChange,
     ]);
 
-    // Execute swap - handles approval flow then swap
+    // Execute swap - uses Safe transaction flow if Safe wallet is selected
     const handleExecuteSwap = useCallback(async () => {
         if (!isValidForQuote || !sourceTokenAddress || !destinationTokenAddress || !embeddedWallet) return;
 
+        // Check if Safe wallet is selected - use Safe transaction flow
+        if (selectedSafe && authenticated) {
+            console.log("Using Safe transaction flow for swap", { selectedSafe, authenticated });
+            setExecutionState({ loading: true, error: null, txHash: null, approvalTxHash: null, success: false, step: 'building-tx' });
+
+            try {
+                // Get access token for authenticated API calls
+                const accessToken = await getPrivyAccessToken();
+                if (!accessToken) {
+                    throw new Error("Please log in to execute swaps");
+                }
+
+                // Convert amount to wei/smallest unit based on token decimals
+                const amountInWei = BigInt(Math.floor(parseFloat(swapAmount) * Math.pow(10, sourceTokenDecimals)));
+
+                const swapConfig = {
+                    sourceToken: {
+                        address: sourceTokenAddress,
+                        symbol: sourceTokenSymbol,
+                        decimals: sourceTokenDecimals,
+                    },
+                    destinationToken: {
+                        address: destinationTokenAddress,
+                        symbol: destinationTokenSymbol,
+                        decimals: destinationTokenDecimals,
+                    },
+                    amount: amountInWei.toString(),
+                    swapType: SwapType.EXACT_INPUT,
+                    walletAddress: walletAddress, // User's EOA wallet (for identification)
+                };
+
+                // Step 1: Build Safe transaction hash
+                console.log("Step 1: Building Safe transaction hash...");
+                const buildUrl = `${buildApiUrl(API_CONFIG.ENDPOINTS.SWAP.BUILD_SAFE_TRANSACTION)}/${swapProvider}/${swapChain}`;
+                
+                const buildResponse = await fetch(buildUrl, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${accessToken}`,
+                    },
+                    body: JSON.stringify(swapConfig),
+                });
+
+                if (!buildResponse.ok) {
+                    const errorData = await buildResponse.json().catch(() => ({ error: { message: "Request failed" } }));
+                    throw new Error(errorData.error?.message || `HTTP ${buildResponse.status}`);
+                }
+
+                const buildData = await buildResponse.json();
+                if (!buildData.success) {
+                    throw new Error(buildData.error?.message || "Failed to build Safe transaction");
+                }
+
+                const { safeTxHash, safeAddress, safeTxData, needsApproval, nodeExecutionId } = buildData.data;
+                console.log("Safe transaction hash built:", safeTxHash);
+
+                // Step 2: Sign Safe transaction hash using Safe SDK
+                console.log("Step 2: Signing Safe transaction...");
+                setExecutionState(prev => ({ ...prev, step: 'approving' }));
+
+                if (!ethereumProvider) {
+                    throw new Error("Ethereum provider not available");
+                }
+
+                // Initialize Safe SDK
+                const safeSdk = await Safe.init({
+                    provider: ethereumProvider as unknown as ethers.Eip1193Provider,
+                    safeAddress: safeAddress,
+                });
+
+                // Create Safe transaction from the data we got from backend
+                const safeTransaction = await safeSdk.createTransaction({
+                    transactions: [{
+                        to: safeTxData.to,
+                        value: safeTxData.value,
+                        data: safeTxData.data,
+                        operation: safeTxData.operation,
+                    }],
+                });
+
+                // Sign the transaction (triggers EIP-712 signature popup)
+                const signedSafeTx = await safeSdk.signTransaction(safeTransaction);
+                // Ensure the hash we signed matches what backend built (otherwise signatures will revert on-chain)
+                const signedTxHash = await safeSdk.getTransactionHash(signedSafeTx);
+                if (signedTxHash.toLowerCase() !== safeTxHash.toLowerCase()) {
+                    throw new Error(
+                        `Safe tx hash mismatch. Backend=${safeTxHash} Frontend=${signedTxHash}`
+                    );
+                }
+
+                // Extract signatures in the format backend expects (concatenated bytes)
+                // Safe SDK's encodedSignatures() returns signatures in the correct format
+                const concatenatedSignatures = signedSafeTx.encodedSignatures();
+                
+                if (!concatenatedSignatures || concatenatedSignatures === "0x") {
+                    throw new Error("Failed to get signature from Safe transaction");
+                }
+
+                console.log("Transaction signed, executing...");
+                setExecutionState(prev => ({ ...prev, step: 'swapping' }));
+
+                // Step 3: Execute swap with signature
+                const executeUrl = `${buildApiUrl(API_CONFIG.ENDPOINTS.SWAP.EXECUTE_WITH_SIGNATURE)}/${swapProvider}/${swapChain}`;
+                
+                const executeResponse = await fetch(executeUrl, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${accessToken}`,
+                    },
+                    body: JSON.stringify({
+                        config: swapConfig,
+                        signature: concatenatedSignatures,
+                        nodeExecutionId: nodeExecutionId,
+                    }),
+                });
+
+                if (!executeResponse.ok) {
+                    const errorData = await executeResponse.json().catch(() => ({ error: { message: "Request failed" } }));
+                    throw new Error(errorData.error?.message || `HTTP ${executeResponse.status}`);
+                }
+
+                const executeData = await executeResponse.json();
+                if (!executeData.success) {
+                    throw new Error(executeData.error?.message || "Failed to execute swap");
+                }
+
+                const result = executeData.data;
+                console.log("Swap executed successfully:", result.txHash);
+
+                setExecutionState({
+                    loading: false,
+                    error: null,
+                    txHash: result.txHash || null,
+                    approvalTxHash: needsApproval ? "multicall" : null, // Indicate approval was included
+                    success: true,
+                    step: 'done',
+                });
+
+                handleDataChange({
+                    lastTxHash: result.txHash,
+                    lastExecutedAt: new Date().toISOString(),
+                });
+
+            } catch (error) {
+                console.error("Safe swap execution failed:", error);
+                setExecutionState({
+                    loading: false,
+                    error: error instanceof Error ? error.message : "Failed to execute swap",
+                    txHash: null,
+                    approvalTxHash: null,
+                    success: false,
+                    step: 'idle',
+                });
+            }
+            return;
+        }
+
+        // Fallback to old direct EOA flow (for backwards compatibility when no Safe selected)
+        // Warn user if Safe wallet should be used
+        if (!selectedSafe) {
+            console.warn("No Safe wallet selected - using direct EOA flow. This requires gas funds in your wallet.");
+        }
+        if (!authenticated) {
+            console.warn("User not authenticated - using direct EOA flow. Please log in to use Safe wallet.");
+        }
+        
         setExecutionState({ loading: true, error: null, txHash: null, approvalTxHash: null, success: false, step: 'checking-allowance' });
 
         try {
@@ -679,6 +865,11 @@ export function SwapNodeConfiguration({
         swapChain,
         embeddedWallet,
         handleDataChange,
+        selectedSafe,
+        authenticated,
+        getPrivyAccessToken,
+        ethereumProvider,
+        walletAddress,
     ]);
 
     // Handle copy to clipboard
