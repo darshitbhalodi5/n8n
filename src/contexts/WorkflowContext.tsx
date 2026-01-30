@@ -627,7 +627,15 @@ const WorkflowProviderInner: React.FC<{ children: React.ReactNode }> = ({
               isDefault?: boolean;
             }>) || [];
 
-          const matchedCase = cases.find(
+          // Sort cases to ensure default is first
+          const sortedCases = [...cases].sort((a, b) => {
+            if (a.isDefault) return -1;
+            if (b.isDefault) return 1;
+            return 0;
+          });
+
+          // Find the matched case by sourceHandle ID
+          const matchedCase = sortedCases.find(
             (c) => c.id === connection.sourceHandle
           );
 
@@ -639,9 +647,9 @@ const WorkflowProviderInner: React.FC<{ children: React.ReactNode }> = ({
               { stroke: "#a855f7", fill: "#6b21a8" },
             ];
 
-            const caseIndex = cases
-              .filter((c) => !c.isDefault)
-              .findIndex((c) => c.id === matchedCase.id);
+            // Get the index for non-default cases
+            const nonDefaultCases = sortedCases.filter((c) => !c.isDefault);
+            const caseIndex = nonDefaultCases.findIndex((c) => c.id === matchedCase.id);
             const isDefault = matchedCase.isDefault;
 
             const color = isDefault
