@@ -9,15 +9,15 @@ import { usePrivy, useWallets } from "@privy-io/react-auth";
 import { SimpleCard } from "@/components/ui/SimpleCard";
 import { CheckCircle2, XCircle, Info } from "lucide-react";
 
-interface EmailNodeConfigurationProps {
+interface MailNodeConfigurationProps {
   nodeData: Record<string, unknown>;
   handleDataChange: (updates: Record<string, unknown>) => void;
 }
 
-function EmailNodeConfigurationInner({
+function MailNodeConfigurationInner({
   nodeData,
   handleDataChange,
-}: EmailNodeConfigurationProps) {
+}: MailNodeConfigurationProps) {
   const { wallets } = useWallets();
   const { authenticated: privyAuthenticated } = usePrivy();
   const embeddedWallet = wallets.find((w) => w.walletClientType === "privy");
@@ -40,7 +40,7 @@ function EmailNodeConfigurationInner({
           variant="h5"
           className="font-semibold text-foreground"
         >
-          Email Configuration
+          Mail Configuration
         </Typography>
         <Typography
           variant="bodySmall"
@@ -79,13 +79,12 @@ function EmailNodeConfigurationInner({
           )}
           <Typography
             variant="caption"
-            className={`text-xs ${
-              email.notification.type === "success"
+            className={`text-xs ${email.notification.type === "success"
                 ? "text-success"
                 : email.notification.type === "error"
-                ? "text-destructive"
-                : "text-primary"
-            }`}
+                  ? "text-destructive"
+                  : "text-primary"
+              }`}
           >
             {email.notification.message}
           </Typography>
@@ -95,10 +94,10 @@ function EmailNodeConfigurationInner({
   );
 }
 
-export function EmailNodeConfiguration(props: EmailNodeConfigurationProps) {
+export function MailNodeConfiguration(props: MailNodeConfigurationProps) {
   return (
     <ErrorBoundary>
-      <EmailNodeConfigurationInner {...props} />
+      <MailNodeConfigurationInner {...props} />
     </ErrorBoundary>
   );
 }
