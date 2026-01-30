@@ -3,17 +3,16 @@
 import { Typography } from "@/components/ui/Typography";
 import { DraggableBlock } from "./DraggableBlock";
 import { ComingSoonSection } from "./ComingSoonSection";
-import {
-  blockCategories,
-} from "@/components/blocks/blocks";
 import { useWorkflow } from "@/contexts/WorkflowContext";
+import { useBlock } from "@/blocks/context";
+import type { BlockDefinition } from "@/blocks/types";
 
 interface WorkflowBlockListProps {
   activeCategory: string;
 }
 
 // Helper function to categorize DeFi blocks
-function categorizeDefiBlocks(blocks: typeof blockCategories[0]["blocks"]) {
+function categorizeDefiBlocks(blocks: BlockDefinition[]) {
   const swapBlocks = blocks.filter(
     (block) =>
       block.nodeType === "uniswap" ||
@@ -36,6 +35,8 @@ export function WorkflowBlockList({
     handleBlockClick,
     isBlockDisabled,
   } = useWorkflow();
+  const { getCategories } = useBlock();
+  const blockCategories = getCategories();
 
   // Handle Coming Soon category
   if (activeCategory === "coming-soon") {

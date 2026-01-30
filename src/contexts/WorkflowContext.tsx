@@ -17,13 +17,10 @@ import {
   addEdge,
   ReactFlowInstance,
 } from "reactflow";
-import {
-  getBlockById,
-  iconRegistry,
-  blockCategories,
-  startBlock,
-  type BlockDefinition,
-} from "@/components/blocks/blocks";
+import { getBlockById as getBlockByIdFromRegistry, getCategories } from "@/blocks/registry";
+import { generateIconRegistry } from "@/blocks/registry";
+import type { BlockDefinition } from "@/blocks/types";
+import { BlockProvider, useBlock } from "@/blocks/context";
 import { useCanvasDimensions } from "@/hooks/useCanvasDimensions";
 import { useUnsavedChanges } from "@/hooks/useWorkflowState";
 import { calculateCanvasCenter } from "@/utils/canvas";
@@ -37,19 +34,26 @@ import { SaveWorkflowModal } from "@/components/workflow/SaveWorkflowModal";
 const START_NODE_ID = "start-node";
 
 // Initial nodes include the Start node which is always present
-const initialNodes: Node[] = [
-  {
-    id: START_NODE_ID,
-    type: "start",
-    position: { x: 100, y: 200 },
-    data: {
-      ...startBlock.defaultData,
-      blockId: startBlock.id,
-      iconName: startBlock.iconName,
+const getInitialNodes = (): Node[] => {
+  const startBlock = getBlockByIdFromRegistry("start");
+  if (!startBlock) {
+    return [];
+  }
+  return [
+    {
+      id: START_NODE_ID,
+      type: "start",
+      position: { x: 100, y: 200 },
+      data: {
+        ...startBlock.defaultData,
+        blockId: startBlock.id,
+        iconName: startBlock.iconName,
+      },
+      deletable: false,
     },
-    deletable: false,
-  },
-];
+  ];
+};
+const initialNodes: Node[] = getInitialNodes();
 const initialEdges: Edge[] = [];
 
 // Define handler types for React Flow events
@@ -142,9 +146,10 @@ export const useWorkflow = () => {
   return context;
 };
 
-export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({
+const WorkflowProviderInner: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
+  const { getBlockById } = useBlock();
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
@@ -551,7 +556,7 @@ export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({
       setNodes((nds) => nds.concat(newNode));
       setMobileMenuOpen(false);
     },
-    [nodes, setNodes, canvasDimensions]
+    [nodes, setNodes, canvasDimensions, getBlockById]
   );
 
   // React Flow's built-in node deletion handler
@@ -722,7 +727,7 @@ export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({
         console.error("Error dropping block:", error);
       }
     },
-    [nodes, setNodes]
+    [nodes, setNodes, getBlockById]
   );
 
   const handleBlockDragStart = useCallback(() => {
@@ -839,7 +844,7 @@ export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, [nodes]);
 
-  // Build categories dynamically from blockCategories
+  // Build categories dynamically from block registry
   const categories = useMemo(() => {
     const allCategory = {
       id: "all",
@@ -847,6 +852,9 @@ export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({
       icon: <CheckSquare className="w-4 h-4" />,
     };
 
+    const blockCategories = getCategories();
+    const iconRegistry = generateIconRegistry();
+    
     const dynamicCategories = blockCategories.map((cat) => {
       const IconComponent = cat.iconName ? iconRegistry[cat.iconName] : null;
       return {
@@ -984,5 +992,16 @@ export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({
         />
       )}
     </WorkflowContext.Provider>
+  );
+};
+
+// Wrap WorkflowProvider with BlockProvider
+export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
+  return (
+    <BlockProvider>
+      <WorkflowProviderInner>{children}</WorkflowProviderInner>
+    </BlockProvider>
   );
 };

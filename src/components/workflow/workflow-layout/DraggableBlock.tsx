@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useRef, useState } from "react";
-import type { BlockDefinition } from "@/components/blocks/blocks";
-import { iconRegistry } from "@/components/blocks/blocks";
+import type { BlockDefinition } from "@/blocks/types";
+import { useBlock } from "@/blocks/context";
 import { SimpleCard } from "@/components/ui/SimpleCard";
 
 interface DraggableBlockProps {
@@ -20,6 +20,7 @@ export const DraggableBlock = React.memo(function DraggableBlock({
 }: DraggableBlockProps) {
   const dragRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const { iconRegistry } = useBlock();
   const IconComponent = block.iconName ? iconRegistry[block.iconName] : null;
 
   const handleDragStart = (e: React.DragEvent) => {
