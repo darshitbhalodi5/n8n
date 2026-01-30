@@ -280,6 +280,8 @@ class BlockRegistry {
 
     // Group blocks by category
     for (const block of this.getAllBlocks()) {
+      if (block.hidden) continue;
+
       if (!categoryMap.has(block.category)) {
         categoryMap.set(block.category, []);
       }

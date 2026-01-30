@@ -17,6 +17,7 @@ export const startBlock: BlockDefinition = {
     description: "Workflow entry point",
     status: "idle" as const,
   },
+  hidden: true,
 };
 
 export default startBlock;

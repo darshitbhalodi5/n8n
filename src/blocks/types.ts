@@ -90,6 +90,11 @@ export interface BlockDefinition {
    * Optional shared config component (if multiple blocks share same config)
    */
   sharedConfigComponent?: string;
+
+  /**
+   * Whether the block should be hidden from the UI (e.g. block picker)
+   */
+  hidden?: boolean;
 }
 
 /**
