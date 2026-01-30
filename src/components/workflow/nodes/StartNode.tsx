@@ -1,10 +1,12 @@
 "use client";
 
 import React from "react";
-import { Handle, Position, NodeProps } from "reactflow";
+import { Position, NodeProps } from "reactflow";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/Card";
 import { iconRegistry } from "@/components/blocks/blocks";
+import { ConnectionHandle } from "./ConnectionHandle";
+import { useWorkflow } from "@/contexts/WorkflowContext";
 
 export interface StartNodeData {
   label: string;
@@ -26,25 +28,23 @@ export interface StartNodeProps extends NodeProps<StartNodeData> {
  * - Cannot be deleted
  * - Simple icon-centered design
  */
-export const StartNode = React.memo(function StartNode({
+export function StartNode({
+  id,
   data,
   selected,
   sourcePosition = Position.Right,
 }: StartNodeProps) {
-  // Get icon from registry
+  const { edges } = useWorkflow();
+  const hasEdges = edges.some((e) => e.source === id || e.target === id);
   const IconComponent = data.iconName ? iconRegistry[data.iconName] : null;
 
   return (
-    <div className="relative group">
-      {/* Only source handle - workflow starts here, no inputs */}
-      <Handle
+    <div className={cn("relative group overflow-visible", hasEdges && "has-edges")}>
+      {/* Only source handle - start drawing edge from here */}
+      <ConnectionHandle
         type="source"
         position={sourcePosition}
-        className="react-flow-handle"
-        isConnectable={true}
-        style={{
-          right: sourcePosition === Position.Right ? "-8px" : undefined,
-        }}
+        label="S"
       />
 
       <Card
@@ -68,6 +68,6 @@ export const StartNode = React.memo(function StartNode({
       </Card>
     </div>
   );
-});
+}
 
 export default StartNode;

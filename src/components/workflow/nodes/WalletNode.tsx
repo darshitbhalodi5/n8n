@@ -1,11 +1,13 @@
 "use client";
 
 import React from "react";
-import { Handle, Position, NodeProps } from "reactflow";
+import { Position, NodeProps } from "reactflow";
 import { Card } from "@/components/ui/Card";
 import { cn } from "@/lib/utils";
 import { Wallet } from "lucide-react";
 import { iconRegistry } from "@/components/blocks/blocks";
+import { ConnectionHandle } from "./ConnectionHandle";
+import { useWorkflow } from "@/contexts/WorkflowContext";
 
 export interface WalletNodeData {
   label: string;
@@ -33,43 +35,36 @@ export interface WalletNodeProps extends NodeProps<WalletNodeData> {
  * - Primary-colored fallback icon if no icon specified
  * - Serializable via iconName property
  */
-export const WalletNode = React.memo(function WalletNode({
+export function WalletNode({
+  id,
   data,
   selected,
   showHandles = true,
   sourcePosition = Position.Right,
   targetPosition = Position.Left,
 }: WalletNodeProps) {
-  // Resolve icon: prefer iconName (serializable), fallback to legacy icon prop
+  const { edges } = useWorkflow();
+  const hasEdges = edges.some((e) => e.source === id || e.target === id);
   const IconComponent = data.iconName ? iconRegistry[data.iconName] : null;
   const renderedIcon = IconComponent ? (
     <IconComponent className="w-8 h-8" />
   ) : (
-    // Legacy support: direct icon JSX
     data.icon || null
   );
 
   return (
-    <div className="relative group">
+    <div className={cn("relative group overflow-visible", hasEdges && "has-edges")}>
       {showHandles && (
         <>
-          <Handle
+          <ConnectionHandle
             type="target"
             position={targetPosition}
-            className="react-flow-handle"
-            isConnectable={true}
-            style={{
-              left: targetPosition === Position.Left ? "-8px" : undefined,
-            }}
+            label="W"
           />
-          <Handle
+          <ConnectionHandle
             type="source"
             position={sourcePosition}
-            className="react-flow-handle"
-            isConnectable={true}
-            style={{
-              right: sourcePosition === Position.Right ? "-8px" : undefined,
-            }}
+            label="W"
           />
         </>
       )}
@@ -98,4 +93,4 @@ export const WalletNode = React.memo(function WalletNode({
       </Card>
     </div>
   );
-});
+}

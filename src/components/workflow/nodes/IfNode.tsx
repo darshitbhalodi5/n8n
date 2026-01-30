@@ -1,10 +1,12 @@
 "use client";
 
 import React from "react";
-import { Handle, Position, NodeProps } from "reactflow";
+import { Position, NodeProps } from "reactflow";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/Card";
 import { iconRegistry } from "@/components/blocks/blocks";
+import { ConnectionHandle } from "./ConnectionHandle";
+import { useWorkflow } from "@/contexts/WorkflowContext";
 
 export interface IfNodeData {
   label: string;
@@ -37,62 +39,50 @@ export interface IfNodeProps extends NodeProps<IfNodeData> {
  * - Token-based styling
  * - Memoized for performance
  */
-export const IfNode = React.memo(function IfNode({
+export function IfNode({
+  id,
   data,
   selected,
   showHandles = true,
   sourcePosition = Position.Right,
   targetPosition = Position.Left,
 }: IfNodeProps) {
-  // Resolve icon: prefer iconName (serializable)
+  const { edges } = useWorkflow();
+  const hasEdges = edges.some((e) => e.source === id || e.target === id);
   const IconComponent = data.iconName ? iconRegistry[data.iconName] : null;
   const renderedIcon = IconComponent ? (
     <IconComponent className="w-6 h-6" />
   ) : null;
 
   return (
-    <div className="relative group">
+    <div className={cn("relative group overflow-visible", hasEdges && "has-edges")}>
       {showHandles && (
         <>
-          {/* Input handle (left) */}
-          <Handle
+          {/* Input: where to connect an edge */}
+          <ConnectionHandle
             type="target"
             position={targetPosition}
-            className="react-flow-handle"
-            isConnectable={true}
-            style={{
-              left: targetPosition === Position.Left ? "-8px" : undefined,
-              top: "50%",
-              transform: "translateY(-50%)",
-            }}
+            label="I"
           />
 
-          {/* True output handle (top-right) */}
-          <Handle
+          {/* Output: start edge (true branch) */}
+          <ConnectionHandle
             type="source"
             position={sourcePosition}
             id="true"
-            className="react-flow-handle bg-green-500!"
-            isConnectable={true}
-            style={{
-              right: sourcePosition === Position.Right ? "-8px" : undefined,
-              top: "25%",
-              transform: "translateY(-50%)",
-            }}
+            label="T"
+            variant="true"
+            style={{ top: "25%", transform: "translateY(-50%)" }}
           />
 
-          {/* False output handle (bottom-right) */}
-          <Handle
+          {/* Output: start edge (false branch) */}
+          <ConnectionHandle
             type="source"
             position={sourcePosition}
             id="false"
-            className="react-flow-handle bg-red-500!"
-            isConnectable={true}
-            style={{
-              right: sourcePosition === Position.Right ? "-8px" : undefined,
-              top: "75%",
-              transform: "translateY(-50%)",
-            }}
+            label="F"
+            variant="false"
+            style={{ top: "75%", transform: "translateY(-50%)" }}
           />
         </>
       )}
@@ -120,7 +110,7 @@ export const IfNode = React.memo(function IfNode({
       </Card>
     </div>
   );
-});
+}
 
 export default IfNode;
 

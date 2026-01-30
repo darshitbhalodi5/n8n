@@ -1,11 +1,13 @@
 "use client";
 
 import React from "react";
-import { Handle, Position, NodeProps } from "reactflow";
+import { Position, NodeProps } from "reactflow";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/Card";
 import { iconRegistry } from "@/components/blocks/blocks";
 import type { SwitchCaseData } from "@/components/blocks/blocks";
+import { ConnectionHandle } from "./ConnectionHandle";
+import { useWorkflow } from "@/contexts/WorkflowContext";
 
 export interface SwitchNodeData {
   label: string;
@@ -37,95 +39,63 @@ export interface SwitchNodeProps extends NodeProps<SwitchNodeData> {
  * - Token-based styling
  * - Memoized for performance
  */
-export const SwitchNode = React.memo(function SwitchNode({
+export function SwitchNode({
+  id,
   data,
   selected,
   showHandles = true,
   sourcePosition = Position.Right,
   targetPosition = Position.Left,
 }: SwitchNodeProps) {
-  // Resolve icon: prefer iconName (serializable)
+  const { edges } = useWorkflow();
+  const hasEdges = edges.some((e) => e.source === id || e.target === id);
   const IconComponent = data.iconName ? iconRegistry[data.iconName] : null;
   const renderedIcon = IconComponent ? (
     <IconComponent className="w-6 h-6" />
   ) : null;
 
-  // Get cases for rendering handles
   const cases = data.cases || [];
-  const caseCount = cases.length || 1; // At least 1 for default
+  const caseCount = cases.length || 1;
 
-  // Calculate handle positions based on number of cases
-  // Distribute handles evenly along the right side
   const getHandleTopPosition = (index: number, total: number): string => {
     if (total === 1) return "50%";
     const step = 100 / (total + 1);
     return `${step * (index + 1)}%`;
   };
 
-  // Color coding for cases
-  const getCaseColor = (isDefault: boolean, index: number): string => {
-    if (isDefault) return "bg-gray-400"; // Default case - neutral
-    const colors = [
-      "bg-blue-500",
-      "bg-green-500",
-      "bg-yellow-500",
-      "bg-purple-500",
-    ];
-    return colors[index % colors.length];
-  };
-
   return (
-    <div className="relative group">
+    <div className={cn("relative group overflow-visible", hasEdges && "has-edges")}>
       {showHandles && (
         <>
-          {/* Input handle (left) */}
-          <Handle
+          {/* Input: where to connect an edge */}
+          <ConnectionHandle
             type="target"
             position={targetPosition}
-            className="react-flow-handle"
-            isConnectable={true}
-            style={{
-              left: targetPosition === Position.Left ? "-8px" : undefined,
-              top: "50%",
-              transform: "translateY(-50%)",
-            }}
+            label="S"
           />
 
-          {/* Dynamic output handles based on cases */}
+          {/* Output: start edge (per case) */}
           {cases.map((switchCase, index) => (
-            <Handle
+            <ConnectionHandle
               key={switchCase.id}
               type="source"
               position={sourcePosition}
               id={switchCase.id}
-              className={cn(
-                "react-flow-handle",
-                getCaseColor(!!switchCase.isDefault, index)
-              )}
-              isConnectable={true}
+              label={String(index + 1)}
               style={{
-                right: sourcePosition === Position.Right ? "-8px" : undefined,
                 top: getHandleTopPosition(index, caseCount),
                 transform: "translateY(-50%)",
-                width: "10px",
-                height: "10px",
               }}
             />
           ))}
 
-          {/* If no cases, show a single default handle */}
           {cases.length === 0 && (
-            <Handle
+            <ConnectionHandle
               type="source"
               position={sourcePosition}
               id="default"
-              className="react-flow-handle bg-gray-400"
-              isConnectable={true}
-              style={{
-                right: sourcePosition === Position.Right ? "-8px" : undefined,
-                top: "50%",
-                transform: "translateY(-50%)",
-              }}
+              label="•"
+              style={{ top: "50%", transform: "translateY(-50%)" }}
             />
           )}
         </>
@@ -165,6 +135,6 @@ export const SwitchNode = React.memo(function SwitchNode({
       </Card>
     </div>
   );
-});
+}
 
 export default SwitchNode;

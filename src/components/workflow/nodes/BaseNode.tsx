@@ -1,10 +1,12 @@
 "use client";
 
 import React from "react";
-import { Handle, Position, NodeProps } from "reactflow";
+import { Position, NodeProps } from "reactflow";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/Card";
 import { iconRegistry } from "@/components/blocks/blocks";
+import { ConnectionHandle } from "./ConnectionHandle";
+import { useWorkflow } from "@/contexts/WorkflowContext";
 
 export interface BaseNodeData {
   label: string;
@@ -34,13 +36,30 @@ export interface BaseNodeProps extends NodeProps<BaseNodeData> {
  * - Token-based styling
  * - Memoized for performance
  */
-export const BaseNode = React.memo(function BaseNode({
+/** Derive a single-letter handle label from node type (e.g. "telegram" → "T") */
+function getHandleLabel(nodeType: string | undefined, data: BaseNodeData): string {
+  const custom = data.handleLabel as string | undefined;
+  if (custom && custom.length > 0) return custom.charAt(0).toUpperCase();
+  if (nodeType && nodeType !== "base") {
+    const first = nodeType.charAt(0).toUpperCase();
+    if (nodeType.includes("transform")) return "A";
+    return first;
+  }
+  return "•";
+}
+
+export function BaseNode({
+  id,
   data,
   selected,
+  type: nodeType,
   showHandles = true,
   sourcePosition = Position.Right,
   targetPosition = Position.Left,
 }: BaseNodeProps) {
+  const { edges } = useWorkflow();
+  const hasEdges = edges.some((e) => e.source === id || e.target === id);
+
   // Resolve icon: prefer iconName (serializable), fallback to legacy icon prop
   const IconComponent = data.iconName ? iconRegistry[data.iconName] : null;
   const renderedIcon = IconComponent ? (
@@ -50,29 +69,21 @@ export const BaseNode = React.memo(function BaseNode({
     data.icon || null
   );
 
+  const handleLabel = getHandleLabel(nodeType, data);
+
   return (
-    <div className="relative group">
+    <div className={cn("relative group overflow-visible", hasEdges && "has-edges")}>
       {showHandles && (
         <>
-          <Handle
+          <ConnectionHandle
             type="target"
             position={targetPosition}
-            className="react-flow-handle"
-            isConnectable={true}
-            style={{
-              left: targetPosition === Position.Left ? "-8px" : undefined,
-              right: targetPosition === Position.Right ? "8px" : undefined,
-            }}
+            label={handleLabel}
           />
-          <Handle
+          <ConnectionHandle
             type="source"
             position={sourcePosition}
-            className="react-flow-handle"
-            isConnectable={true}
-            style={{
-              left: sourcePosition === Position.Left ? "-8px" : undefined,
-              right: sourcePosition === Position.Right ? "-8px" : undefined,
-            }}
+            label={handleLabel}
           />
         </>
       )}
@@ -98,4 +109,4 @@ export const BaseNode = React.memo(function BaseNode({
       </Card>
     </div>
   );
-});
+}
