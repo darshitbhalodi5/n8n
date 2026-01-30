@@ -6,7 +6,6 @@
 
 import type { Node, Edge } from "reactflow";
 import { api, formatErrorWithRequestId, ApiClientError } from "@/lib/api-client";
-import { getAiModelConfig } from "@/config/ai";
 import type {
   WorkflowListResponse,
   WorkflowDetailResponse,
@@ -22,152 +21,19 @@ import type {
   PublicWorkflowDetail,
 } from "@/types/workflow";
 
-/**
- * Normalize frontend node type to backend NodeType enum
- * Maps frontend types to backend processor types
- */
-function normalizeNodeType(frontendType: string): string {
-  const typeMap: Record<string, string> = {
-    start: "START", // Start node
-    if: "IF", // IF node
-    switch: "SWITCH", // Switch node
-    slack: "SLACK", // Slack node (has dedicated processor)
-    telegram: "TELEGRAM", // Telegram node (has dedicated processor)
-    mail: "EMAIL", // Email node (has dedicated processor)
-    uniswap: "SWAP", // Uniswap is a swap
-    relay: "SWAP", // Relay is a swap
-    oneinch: "SWAP", // 1inch is a swap
-    "wallet-node": "WALLET", // Wallet node
-    chainlink: "CHAINLINK_PRICE_ORACLE", // Chainlink oracle node
-    pyth: "PYTH_PRICE_ORACLE", // Pyth oracle node
-    "ai-transform": "LLM_TRANSFORM", // AI Transform node
-  };
-  // Default to the uppercase version if not in map, or TRIGGER as fallback
-  return typeMap[frontendType] || frontendType.toUpperCase() || "TRIGGER";
-}
+// Import backend mappings from centralized blocks system
+import {
+  normalizeNodeType,
+  extractNodeConfig,
+  transformNodeToCanvas,
+} from "@/blocks/utils/backend-mapping";
 
 /**
  * Extract node-specific configuration from node data
+ * Uses centralized implementation from @/blocks/utils/backend-mapping
  */
-function extractNodeConfig(node: Node): any {
-  const data = node.data || {};
-  const type = node.type;
-
-  switch (type) {
-    case "slack":
-      return {
-        connectionId: data.slackConnectionId,
-        message: data.slackMessage || data.testMessage || "",
-        connectionType: data.slackConnectionType || "webhook",
-        channelId: data.slackChannelId,
-      };
-
-    case "telegram":
-      return {
-        connectionId: data.telegramConnectionId,
-        chatId: data.telegramChatId,
-        message: data.telegramMessage || "",
-      };
-
-    case "uniswap":
-    case "relay":
-    case "oneinch":
-    case "lifi":
-      return {
-        // Ensure provider is always persisted; LI.FI blocks should never fall back to UNISWAP.
-        provider: data.swapProvider || (type === "lifi" ? "LIFI" : undefined),
-        chain: data.swapChain,
-        inputConfig: {
-          sourceToken: {
-            address: data.sourceTokenAddress,
-            symbol: data.sourceTokenSymbol,
-            decimals: data.sourceTokenDecimals || 18,
-          },
-          destinationToken: {
-            address: data.destinationTokenAddress,
-            symbol: data.destinationTokenSymbol,
-            decimals: data.destinationTokenDecimals || 18,
-          },
-          amount: data.swapAmount,
-          swapType: data.swapType || "EXACT_INPUT",
-          walletAddress: data.walletAddress,
-        },
-        simulateFirst: data.simulateFirst ?? true,
-        autoRetryOnFailure: data.autoRetryOnFailure ?? true,
-        maxRetries: data.maxRetries ?? 3,
-      };
-
-    case "if":
-      return {
-        leftPath: data.leftPath,
-        operator: data.operator,
-        rightValue: data.rightValue,
-      };
-
-    case "switch":
-      return {
-        cases: data.cases || [],
-        defaultCaseId: data.defaultCaseId,
-      };
-
-    case "mail":
-      return {
-        to: data.emailTo,
-        subject: data.emailSubject,
-        body: data.emailBody,
-      };
-
-    case "ai-transform":
-      {
-        const aiConfig = getAiModelConfig(data.llmModel);
-
-        return {
-          provider: data.llmProvider,
-          model: data.llmModel,
-          userPromptTemplate: data.userPromptTemplate,
-          outputSchema: data.outputSchema,
-          // Temperature and max tokens are enforced by internal config
-          temperature: aiConfig.temperature,
-          maxOutputTokens: aiConfig.maxOutputTokens,
-        };
-      }
-
-    case "start":
-      return {};
-
-    case "wallet-node":
-      return {};
-
-    case "chainlink":
-      return {
-        provider: "CHAINLINK",
-        chain: data.oracleChain || "ARBITRUM_SEPOLIA",
-        aggregatorAddress: data.aggregatorAddress,
-        staleAfterSeconds: data.staleAfterSeconds || 3600,
-        // Include metadata for debugging
-        ...(data.symbol && { symbol: data.symbol }),
-        ...(data.feedName && { feedName: data.feedName }),
-      };
-
-    case "pyth":
-      return {
-        provider: "PYTH",
-        chain: data.oracleChain || "ARBITRUM_SEPOLIA",
-        priceFeedId: data.priceFeedId,
-        staleAfterSeconds: data.staleAfterSeconds || 3600,
-        // Include metadata for debugging
-        ...(data.symbol && { symbol: data.symbol }),
-        ...(data.feedName && { feedName: data.feedName }),
-      };
-
-    default:
-      // Fallback: extract common fields
-      return {
-        ...(data.leftPath && { leftPath: data.leftPath }),
-        ...(data.operator && { operator: data.operator }),
-        ...(data.rightValue && { rightValue: data.rightValue }),
-      };
-  }
+function extractNodeConfigForBackend(node: Node): any {
+  return extractNodeConfig(node);
 }
 
 /**
@@ -181,7 +47,7 @@ function transformNodeToBackend(node: Node) {
     type: backendType,
     name: node.data?.label || node.id,
     description: node.data?.description || "",
-    config: extractNodeConfig(node),
+    config: extractNodeConfigForBackend(node),
     position: node.position,
     metadata: {
       blockId: node.data?.blockId,
@@ -651,105 +517,10 @@ export async function getWorkflowExecutions(params: {
 
 /**
  * Transform backend node to React Flow format
+ * @deprecated Use transformNodeToCanvas from @/blocks/utils/backend-mapping instead
+ * Re-exported for backward compatibility
  */
-export function transformNodeToCanvas(backendNode: BackendNode): Node {
-  const metadata = backendNode.metadata || {};
-  const config = backendNode.config || {};
-
-  // Determine the frontend node type from metadata or backend type
-  const frontendType = (metadata.frontendType as string) ||
-    backendNode.type.toLowerCase() ||
-    "base";
-
-  // Reconstruct node data from config
-  const nodeData: Record<string, unknown> = {
-    label: backendNode.name || backendNode.id,
-    description: backendNode.description || "",
-    blockId: metadata.blockId,
-    iconName: metadata.iconName,
-    status: metadata.status,
-  };
-
-  // Map config back to frontend data format based on type
-  switch (frontendType) {
-    case "slack":
-      nodeData.slackConnectionId = config.connectionId;
-      nodeData.testMessage = config.message;
-      nodeData.slackMessage = config.message;
-      nodeData.slackConnectionType = config.connectionType;
-      nodeData.slackChannelId = config.channelId;
-      break;
-
-    case "telegram":
-      nodeData.telegramConnectionId = config.connectionId;
-      nodeData.telegramChatId = config.chatId;
-      nodeData.telegramMessage = config.message;
-      break;
-
-    case "uniswap":
-    case "relay":
-    case "oneinch":
-    case "lifi":
-      nodeData.swapProvider = config.provider;
-      nodeData.swapChain = config.chain;
-      if (config.inputConfig) {
-        const inputConfig = config.inputConfig as Record<string, any>;
-        nodeData.sourceTokenAddress = inputConfig.sourceToken?.address;
-        nodeData.sourceTokenSymbol = inputConfig.sourceToken?.symbol;
-        nodeData.sourceTokenDecimals = inputConfig.sourceToken?.decimals;
-        nodeData.destinationTokenAddress = inputConfig.destinationToken?.address;
-        nodeData.destinationTokenSymbol = inputConfig.destinationToken?.symbol;
-        nodeData.destinationTokenDecimals = inputConfig.destinationToken?.decimals;
-        nodeData.swapAmount = inputConfig.amount;
-        nodeData.swapType = inputConfig.swapType;
-        nodeData.walletAddress = inputConfig.walletAddress;
-      }
-      nodeData.simulateFirst = config.simulateFirst;
-      nodeData.autoRetryOnFailure = config.autoRetryOnFailure;
-      nodeData.maxRetries = config.maxRetries;
-      break;
-
-    case "if":
-      nodeData.leftPath = config.leftPath;
-      nodeData.operator = config.operator;
-      nodeData.rightValue = config.rightValue;
-      break;
-
-    case "switch":
-      nodeData.cases = config.cases;
-      nodeData.defaultCaseId = config.defaultCaseId;
-      break;
-
-    case "mail":
-      nodeData.emailTo = config.to;
-      nodeData.emailSubject = config.subject;
-      nodeData.emailBody = config.body;
-      break;
-
-    case "ai-transform": {
-      nodeData.llmProvider = config.provider;
-      nodeData.llmModel = config.model;
-      nodeData.userPromptTemplate = config.userPromptTemplate;
-      nodeData.outputSchema = config.outputSchema;
-
-      const aiConfig = getAiModelConfig(config.model as string | undefined);
-      // Use backend-provided values if present, otherwise fall back to internal config
-      nodeData.temperature =
-        (config.temperature as number | undefined) ?? aiConfig.temperature;
-      nodeData.maxOutputTokens =
-        (config.maxOutputTokens as number | undefined) ?? aiConfig.maxOutputTokens;
-      break;
-    }
-  }
-
-  return {
-    id: backendNode.id,
-    type: frontendType,
-    position: backendNode.position || { x: 0, y: 0 },
-    data: nodeData,
-    deletable: frontendType !== "start",
-  };
-}
+export { transformNodeToCanvas } from "@/blocks/utils/backend-mapping";
 
 /**
  * Transform backend edge to React Flow format

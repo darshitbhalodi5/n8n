@@ -1,16 +1,18 @@
 /**
  * Node Types Configuration
- * Centralized node type registry for React Flow
+ * Auto-generated node type registry for React Flow
+ * Uses block registry for auto-discovery - special cases override defaults
  */
 
 import React from "react";
 import { Position, NodeTypes } from "reactflow";
 import type { NodeProps } from "reactflow";
-import { BaseNode } from "./nodes/BaseNode";
-import { WalletNode } from "./nodes/WalletNode";
-import { StartNode } from "./nodes/StartNode";
-import { IfNode } from "./nodes/IfNode";
-import { SwitchNode } from "./nodes/SwitchNode";
+import { BaseNode } from "@/blocks/nodes/BaseNode";
+import { WalletNode } from "@/blocks/nodes/WalletNode";
+import { StartNode } from "@/blocks/nodes/StartNode";
+import { IfNode } from "@/blocks/nodes/IfNode";
+import { SwitchNode } from "@/blocks/nodes/SwitchNode";
+import { getAllBlocks, discoverNodeComponents } from "@/blocks/registry";
 
 /**
  * Default configuration for node handles
@@ -59,49 +61,41 @@ SwitchNodeWrapper.displayName = "SwitchNodeWrapper";
 
 /**
  * Node type registry
- * Maps node type strings to React components
- *
- * To add a new node type:
- * 1. Create the component in ./nodes/
- * 2. Create a wrapper function above
- * 3. Add the mapping below
+ * Auto-generated from discovered node components and block registry
+ * 
+ * Priority:
+ * 1. Explicit overrides (Start, If, Switch, Wallet)
+ * 2. Auto-discovered node components (from nodes/ folder)
+ * 3. Auto-generated from block registry (defaults to BaseNode)
  */
 export const nodeTypes: NodeTypes = {
-  // Start node - workflow entry point (special shape)
-  start: StartNodeWrapper,
-
-  // Generic base node
+  // Generic base node fallback
   base: BaseNodeWrapper,
-
-  // Control flow nodes
-  if: IfNodeWrapper,
-  switch: SwitchNodeWrapper,
-
-  // Social/messaging nodes (all use base node for now)
-  telegram: BaseNodeWrapper,
-  mail: BaseNodeWrapper,
-  slack: BaseNodeWrapper,
-
-  // DeFi / swap nodes (Uniswap, Relay, 1inch, LiFi) - use base node visuals
-  uniswap: BaseNodeWrapper,
-  relay: BaseNodeWrapper,
-  oneinch: BaseNodeWrapper,
-  lifi: BaseNodeWrapper,
-
-  // DeFi / lending nodes (Aave, Compound) - use base node visuals
-  aave: BaseNodeWrapper,
-  compound: BaseNodeWrapper,
-
-  // Oracle nodes (Chainlink, Pyth) - use base node visuals
-  chainlink: BaseNodeWrapper,
-  pyth: BaseNodeWrapper,
-
-  // AI Transform node - use base node visuals
-  "ai-transform": BaseNodeWrapper,
-
-  // Wallet node (specialized)
-  "wallet-node": WalletNodeWrapper,
 };
+
+// Step 1: Add auto-discovered node components (from nodes/ folder)
+const discoveredNodes = discoverNodeComponents();
+for (const [nodeType, component] of discoveredNodes.entries()) {
+  // Wrap discovered components with default handle config
+  nodeTypes[nodeType] = ((props: NodeProps) => (
+    React.createElement(component, { ...props, ...DEFAULT_HANDLE_CONFIG })
+  )) as React.FC<NodeProps>;
+}
+
+// Step 2: Explicit overrides for special nodes (take precedence over discovered)
+nodeTypes.start = StartNodeWrapper;
+nodeTypes.if = IfNodeWrapper;
+nodeTypes.switch = SwitchNodeWrapper;
+nodeTypes["wallet-node"] = WalletNodeWrapper;
+
+// Step 3: Auto-generate node types from block registry (defaults to BaseNode)
+const allBlocks = getAllBlocks();
+for (const block of allBlocks) {
+  if (block.nodeType && !nodeTypes[block.nodeType]) {
+    // Only add if not already defined (discovered/overrides take precedence)
+    nodeTypes[block.nodeType] = BaseNodeWrapper;
+  }
+}
 
 /**
  * List of available node type keys

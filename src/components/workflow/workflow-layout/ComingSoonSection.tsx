@@ -11,9 +11,9 @@ import {
 } from "lucide-react";
 import {
     comingSoonCategories,
-    iconRegistry,
     type ComingSoonCategoryDefinition,
-} from "@/components/blocks/blocks";
+} from "@/blocks/coming-soon/coming-soon";
+import { iconRegistry } from "@/blocks/registry";
 
 // Theme color - single color for all categories
 const themeColor = {

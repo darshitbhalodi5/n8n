@@ -3,7 +3,7 @@
  * Properly typed interfaces for all node configurations
  */
 
-import type { SwitchCaseData } from "@/components/blocks/blocks";
+import type { SwitchCaseData } from "@/blocks/definitions/control/switch";
 
 // Base node data shared by all nodes
 export interface BaseNodeData {

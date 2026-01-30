@@ -40,14 +40,11 @@ body {
 /* Hide scrollbar */
 .scrollbar-hide {
   -ms-overflow-style: none;
-  /* IE and Edge */
   scrollbar-width: none;
-  /* Firefox */
 }
 
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
-  /* Chrome, Safari and Opera */
 }
 
 /* React Flow: allow handles (connection circles) to show outside node bounds */
@@ -59,58 +56,15 @@ body {
   padding: 0;
 }
 
-/* React Flow Handle Styling - Visible connection points for drawing edges */
-.react-flow__handle {
-  width: 16px !important;
-  height: 16px !important;
-  border: 2px solid rgba(255, 255, 255, 0.9) !important;
-  background: rgba(255, 255, 255, 0.2) !important;
-  border-radius: 50% !important;
-  z-index: 10;
-  opacity: 1;
-}
-
-.react-flow__handle::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 8px;
-  height: 8px;
-  background: #ffffff;
-  border-radius: 50%;
-  opacity: 1;
-}
-
-.react-flow__handle:hover {
-  background: rgba(255, 255, 255, 0.1) !important;
-  border-color: rgba(255, 255, 255, 0.5) !important;
-}
-
-.react-flow__handle:hover::after {
-  background: #ffffff;
-}
-
-.react-flow__handle.react-flow__handle-connecting {
-  background: rgba(255, 255, 255, 0.2) !important;
-  border-color: rgba(255, 255, 255, 0.5) !important;
-}
-
-.react-flow__handle.react-flow__handle-valid {
-  background: rgba(34, 197, 94, 0.2) !important;
-  border-color: #22c55e !important;
-}
-
-/* Custom connection handle - small circle with T-style icon only */
+/* Custom connection handle - small circle, theme aligned with FormInput (white/5, white/10, white/50) */
 /* Hidden by default; show on node hover or when node is selected (clicked) */
 .react-flow__handle.connection-handle {
   width: 12px !important;
   height: 12px !important;
   min-width: 12px !important;
   min-height: 12px !important;
-  background: rgba(34, 197, 94, 0.35) !important;
-  border: 1px solid rgba(148, 163, 184, 0.9) !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
   border-radius: 50% !important;
   z-index: 10;
   opacity: 0;
@@ -147,7 +101,7 @@ body {
 }
 
 .react-flow__handle.connection-handle:hover {
-  background: rgba(34, 197, 94, 0.55) !important;
+  background: rgba(255, 255, 255, 0.1) !important;
   border-color: rgba(255, 255, 255, 0.5) !important;
 }
 
@@ -159,19 +113,22 @@ body {
   /* Input: where to connect an edge */
 }
 
+/* True handle - theme white accents */
 .react-flow__handle.connection-handle-true {
-  background: rgba(34, 197, 94, 0.4) !important;
-  border-color: rgba(34, 197, 94, 0.9) !important;
+  background: rgba(56, 192, 51, 0.08) !important;
+  border-color: rgba(56, 192, 51, 0.25) !important;
 }
 
+/* False handle - subtle red for error/destructive (FormInput uses border-red-500 for error) */
 .react-flow__handle.connection-handle-false {
-  background: rgba(239, 68, 68, 0.35) !important;
-  border-color: rgba(239, 68, 68, 0.9) !important;
+  background: rgba(239, 68, 68, 0.15) !important;
+  border-color: rgba(239, 68, 68, 0.5) !important;
 }
 
+/* Connecting handle - focus state like FormInput focus:border-white/50 */
 .react-flow__handle.connection-handle.react-flow__handle-connecting,
 .react-flow__handle.connection-handle.react-flow__handle-valid {
-  background: rgba(34, 197, 94, 0.5) !important;
+  background: rgba(255, 255, 255, 0.1) !important;
   border-color: rgba(255, 255, 255, 0.5) !important;
 }
 

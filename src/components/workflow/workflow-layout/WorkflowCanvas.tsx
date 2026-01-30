@@ -107,7 +107,7 @@ function WorkflowCanvasInner({
           animated: true,
           style: {
             stroke: "#ffffff",
-            strokeWidth: 1,
+            strokeWidth: 0.5,
           },
         }}
         className="workflow-canvas"
