@@ -76,8 +76,8 @@ export function extractNodeConfig(node: Node): Record<string, unknown> {
 
     case "switch":
       return {
+        valuePath: data.valuePath || "",
         cases: data.cases || [],
-        defaultCaseId: data.defaultCaseId,
       };
 
     case "mail":

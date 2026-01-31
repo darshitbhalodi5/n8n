@@ -56,7 +56,15 @@ export function SwitchNode({
   ) : null;
 
   const cases = data.cases || [];
-  const caseCount = cases.length || 1;
+  
+  // Ensure default case is always first
+  const sortedCases = [...cases].sort((a, b) => {
+    if (a.isDefault) return -1;
+    if (b.isDefault) return 1;
+    return 0;
+  });
+  
+  const caseCount = sortedCases.length || 1;
 
   const getHandleTopPosition = (index: number, total: number): string => {
     if (total === 1) return "50%";
@@ -76,26 +84,26 @@ export function SwitchNode({
           />
 
           {/* Output: start edge (per case) */}
-          {cases.map((switchCase, index) => (
-            <ConnectionHandle
-              key={switchCase.id}
-              type="source"
-              position={sourcePosition}
-              id={switchCase.id}
-              label={String(index + 1)}
-              style={{
-                top: getHandleTopPosition(index, caseCount),
-                transform: "translateY(-50%)",
-              }}
-            />
-          ))}
-
-          {cases.length === 0 && (
+          {sortedCases.length > 0 ? (
+            sortedCases.map((switchCase, index) => (
+              <ConnectionHandle
+                key={switchCase.id}
+                type="source"
+                position={sourcePosition}
+                id={switchCase.id}
+                label={switchCase.isDefault ? "D" : String(index)}
+                style={{
+                  top: getHandleTopPosition(index, caseCount),
+                  transform: "translateY(-50%)",
+                }}
+              />
+            ))
+          ) : (
             <ConnectionHandle
               type="source"
               position={sourcePosition}
               id="default"
-              label="•"
+              label="D"
               style={{ top: "50%", transform: "translateY(-50%)" }}
             />
           )}
