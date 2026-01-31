@@ -118,10 +118,6 @@ export function WorkflowDashboard() {
     }, [router]);
 
     const handleDelete = useCallback(async (workflowId: string) => {
-        if (!confirm("Are you sure you want to delete this workflow? This action cannot be undone.")) {
-            return;
-        }
-
         setIsDeleting(workflowId);
 
         try {

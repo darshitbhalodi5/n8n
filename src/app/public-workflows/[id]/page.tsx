@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { WorkflowProvider } from "@/contexts/WorkflowContext";
 import { PublicWorkflowPreview } from "@/components/workflow/PublicWorkflowPreview";
 import { getPublicWorkflow } from "@/utils/workflow-api";
 
@@ -59,7 +60,9 @@ export default async function PublicWorkflowDetailPage({
 
   return (
     <div className="min-h-screen bg-background">
-      <PublicWorkflowPreview workflowId={id} />
+      <WorkflowProvider>
+        <PublicWorkflowPreview workflowId={id} />
+      </WorkflowProvider>
     </div>
   );
 }

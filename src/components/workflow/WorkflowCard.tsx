@@ -1,12 +1,12 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import type { WorkflowSummary } from "@/types/workflow";
 import { Play, Edit3, Trash2, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getStatusColor, getStatusIcon } from "@/utils/workflow-utils";
-import { Button } from "@/components/ui/Button";
+import { DeleteConfirmDialog } from "@/components/ui/DeleteConfirmDialog";
 
 interface WorkflowCardProps {
     workflow: WorkflowSummary;
@@ -38,9 +38,18 @@ export const WorkflowCard = React.memo(function WorkflowCard({
     onRun,
 }: WorkflowCardProps) {
     const hasTags = workflow.tags && workflow.tags.length > 0;
+    const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
+    const handleDeleteClick = () => setShowDeleteDialog(true);
+    const handleDeleteConfirm = () => {
+        onDelete();
+        setShowDeleteDialog(false);
+    };
+    const handleDeleteCancel = () => setShowDeleteDialog(false);
 
     if (viewMode === "list") {
         return (
+        <>
             <div
                 className={cn(
                     "group flex items-center gap-5 rounded-xl border border-white/6 bg-white/2 px-6 py-4 transition-colors hover:border-white/10 hover:bg-white/4",
@@ -75,23 +84,33 @@ export const WorkflowCard = React.memo(function WorkflowCard({
                     <button type="button" onClick={onEdit} title="Edit" className={iconBtn}>
                         <Edit3 className="h-4 w-4" />
                     </button>
-                    <Button
-                        onClick={onDelete}
+                    <button
+                        type="button"
+                        onClick={handleDeleteClick}
                         disabled={isDeleting}
-                        loading={isDeleting}
-                        variant="delete"
                         title="Delete"
-                        className="h-8 w-8 shrink-0 rounded-md p-0 opacity-60 hover:opacity-100"
+                        className={iconBtn}
+                        aria-label="Delete workflow"
                     >
                         <Trash2 className="h-4 w-4" />
-                    </Button>
+                    </button>
                 </div>
             </div>
+            <DeleteConfirmDialog
+                open={showDeleteDialog}
+                onOpenChange={setShowDeleteDialog}
+                onConfirm={handleDeleteConfirm}
+                onCancel={handleDeleteCancel}
+                title="Delete workflow?"
+                description="This workflow will be permanently deleted and cannot be recovered."
+            />
+        </>
         );
     }
 
     // ——— Grid: editorial, minimal card with left accent ———
     return (
+        <>
         <article
             className={cn(
                 "relative flex flex-col overflow-hidden rounded-xl border border-white/6 bg-white/2 transition-colors hover:border-white/10 hover:bg-white/4",
@@ -119,16 +138,16 @@ export const WorkflowCard = React.memo(function WorkflowCard({
                         <button type="button" onClick={onEdit} title="Edit" className={iconBtn}>
                             <Edit3 className="h-4 w-4" />
                         </button>
-                        <Button
-                            onClick={onDelete}
+                        <button
+                            type="button"
+                            onClick={handleDeleteClick}
                             disabled={isDeleting}
-                            loading={isDeleting}
-                            variant="delete"
                             title="Delete"
-                            className="h-8 w-8 shrink-0 rounded-md p-0 opacity-60 hover:opacity-100"
+                            className={iconBtn}
+                            aria-label="Delete workflow"
                         >
                             <Trash2 className="h-4 w-4" />
-                        </Button>
+                        </button>
                     </div>
                 </div>
 
@@ -170,5 +189,14 @@ export const WorkflowCard = React.memo(function WorkflowCard({
                 )}
             </div>
         </article>
+        <DeleteConfirmDialog
+            open={showDeleteDialog}
+            onOpenChange={setShowDeleteDialog}
+            onConfirm={handleDeleteConfirm}
+            onCancel={handleDeleteCancel}
+            title="Delete workflow?"
+            description="This workflow will be permanently deleted and cannot be recovered."
+        />
+        </>
     );
 });

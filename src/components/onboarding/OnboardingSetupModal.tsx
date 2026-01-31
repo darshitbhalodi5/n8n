@@ -14,7 +14,6 @@ import {
     RefreshCw,
     Shield,
     PenLine,
-    X,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 
@@ -190,38 +189,38 @@ export const OnboardingSetupModal: React.FC = () => {
     }
 
     return (
-        <div className="fixed inset-0 z-100 flex items-center justify-center bg-background">
+        <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-background"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="onboarding-dialog-title"
+            aria-describedby="onboarding-dialog-description"
+        >
             {/* Backdrop */}
-            <div className="absolute inset-0 bg-background backdrop-blur-md" />
+            <div className="fixed inset-0 bg-background backdrop-blur-md" />
 
-            {/* Modal */}
-            <div className="relative z-50 w-full max-w-[425px] p-6 gap-4 bg-black/95 border-white/20 border rounded-xl shadow-lg animate-in fade-in-0 zoom-in-95 duration-200 overflow-hidden">
-                {/* Header */}
-                <div className="p-6 pb-4 text-center border-b border-border bg-linear-to-b from-primary/10 to-transparent relative">
-                    {/* Dismiss button (top-right) */}
-                    {!isOnboarding && (
-                        <button
-                            onClick={dismissOnboarding}
-                            className="absolute top-4 right-4 p-2 hover:bg-muted rounded-lg transition-colors"
-                            title="Dismiss (you can resume later)"
-                        >
-                            <X className="w-4 h-4 text-muted-foreground" />
-                        </button>
-                    )}
-
-                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
-                        <Shield className="w-8 h-8 text-primary" />
-                    </div>
-                    <h2 className="text-xl font-semibold text-foreground">
-                        Smart Wallet Setup
-                    </h2>
-                    <p className="text-sm text-muted-foreground mt-2 max-w-xs mx-auto">
-                        Setting up your Smart Wallets for seamless automated transactions
-                    </p>
-                </div>
+            {/* Modal Content - same layout as DeleteConfirmDialog */}
+            <div
+                className="relative z-50 w-full max-w-[425px] flex flex-col items-center justify-center p-6 gap-4 bg-black/95 border-white/20 border rounded-xl shadow-lg animate-in fade-in-0 zoom-in-95 duration-200"
+                onClick={(e) => e.stopPropagation()}
+            >
+                {/* Icon + Title + Description (centered, like delete modal) */}
+                <Shield className="w-16 h-16 text-white shrink-0" />
+                <h2
+                    id="onboarding-dialog-title"
+                    className="text-xl font-semibold text-center text-foreground"
+                >
+                    Smart Wallet Setup
+                </h2>
+                <p
+                    id="onboarding-dialog-description"
+                    className="text-base text-center text-muted-foreground max-w-[80%]"
+                >
+                    Setting up your Smart Wallets for seamless automated transactions
+                </p>
 
                 {/* Progress Steps */}
-                <div className="p-6 space-y-4 max-h-[400px] overflow-y-auto">
+                <div className="w-full space-y-4 max-h-[320px] overflow-y-auto">
                     {chainsToSetup.map((chain) => (
                         <ChainProgressCard
                             key={chain.key}
@@ -238,41 +237,29 @@ export const OnboardingSetupModal: React.FC = () => {
                     ))}
                 </div>
 
-                {/* Footer */}
-                <div className="p-4 border-t border-border bg-muted/30">
+                {/* Footer - action area like delete modal */}
+                <div className="w-full flex flex-col items-center gap-3 pt-2">
                     {allComplete ? (
-                        <div className="text-center py-2">
-                            <p className="text-sm font-medium text-green-500 flex items-center justify-center gap-2">
-                                <CheckCircle2 className="w-4 h-4" />
-                                Setup Complete!
-                            </p>
-                            <p className="text-xs text-muted-foreground mt-1">
-                                Your Smart Wallets are ready
-                            </p>
-                        </div>
+                        <p className="text-sm font-medium text-green-500 flex items-center justify-center gap-2">
+                            <CheckCircle2 className="w-4 h-4" />
+                            Setup Complete!
+                        </p>
                     ) : currentSigningChain ? (
-                        <div className="text-center py-2">
-                            <p className="text-sm text-primary font-medium flex items-center justify-center gap-2">
-                                <PenLine className="w-4 h-4" />
-                                Please sign in your wallet
-                            </p>
-                            <p className="text-xs text-muted-foreground mt-1">
-                                This authorizes automated transactions
-                            </p>
-                        </div>
-                    ) : (
-                        <div className="flex items-center justify-between">
-                            <p className="text-xs text-muted-foreground py-1">
-                                This setup is required for automated workflows
-                            </p>
-                            {!isOnboarding && (
-                                <Button
-                                    onClick={dismissOnboarding}
-                                    className="h-8 px-3 text-xs bg-transparent hover:bg-muted"
-                                >
-                                    Skip for now
-                                </Button>
-                            )}
+                        <p className="text-sm text-primary font-medium flex items-center justify-center gap-2">
+                            <PenLine className="w-4 h-4" />
+                            Please sign in your wallet
+                        </p>
+                    ) : null}
+                    {!isOnboarding && !allComplete && (
+                        <div className="flex gap-3 w-full justify-center">
+                            <Button
+                                onClick={dismissOnboarding}
+                                variant="delete"
+                                border
+                                className="flex-1 min-w-[100px]"
+                            >
+                                Skip for now
+                            </Button>
                         </div>
                     )}
                 </div>
