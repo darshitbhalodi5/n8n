@@ -15,7 +15,6 @@ import { WorkflowBlockList } from "./workflow-layout/WorkflowBlockList";
 import { WorkflowRightSidebar } from "./workflow-layout/WorkflowRightSidebar";
 import { CategoryDropdown } from "@/components/ui/CategoryDropdown";
 import { CanvasControls } from "./workflow-layout/CanvasControls";
-import { ExecutionHistoryPanel } from "./ExecutionHistoryPanel";
 
 interface WorkflowLayoutProps {
   onCategoryChange?: (categoryId: string) => void;
@@ -212,11 +211,8 @@ export function WorkflowLayout({ onCategoryChange }: WorkflowLayoutProps) {
         >
           <WorkflowCanvas showBackground className="h-full" />
 
-          {/* Canvas Controls - Bottom Right */}
+          {/* Canvas Controls - Bottom Right (with execution history link) */}
           <CanvasControls />
-
-          {/* Execution History Panel - Bottom */}
-          <ExecutionHistoryPanel />
         </div>
 
         {/* Status Bar */}

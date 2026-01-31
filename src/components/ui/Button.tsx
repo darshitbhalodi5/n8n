@@ -6,26 +6,31 @@ export interface ButtonProps
   loading?: boolean;
   variant?: "default" | "delete";
   border?: boolean;
+  /** Border color when border is true. Any valid CSS color (e.g. #f97316, rgb(249,115,22)). */
+  borderColor?: string;
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, disabled, loading, children, variant = "default", border = false, ...props }, ref) => {
+  ({ className, disabled, loading, children, variant = "default", border = false, borderColor, style, ...props }, ref) => {
     const isDelete = variant === "delete";
-    
+    const hasCustomBorderColor = border && borderColor != null;
+
     return (
       <button
         className={cn(
           "cursor-pointer group relative px-6 h-[50px] overflow-hidden rounded-full flex items-center justify-center gap-2 whitespace-nowrap transition-colors disabled:opacity-50 disabled:cursor-not-allowed",
-          border && "border",
-          isDelete && border && "border-red-500 bg-card hover:bg-red-500/10",
+          border && "border-2",
+          !hasCustomBorderColor && isDelete && border && "border-red-500 bg-card hover:bg-red-500/10",
+          hasCustomBorderColor && "bg-transparent",
           className
         )}
+        style={hasCustomBorderColor ? { ...style, borderColor } : style}
         ref={ref}
         disabled={disabled || loading}
         {...props}
       >
         {/* Gradient Background */}
-        {!isDelete && (
+        {!isDelete && !hasCustomBorderColor && (
           <div
             className="absolute inset-0 rounded-full"
             style={{
@@ -34,7 +39,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
             }}
           />
         )}
-        
+
         {isDelete && !border && (
           <>
             <div
@@ -47,12 +52,15 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         )}
 
         {/* Content with hover effect */}
-        <div className={cn(
-          "relative z-10 flex items-center justify-center gap-2 overflow-hidden h-full",
-          border && isDelete && "text-red-500",
-          !border && "text-white",
-          !isDelete && border && "text-white" // Default border without variant uses white
-        )}>
+        <div
+          className={cn(
+            "relative z-10 flex items-center justify-center gap-2 overflow-hidden h-full",
+            border && isDelete && !hasCustomBorderColor && "text-red-500",
+            !border && "text-white",
+            !isDelete && border && !hasCustomBorderColor && "text-white"
+          )}
+          style={hasCustomBorderColor ? { color: borderColor } : undefined}
+        >
           {/* Original text - slides down on hover */}
           <div className="flex items-center gap-2 transition-transform duration-300 ease-in-out group-hover:translate-y-[50px]">
             {children}

@@ -1,14 +1,15 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { usePrivyWallet } from "@/hooks/usePrivyWallet";
 import { WorkflowCard } from "./WorkflowCard";
 import { WorkflowCardSkeleton } from "./WorkflowCardSkeleton";
 import { listWorkflows, deleteWorkflow } from "@/utils/workflow-api";
 import type { WorkflowSummary } from "@/types/workflow";
-import { Plus, Search, LayoutGrid, List, RefreshCw } from "lucide-react";
+import { Plus, Search, LayoutGrid, List, RefreshCw, Workflow, SearchX, Sparkles, X, Filter, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/Button";
 
 // Custom hook for debounced value
 function useDebounce<T>(value: T, delay: number): T {
@@ -25,6 +26,9 @@ function useDebounce<T>(value: T, delay: number): T {
 // localStorage key for view mode persistence
 const VIEW_MODE_KEY = "workflow-dashboard-view-mode";
 
+type SortOrder = "newest" | "oldest";
+type StatusFilter = "all" | "success" | "failed" | "never_run";
+
 export function WorkflowDashboard() {
     const router = useRouter();
     const { getPrivyAccessToken, authenticated, ready } = usePrivyWallet();
@@ -34,7 +38,22 @@ export function WorkflowDashboard() {
     const [error, setError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
     const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+    const [sortOrder, setSortOrder] = useState<SortOrder>("newest");
+    const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+    const [filterDropdownOpen, setFilterDropdownOpen] = useState(false);
+    const filterDropdownRef = useRef<HTMLDivElement>(null);
     const [isDeleting, setIsDeleting] = useState<string | null>(null);
+
+    // Close filter dropdown on outside click
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (filterDropdownRef.current && !filterDropdownRef.current.contains(e.target as Node)) {
+                setFilterDropdownOpen(false);
+            }
+        };
+        if (filterDropdownOpen) document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, [filterDropdownOpen]);
 
     // Debounce search query by 300ms
     const debouncedSearchQuery = useDebounce(searchQuery, 300);
@@ -131,16 +150,39 @@ export function WorkflowDashboard() {
         router.push(`/automation-builder?workflowId=${workflowId}&autoRun=true`);
     }, [router]);
 
-    // Memoize filtered workflows to avoid recalculation on every render
+    // Memoize filtered and sorted workflows
     const filteredWorkflows = useMemo(() => {
         const query = debouncedSearchQuery.toLowerCase();
-        if (!query) return workflows;
+        let result = workflows;
 
-        return workflows.filter((workflow) =>
-            workflow.name.toLowerCase().includes(query) ||
-            workflow.description?.toLowerCase().includes(query)
-        );
-    }, [workflows, debouncedSearchQuery]);
+        // Search filter
+        if (query) {
+            result = result.filter((workflow) =>
+                workflow.name.toLowerCase().includes(query) ||
+                workflow.description?.toLowerCase().includes(query)
+            );
+        }
+
+        // Status filter: last run success / failed / never run
+        if (statusFilter !== "all") {
+            result = result.filter((workflow) => {
+                const status = workflow.last_execution_status;
+                if (statusFilter === "success") return status === "SUCCESS";
+                if (statusFilter === "failed") return status === "FAILED";
+                if (statusFilter === "never_run") return status == null || workflow.execution_count === 0;
+                return true;
+            });
+        }
+
+        // Sort by updated_at
+        result = [...result].sort((a, b) => {
+            const dateA = new Date(a.updated_at).getTime();
+            const dateB = new Date(b.updated_at).getTime();
+            return sortOrder === "newest" ? dateB - dateA : dateA - dateB;
+        });
+
+        return result;
+    }, [workflows, debouncedSearchQuery, statusFilter, sortOrder]);
 
     // Show login prompt if not authenticated
     if (ready && !authenticated) {
@@ -160,90 +202,163 @@ export function WorkflowDashboard() {
     }
 
     return (
-        <div className="min-h-screen px-4 sm:px-6 lg:px-8 pt-28 pb-12 max-w-7xl mx-auto">
+        <div className="min-h-screen px-4 sm:px-6 lg:px-8 w-full">
             {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-                <div>
-                    <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
-                        My Workflows
-                    </h1>
-                    <p className="text-muted-foreground mt-1">
-                        {workflows.length} workflow{workflows.length !== 1 ? "s" : ""} total
-                    </p>
-                </div>
-
-                <button
-                    onClick={handleCreateNew}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium hover:from-amber-600 hover:to-orange-600 transition-all shadow-lg shadow-amber-500/20"
-                >
-                    <Plus className="w-5 h-5" />
-                    New Workflow
-                </button>
+            <div className="pt-32 pb-12">
+                <h1 className="text-[5vw] text-center font-bold">
+                    Your Automations
+                </h1>
             </div>
 
             {/* Search and View Toggle */}
-            <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
-                <div className="relative flex-1 max-w-md">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
-                    <input
-                        type="text"
-                        placeholder="Search workflows..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-card border border-border focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors"
-                        aria-label="Search workflows"
-                    />
-                </div>
-
-                <div className="flex items-center gap-2">
-                    <button
-                        onClick={fetchWorkflows}
-                        disabled={isLoading}
-                        className="p-2.5 rounded-lg border border-border hover:bg-secondary/50 transition-colors disabled:opacity-50"
-                        title="Refresh"
-                    >
-                        <RefreshCw className={cn("w-4 h-4", isLoading && "animate-spin")} />
-                    </button>
-
-                    <div className="flex rounded-lg border border-border overflow-hidden">
-                        <button
-                            onClick={() => handleViewModeChange("grid")}
-                            className={cn(
-                                "p-2.5 transition-colors",
-                                viewMode === "grid"
-                                    ? "bg-primary text-primary-foreground"
-                                    : "hover:bg-secondary/50"
-                            )}
-                            title="Grid view"
-                            aria-label="Grid view"
-                            aria-pressed={viewMode === "grid"}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mb-8 w-full">
+                <div className="flex items-center gap-2 w-full flex-wrap">
+                    <div className="relative flex items-center justify-start rounded-full border border-white/20 px-4 h-[44px] group hover:border-white/30 transition-all duration-300 flex-1 min-w-[200px] max-w-xl">
+                        <input
+                            type="text"
+                            placeholder="Search your flows..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="bg-transparent border-none outline-none text-sm font-semibold text-white placeholder:text-white/50 w-full pr-10"
+                            aria-label="Search workflows"
+                        />
+                        <Button
+                            type="button"
+                            className="absolute right-0 p-0! w-[42px]! h-[42px]!"
+                            title="Search"
+                            aria-label="Search"
                         >
-                            <LayoutGrid className="w-4 h-4" aria-hidden="true" />
-                        </button>
+                            <Search className="w-4 h-4" />
+                        </Button>
+                    </div>
+
+
+                    <div className="flex items-center gap-2 sm:gap-3">
                         <button
-                            onClick={() => handleViewModeChange("list")}
-                            className={cn(
-                                "p-2.5 transition-colors",
-                                viewMode === "list"
-                                    ? "bg-primary text-primary-foreground"
-                                    : "hover:bg-secondary/50"
-                            )}
-                            title="List view"
-                            aria-label="List view"
-                            aria-pressed={viewMode === "list"}
+                            type="button"
+                            onClick={fetchWorkflows}
+                            disabled={isLoading}
+                            className="w-10 h-10 flex items-center justify-center rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-all duration-200 disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:ring-2 focus:ring-amber-600/50"
+                            title="Refresh"
+                            aria-label="Refresh workflows"
                         >
-                            <List className="w-4 h-4" aria-hidden="true" />
+                            <RefreshCw className={cn("w-4 h-4", isLoading && "animate-spin")} />
                         </button>
+
+                        <div className="flex p-1 rounded-full border border-white/20 h-[44px]">
+                            <button
+                                type="button"
+                                onClick={() => handleViewModeChange("grid")}
+                                className={cn(
+                                    "p-2.5 rounded-full transition-all duration-200",
+                                    viewMode === "grid"
+                                        ? "bg-white/20 text-white"
+                                        : "text-white/70 hover:text-white hover:bg-white/10"
+                                )}
+                                title="Grid view"
+                                aria-label="Grid view"
+                                aria-pressed={viewMode === "grid"}
+                            >
+                                <LayoutGrid className="w-4 h-4" aria-hidden="true" />
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => handleViewModeChange("list")}
+                                className={cn(
+                                    "p-2.5 rounded-full transition-all duration-200",
+                                    viewMode === "list"
+                                        ? "bg-white/20 text-white"
+                                        : "text-white/70 hover:text-white hover:bg-white/10"
+                                )}
+                                title="List view"
+                                aria-label="List view"
+                                aria-pressed={viewMode === "list"}
+                            >
+                                <List className="w-4 h-4" aria-hidden="true" />
+                            </button>
+                        </div>
+
+
+                        {/* Filter dropdown beside search */}
+                        <div className="relative h-[44px] shrink-0" ref={filterDropdownRef}>
+                            <button
+                                type="button"
+                                onClick={() => setFilterDropdownOpen((o) => !o)}
+                                className={cn(
+                                    "h-full aspect-square flex items-center justify-center rounded-full border border-white/20 text-sm font-medium transition-all duration-200",
+                                    filterDropdownOpen
+                                        ? "bg-white/20 text-white border-white/30"
+                                        : "text-white/70 hover:text-white hover:bg-white/10 hover:border-white/25"
+                                )}
+                                aria-expanded={filterDropdownOpen}
+                                aria-haspopup="true"
+                                title="Filter & sort"
+                            >
+                                <Filter className="w-4 h-4 shrink-0" />
+                            </button>
+                            {filterDropdownOpen && (
+                                <div className="absolute top-full left-0 mt-2 min-w-[220px] rounded-xl border border-white/20 bg-[#121212] shadow-xl z-50 overflow-hidden">
+                                    <div className="p-2">
+                                        <p className="px-3 py-1.5 text-xs font-semibold text-white/50 uppercase tracking-wider">Sort</p>
+                                        {(
+                                            [
+                                                { value: "newest" as const, label: "Newest first" },
+                                                { value: "oldest" as const, label: "Oldest first" },
+                                            ] as const
+                                        ).map(({ value, label }) => (
+                                            <button
+                                                key={value}
+                                                type="button"
+                                                onClick={() => setSortOrder(value)}
+                                                className={cn(
+                                                    "w-full px-3 py-2 rounded-lg text-sm font-medium text-left transition-colors",
+                                                    sortOrder === value ? "bg-white/15 text-white" : "text-white/70 hover:bg-white/10 hover:text-white"
+                                                )}
+                                            >
+                                                {label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <div className="border-t border-white/10 p-2">
+                                        <p className="px-3 py-1.5 text-xs font-semibold text-white/50 uppercase tracking-wider">Status</p>
+                                        {(
+                                            [
+                                                { value: "all" as const, label: "All" },
+                                                { value: "success" as const, label: "Successful" },
+                                                { value: "failed" as const, label: "Failed" },
+                                                { value: "never_run" as const, label: "Never run" },
+                                            ] as const
+                                        ).map(({ value, label }) => (
+                                            <button
+                                                key={value}
+                                                type="button"
+                                                onClick={() => setStatusFilter(value)}
+                                                className={cn(
+                                                    "w-full px-3 py-2 rounded-lg text-sm font-medium text-left transition-colors",
+                                                    statusFilter === value ? "bg-white/15 text-white" : "text-white/70 hover:bg-white/10 hover:text-white"
+                                                )}
+                                            >
+                                                {label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            {/* Error State */}
-            {error && (
-                <div className="mb-6 p-4 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive">
-                    {error}
-                </div>
-            )}
+                <Button
+                    onClick={() => router.push("/public-workflows")}
+                    className="shrink-0"
+                    border
+                    borderColor="#ffffff"
+                    title="Checkout Public Automations"
+                    aria-label="Checkout Public Automations"
+                >
+                    Checkout Public Automations
+                </Button>
+            </div>
 
             {/* Loading State */}
             {isLoading && (
@@ -252,7 +367,7 @@ export function WorkflowDashboard() {
                         ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
                         : "space-y-3"
                 )}>
-                    {[...Array(6)].map((_, i) => (
+                    {[...Array(3)].map((_, i) => (
                         <WorkflowCardSkeleton key={i} viewMode={viewMode} />
                     ))}
                 </div>
@@ -260,28 +375,88 @@ export function WorkflowDashboard() {
 
             {/* Empty State */}
             {!isLoading && filteredWorkflows.length === 0 && (
-                <div className="min-h-[50vh] flex items-center justify-center">
-                    <div className="text-center space-y-4">
-                        <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-primary/20 to-purple-500/20 flex items-center justify-center">
-                            <Plus className="w-10 h-10 text-primary" />
-                        </div>
-                        <h3 className="text-xl font-semibold">
-                            {searchQuery ? "No workflows found" : "No workflows yet"}
-                        </h3>
-                        <p className="text-muted-foreground max-w-sm">
-                            {searchQuery
-                                ? "Try a different search term"
-                                : "Create your first workflow to automate tasks and connect services."}
-                        </p>
-                        {!searchQuery && (
-                            <button
-                                onClick={handleCreateNew}
-                                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors"
-                            >
-                                <Plus className="w-5 h-5" />
-                                Create Workflow
-                            </button>
+                <div className="min-h-[50vh] flex items-center justify-center px-4 overflow-hidden w-full">
+                    <div
+                        className={cn(
+                            "group relative w-full max-w-md rounded-2xl border border-white/20 bg-white/5 p-8 sm:p-10 overflow-hidden",
+                            "shadow-[0_0_0_1px_rgba(255,255,255,0.05)_inset]",
+                            "transition-all duration-300 ease-out",
+                            "hover:border-white/30 hover:shadow-[0_0_0_1px_rgba(255,255,255,0.08)_inset,0_8px_32px_-8px_rgba(0,0,0,0.4)]"
                         )}
+                    >
+                        {/* Accent line */}
+                        <div
+                            className="absolute left-0 top-0 bottom-0 w-0.5 rounded-l-2xl transition-opacity duration-300 group-hover:opacity-100 opacity-80"
+                            style={{
+                                background: "linear-gradient(180deg, rgba(249,115,22,0.95) 0%, rgba(251,146,60,0.7) 50%, rgba(249,115,22,0.25) 100%)",
+                                boxShadow: "0 0 12px rgba(249,115,22,0.25)",
+                            }}
+                        />
+
+                        <div
+                            className="absolute right-0 top-0 bottom-0 w-0.5 rounded-r-2xl transition-opacity duration-300 group-hover:opacity-100 opacity-80"
+                            style={{
+                                background: "linear-gradient(180deg, rgba(249,115,22,0.95) 0%, rgba(251,146,60,0.7) 50%, rgba(249,115,22,0.25) 100%)",
+                                boxShadow: "0 0 12px rgba(249,115,22,0.25)",
+                            }}
+                        />
+                        <div className="relative text-center space-y-7">
+                            <div
+                                className={cn(
+                                    "mx-auto flex h-24 w-24 items-center justify-center rounded-2xl border border-white/10",
+                                    "bg-linear-to-br from-white/6 to-transparent",
+                                    "ring-1 ring-white/5 transition-all duration-300",
+                                    "shadow-[0_0_24px_-4px_rgba(249,115,22,0.15)]",
+                                    !searchQuery && "group-hover:shadow-[0_0_32px_-4px_rgba(249,115,22,0.2)] group-hover:border-amber-500/20"
+                                )}
+                            >
+                                {searchQuery ? (
+                                    <SearchX className="h-11 w-11 text-white/50" strokeWidth={1.5} />
+                                ) : (
+                                    <Workflow className="h-11 w-11 text-amber-500/95" strokeWidth={1.5} />
+                                )}
+                            </div>
+                            <div className="space-y-2.5">
+                                <h3 className="text-xl sm:text-2xl font-semibold tracking-tight text-white">
+                                    {searchQuery ? "No workflows found" : "No workflows yet"}
+                                </h3>
+                                <p className="text-sm text-white/55 max-w-sm mx-auto leading-relaxed">
+                                    {searchQuery
+                                        ? "No automations match your search. Try a different term or clear the search to see all workflows."
+                                        : "Create your first workflow to automate tasks and connect services."}
+                                </p>
+                            </div>
+                            <div className="flex flex-col items-center justify-center gap-4">
+                                {searchQuery ? (
+                                    <button
+                                        type="button"
+                                        onClick={() => setSearchQuery("")}
+                                        className={cn(
+                                            "inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium",
+                                            "border border-white/20 bg-white/5 text-white/90",
+                                            "hover:bg-white/10 hover:border-white/30 transition-all duration-200"
+                                        )}
+                                    >
+                                        <X className="h-4 w-4 shrink-0" />
+                                        Clear search
+                                    </button>
+                                ) : (
+                                    <>
+                                        <Button
+                                            onClick={handleCreateNew}
+                                            className="inline-flex items-center gap-2 shrink-0 px-6"
+                                        >
+                                            <Plus className="h-5 w-5 shrink-0" strokeWidth={2.5} aria-hidden />
+                                            <span>Create Workflow</span>
+                                        </Button>
+                                        <p className="flex items-center gap-1.5 text-xs text-white/40 text-center">
+                                            <Sparkles className="h-3.5 w-3.5 shrink-0" />
+                                            Start from scratch or checkout public workflows
+                                        </p>
+                                    </>
+                                )}
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}

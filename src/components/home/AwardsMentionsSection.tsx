@@ -113,13 +113,13 @@ export function AwardsMentionsSection() {
         <motion.div
           className="flex w-max flex-nowrap whitespace-nowrap"
           animate={{
-            x: ["0%", "-40%"],
+            x: ["0%", "-25%"],
           }}
           transition={{
             x: {
               repeat: Infinity,
               repeatType: "loop",
-              duration: 15,
+              duration: 20,
               ease: "linear",
             },
           }}

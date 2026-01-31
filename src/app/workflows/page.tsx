@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import NavBar from "@/components/layout/Navbar";
 import { WorkflowDashboard } from "@/components/workflow/WorkflowDashboard";
 
 export const metadata: Metadata = {
@@ -10,6 +11,7 @@ export const metadata: Metadata = {
 export default function WorkflowsPage() {
     return (
         <div className="min-h-screen bg-background">
+            <NavBar />
             <WorkflowDashboard />
         </div>
     );
