@@ -59,6 +59,13 @@ const initialEdges: Edge[] = [];
 // Define handler types for React Flow events
 type OnNodeClick = (event: React.MouseEvent, node: Node) => void;
 type OnPaneClick = (event: React.MouseEvent) => void;
+type OnNodeContextMenu = (event: React.MouseEvent, node: Node) => void;
+type OnEdgeContextMenu = (event: React.MouseEvent, edge: Edge) => void;
+
+export type ContextMenuState =
+  | { type: "node"; node: Node; x: number; y: number }
+  | { type: "edge"; edge: Edge; x: number; y: number }
+  | null;
 
 export interface WorkflowContextType {
   // State
@@ -96,9 +103,15 @@ export interface WorkflowContextType {
   setSelectedNode: (node: Node | null) => void;
   handleNodeClick: OnNodeClick;
   handlePaneClick: OnPaneClick;
+  handleNodeContextMenu: OnNodeContextMenu;
+  handleEdgeContextMenu: OnEdgeContextMenu;
+  handlePaneContextMenu: (event: React.MouseEvent) => void;
   handleNodeDataChange: (nodeId: string, data: Record<string, unknown>) => void;
   deleteNodes: (nodeIds: string[]) => void;
   onNodesDelete: (deleted: Node[]) => void;
+  deleteEdge: (edgeId: string) => void;
+  contextMenu: ContextMenuState;
+  closeContextMenu: () => void;
 
   // Actions - Canvas operations
   handleZoomIn: () => void;
@@ -121,6 +134,12 @@ export interface WorkflowContextType {
 
   // Actions - UI state
   setMobileMenuOpen: (open: boolean) => void;
+
+  // Undo / Redo
+  undo: () => void;
+  redo: () => void;
+  canUndo: boolean;
+  canRedo: boolean;
 
   // Utilities
   isProtectedNode: (nodeId: string) => boolean;
@@ -154,6 +173,7 @@ const WorkflowProviderInner: React.FC<{ children: React.ReactNode }> = ({
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
+  const [contextMenu, setContextMenu] = useState<ContextMenuState>(null);
   const reactFlowInstanceRef = useRef<ReactFlowInstance | null>(null);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -169,6 +189,50 @@ const WorkflowProviderInner: React.FC<{ children: React.ReactNode }> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [isPublic, setIsPublic] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
+
+  // Undo / Redo history (snapshots of { nodes, edges })
+  const undoStackRef = useRef<Array<{ nodes: Node[]; edges: Edge[] }>>([]);
+  const redoStackRef = useRef<Array<{ nodes: Node[]; edges: Edge[] }>>([]);
+  const [undoStackLength, setUndoStackLength] = useState(0);
+  const [redoStackLength, setRedoStackLength] = useState(0);
+
+  const pushUndo = useCallback((currentNodes: Node[], currentEdges: Edge[]) => {
+    undoStackRef.current.push(
+      JSON.parse(JSON.stringify({ nodes: currentNodes, edges: currentEdges }))
+    );
+    redoStackRef.current = [];
+    setUndoStackLength(undoStackRef.current.length);
+    setRedoStackLength(0);
+  }, []);
+
+  const undo = useCallback(() => {
+    if (undoStackRef.current.length === 0) return;
+    const snapshot = undoStackRef.current.pop();
+    if (!snapshot) return;
+    redoStackRef.current.push(
+      JSON.parse(JSON.stringify({ nodes, edges }))
+    );
+    setNodes(snapshot.nodes);
+    setEdges(snapshot.edges);
+    setUndoStackLength(undoStackRef.current.length);
+    setRedoStackLength(redoStackRef.current.length);
+  }, [nodes, edges, setNodes, setEdges]);
+
+  const redo = useCallback(() => {
+    if (redoStackRef.current.length === 0) return;
+    const snapshot = redoStackRef.current.pop();
+    if (!snapshot) return;
+    undoStackRef.current.push(
+      JSON.parse(JSON.stringify({ nodes, edges }))
+    );
+    setNodes(snapshot.nodes);
+    setEdges(snapshot.edges);
+    setUndoStackLength(undoStackRef.current.length);
+    setRedoStackLength(redoStackRef.current.length);
+  }, [nodes, edges, setNodes, setEdges]);
+
+  const canUndo = undoStackLength > 0;
+  const canRedo = redoStackLength > 0;
 
   // Refs to track the selected node without causing re-renders
   const selectedNodeIdRef = useRef<string | null>(null);
@@ -400,6 +464,10 @@ const WorkflowProviderInner: React.FC<{ children: React.ReactNode }> = ({
 
         setNodes(loadedNodes);
         setEdges(loadedEdges);
+        undoStackRef.current = [];
+        redoStackRef.current = [];
+        setUndoStackLength(0);
+        setRedoStackLength(0);
         setWorkflowName(result.data.name);
         setWorkflowDescription(result.data.description || "");
         setWorkflowTags(result.data.tags || []);
@@ -429,6 +497,10 @@ const WorkflowProviderInner: React.FC<{ children: React.ReactNode }> = ({
   const resetWorkflow = useCallback(() => {
     setNodes(initialNodes);
     setEdges(initialEdges);
+    undoStackRef.current = [];
+    redoStackRef.current = [];
+    setUndoStackLength(0);
+    setRedoStackLength(0);
     setCurrentWorkflowId(null);
     setWorkflowVersion(1);
     setIsPublic(false);
@@ -454,6 +526,7 @@ const WorkflowProviderInner: React.FC<{ children: React.ReactNode }> = ({
         return;
       }
 
+      pushUndo(nodes, edges);
       setNodes((nds) => nds.filter((n) => !deletableIds.includes(n.id)));
       setEdges((eds) =>
         eds.filter(
@@ -470,7 +543,7 @@ const WorkflowProviderInner: React.FC<{ children: React.ReactNode }> = ({
         setSelectedNode(null);
       }
     },
-    [setNodes, setEdges, isProtectedNode]
+    [nodes, edges, setNodes, setEdges, isProtectedNode, pushUndo]
   );
 
   // Keyboard shortcuts
@@ -553,10 +626,11 @@ const WorkflowProviderInner: React.FC<{ children: React.ReactNode }> = ({
         },
       };
 
+      pushUndo(nodes, edges);
       setNodes((nds) => nds.concat(newNode));
       setMobileMenuOpen(false);
     },
-    [nodes, setNodes, canvasDimensions, getBlockById]
+    [nodes, edges, setNodes, canvasDimensions, getBlockById, pushUndo]
   );
 
   // React Flow's built-in node deletion handler
@@ -570,6 +644,7 @@ const WorkflowProviderInner: React.FC<{ children: React.ReactNode }> = ({
 
   const onConnect = useCallback(
     (connection: Parameters<typeof addEdge>[0]) => {
+      pushUndo(nodes, edges);
       setEdges((eds) => {
         // Use a visible color for edges - white for dark background
         const baseEdge = {
@@ -676,7 +751,7 @@ const WorkflowProviderInner: React.FC<{ children: React.ReactNode }> = ({
         return addEdge(baseEdge, eds);
       });
     },
-    [setEdges, nodes]
+    [nodes, edges, setEdges, pushUndo]
   );
 
   // Handle block drag and drop to canvas
@@ -730,12 +805,13 @@ const WorkflowProviderInner: React.FC<{ children: React.ReactNode }> = ({
           },
         };
 
+        pushUndo(nodes, edges);
         setNodes((nds) => nds.concat(newNode));
       } catch (error) {
         console.error("Error dropping block:", error);
       }
     },
-    [nodes, setNodes, getBlockById]
+    [nodes, edges, setNodes, getBlockById, pushUndo]
   );
 
   const handleBlockDragStart = useCallback(() => {
@@ -800,9 +876,44 @@ const WorkflowProviderInner: React.FC<{ children: React.ReactNode }> = ({
     setSelectedNode(null);
   }, []);
 
+  const closeContextMenu = useCallback(() => {
+    setContextMenu(null);
+  }, []);
+
+  const handleNodeContextMenu: OnNodeContextMenu = useCallback(
+    (event, node) => {
+      event.preventDefault();
+      setContextMenu({ type: "node", node, x: event.clientX, y: event.clientY });
+    },
+    []
+  );
+
+  const handleEdgeContextMenu: OnEdgeContextMenu = useCallback(
+    (event, edge) => {
+      event.preventDefault();
+      setContextMenu({ type: "edge", edge, x: event.clientX, y: event.clientY });
+    },
+    []
+  );
+
+  const handlePaneContextMenu = useCallback((event: React.MouseEvent) => {
+    event.preventDefault();
+    setContextMenu(null);
+  }, []);
+
+  const deleteEdge = useCallback(
+    (edgeId: string) => {
+      pushUndo(nodes, edges);
+      setEdges((eds) => eds.filter((e) => e.id !== edgeId));
+      closeContextMenu();
+    },
+    [nodes, edges, setEdges, closeContextMenu, pushUndo]
+  );
+
   // Handle node data change from right sidebar
   const handleNodeDataChange = useCallback(
     (nodeId: string, data: Record<string, unknown>) => {
+      pushUndo(nodes, edges);
       setNodes((nds) => {
         const updatedNodes = nds.map((node) =>
           node.id === nodeId
@@ -832,7 +943,7 @@ const WorkflowProviderInner: React.FC<{ children: React.ReactNode }> = ({
         return updatedNodes;
       });
     },
-    [setNodes]
+    [nodes, edges, setNodes, pushUndo]
   );
 
   // Sync selectedNode with nodes array when nodes change
@@ -913,9 +1024,15 @@ const WorkflowProviderInner: React.FC<{ children: React.ReactNode }> = ({
       setSelectedNode,
       handleNodeClick,
       handlePaneClick,
+      handleNodeContextMenu,
+      handleEdgeContextMenu,
+      handlePaneContextMenu,
       handleNodeDataChange,
       deleteNodes,
       onNodesDelete,
+      deleteEdge,
+      contextMenu,
+      closeContextMenu,
       handleZoomIn,
       handleZoomOut,
       handleFitView,
@@ -930,6 +1047,10 @@ const WorkflowProviderInner: React.FC<{ children: React.ReactNode }> = ({
       onDrop,
       onConnect,
       setMobileMenuOpen,
+      undo,
+      redo,
+      canUndo,
+      canRedo,
       isProtectedNode,
       isBlockDisabled,
       isSwapBlockDisabled,
@@ -955,9 +1076,15 @@ const WorkflowProviderInner: React.FC<{ children: React.ReactNode }> = ({
       onEdgesChange,
       handleNodeClick,
       handlePaneClick,
+      handleNodeContextMenu,
+      handleEdgeContextMenu,
+      handlePaneContextMenu,
       handleNodeDataChange,
       deleteNodes,
       onNodesDelete,
+      deleteEdge,
+      contextMenu,
+      closeContextMenu,
       handleZoomIn,
       handleZoomOut,
       handleFitView,
@@ -971,6 +1098,10 @@ const WorkflowProviderInner: React.FC<{ children: React.ReactNode }> = ({
       onDragOver,
       onDrop,
       onConnect,
+      undo,
+      redo,
+      canUndo,
+      canRedo,
       isProtectedNode,
       isBlockDisabled,
       isSwapBlockDisabled,

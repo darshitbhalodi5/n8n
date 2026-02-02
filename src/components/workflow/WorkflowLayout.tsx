@@ -7,7 +7,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/Tooltip";
-import { X } from "lucide-react";
+import { X, Settings, Trash2 } from "lucide-react";
 import { useWorkflow } from "@/contexts/WorkflowContext";
 import { WorkflowCanvas } from "./workflow-layout/WorkflowCanvas";
 import { WorkflowToolbar } from "./workflow-layout/WorkflowToolbar";
@@ -32,9 +32,19 @@ export function WorkflowLayout({ onCategoryChange }: WorkflowLayoutProps) {
     handleZoomIn,
     handleZoomOut,
     handleFitView,
+    contextMenu,
+    closeContextMenu,
+    deleteNodes,
+    deleteEdge,
+    isProtectedNode,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
   } = useWorkflow();
   const [activeCategory, setActiveCategory] = useState("all");
   const canvasContainerRef = useRef<HTMLDivElement>(null);
+  const contextMenuRef = useRef<HTMLDivElement>(null);
 
   const handleCategoryChange = (categoryId: string) => {
     setActiveCategory(categoryId);
@@ -71,6 +81,24 @@ export function WorkflowLayout({ onCategoryChange }: WorkflowLayoutProps) {
       const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0;
       const modifierKey = isMac ? event.metaKey : event.ctrlKey;
 
+      // Undo: Ctrl/Cmd + Z
+      if (modifierKey && event.key === "z" && !event.shiftKey && canUndo) {
+        event.preventDefault();
+        undo();
+        return;
+      }
+
+      // Redo: Ctrl/Cmd + Shift + Z or Ctrl/Cmd + Y
+      if (
+        modifierKey &&
+        (event.key === "y" || (event.key === "z" && event.shiftKey)) &&
+        canRedo
+      ) {
+        event.preventDefault();
+        redo();
+        return;
+      }
+
       // Zoom in: Ctrl/Cmd + Plus/Equal
       if (modifierKey && (event.key === "+" || event.key === "=")) {
         event.preventDefault();
@@ -104,12 +132,78 @@ export function WorkflowLayout({ onCategoryChange }: WorkflowLayoutProps) {
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [handleZoomIn, handleZoomOut, handleFitView]);
+  }, [handleZoomIn, handleZoomOut, handleFitView, undo, redo, canUndo, canRedo]);
+
+  // Close context menu on click outside
+  useEffect(() => {
+    if (!contextMenu) return;
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        contextMenuRef.current &&
+        !contextMenuRef.current.contains(event.target as Node)
+      ) {
+        closeContextMenu();
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [contextMenu, closeContextMenu]);
 
   const showRightSidebar = selectedNode !== null && selectedNode !== undefined;
 
   return (
     <div className="flex overflow-hidden bg-background relative min-h-screen">
+      {/* Context menu for nodes and edges */}
+      {contextMenu && (
+        <div
+          ref={contextMenuRef}
+          className="fixed z-100 min-w-[180px] rounded-lg border border-white/20 bg-[#121212] shadow-xl overflow-hidden"
+          style={{ left: contextMenu.x, top: contextMenu.y }}
+        >
+          {contextMenu.type === "node" && (
+            <>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedNode(contextMenu.node);
+                  closeContextMenu();
+                }}
+                className="w-full px-4 py-2.5 text-sm text-left text-white/90 hover:bg-white/10 flex items-center gap-2"
+              >
+                <Settings className="w-4 h-4 text-white/70" />
+                Open configuration
+              </button>
+              {!isProtectedNode(contextMenu.node.id) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    deleteNodes([contextMenu.node.id]);
+                    closeContextMenu();
+                  }}
+                  className="w-full px-4 py-2.5 text-sm text-left text-red-400 hover:bg-red-500/10 flex items-center gap-2"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Delete block
+                </button>
+              )}
+            </>
+          )}
+          {contextMenu.type === "edge" && (
+            <button
+              type="button"
+              onClick={() => {
+                if (contextMenu.edge.id) deleteEdge(contextMenu.edge.id);
+                closeContextMenu();
+              }}
+              className="w-full px-4 py-2.5 text-sm text-left text-red-400 hover:bg-red-500/10 flex items-center gap-2"
+            >
+              <Trash2 className="w-4 h-4" />
+              Delete connection
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Mobile Backdrop Overlay */}
       {mobileMenuOpen && (
         <div

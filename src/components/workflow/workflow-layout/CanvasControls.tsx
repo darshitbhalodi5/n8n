@@ -10,9 +10,10 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/Tooltip";
+import { CgRedo, CgUndo } from "react-icons/cg";
 
 export function CanvasControls() {
-  const { handleZoomIn, handleZoomOut, handleFitView, zoomLevel } = useWorkflow();
+  const { handleZoomIn, handleZoomOut, handleFitView, zoomLevel, undo, redo, canUndo, canRedo } = useWorkflow();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -88,7 +89,43 @@ export function CanvasControls() {
 
   return (
     <div className="absolute bottom-4 right-4 z-20 flex flex-col gap-2" ref={dropdownRef}>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-0">
+        {/* Undo */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              onClick={undo}
+              disabled={!canUndo}
+              className="p-1 rounded-full text-white/80 hover:bg-white/5 transition-all duration-200 flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+              aria-label="Undo"
+            >
+              <CgUndo className="w-5 h-5" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="left" sideOffset={8}>
+            <p>Undo {cmdKey}+Z</p>
+          </TooltipContent>
+        </Tooltip>
+
+        {/* Redo */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              onClick={redo}
+              disabled={!canRedo}
+              className="p-1 rounded-full text-white/80 hover:bg-white/5 transition-all duration-200 flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+              aria-label="Redo"
+            >
+              <CgRedo className="w-5 h-5" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="left" sideOffset={8}>
+            <p>Redo {cmdKey}+Shift+Z</p>
+          </TooltipContent>
+        </Tooltip>
+
         {/* Execution history - link to workflows page */}
         <Tooltip>
           <TooltipTrigger asChild>

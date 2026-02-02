@@ -39,6 +39,9 @@ function WorkflowCanvasInner({
     onNodesDelete,
     handleNodeClick,
     handlePaneClick,
+    handleNodeContextMenu,
+    handleEdgeContextMenu,
+    handlePaneContextMenu,
     handleReactFlowInit,
     setZoomLevel,
   } = useWorkflow();
@@ -91,6 +94,9 @@ function WorkflowCanvasInner({
         onMove={handleMove}
         onNodeClick={handleNodeClick}
         onPaneClick={handlePaneClick}
+        onNodeContextMenu={handleNodeContextMenu}
+        onEdgeContextMenu={handleEdgeContextMenu}
+        onPaneContextMenu={handlePaneContextMenu}
         nodesDraggable={true}
         nodesConnectable={true}
         elementsSelectable={true}
