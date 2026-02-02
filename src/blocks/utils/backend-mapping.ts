@@ -24,6 +24,16 @@ export function extractNodeConfig(node: Node): Record<string, unknown> {
 
   // Fallback to type-specific extraction logic
   switch (type) {
+    case "api":
+      return {
+        url: data.url,
+        method: data.method,
+        headers: data.headers,
+        queryParams: data.queryParams,
+        body: data.body,
+        auth: data.auth,
+      };
+
     case "slack":
       return {
         connectionId: data.slackConnectionId,
@@ -144,8 +154,8 @@ export function extractNodeConfig(node: Node): Record<string, unknown> {
  * Uses block metadata if available, otherwise falls back to generic transformation
  */
 export function transformNodeToCanvas(backendNode: BackendNode): Node {
-  const frontendType = (backendNode.metadata?.frontendType as string) || 
-                       (typeof backendNode.type === 'string' ? backendNode.type.toLowerCase() : 'base');
+  const frontendType = (backendNode.metadata?.frontendType as string) ||
+    (typeof backendNode.type === 'string' ? backendNode.type.toLowerCase() : 'base');
 
   // Handle nullable name from backend API
   const nodeName = backendNode.name ?? backendNode.id;

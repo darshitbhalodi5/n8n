@@ -29,6 +29,7 @@ import { slackBlock } from "./definitions/social/slack";
 import { telegramBlock } from "./definitions/social/telegram";
 import { startBlock } from "./definitions/triggers/start";
 import { walletBlock } from "./definitions/wallet/wallet";
+import { apiBlock } from "./definitions/general/api";
 
 // Import icons from assets
 import * as logos from "./assets/logos";
@@ -139,6 +140,8 @@ const STATIC_BLOCKS: BlockDefinition[] = [
   startBlock,
   // Wallet blocks
   walletBlock,
+  // General blocks
+  apiBlock,
   // DeFi blocks
   uniswapBlock,
   relayBlock,
@@ -313,6 +316,7 @@ class BlockRegistry {
       ai: "AI",
       wallet: "Wallet",
       triggers: "Triggers",
+      general: "General",
     };
     return labels[categoryId] || categoryId.charAt(0).toUpperCase() + categoryId.slice(1);
   }
@@ -381,6 +385,7 @@ export function generateIconRegistry(): IconRegistry {
     GLMLogo: logos.GLMLogo,
     DeepSeekLogo: logos.DeepSeekLogo,
     ChatGPTLogo: logos.ChatGPTLogo,
+    ApiLogo: logos.ApiLogo,
   };
 
   return logoMap;

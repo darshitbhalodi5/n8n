@@ -7,7 +7,7 @@ import { WorkflowCard } from "./WorkflowCard";
 import { WorkflowCardSkeleton } from "./WorkflowCardSkeleton";
 import { listWorkflows, deleteWorkflow } from "@/utils/workflow-api";
 import type { WorkflowSummary } from "@/types/workflow";
-import { Plus, Search, LayoutGrid, List, RefreshCw, Workflow, SearchX, Sparkles, X, Filter, ChevronDown } from "lucide-react";
+import { Plus, Search, LayoutGrid, List, RefreshCw, Workflow, SearchX, Sparkles, X, Filter } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
 
@@ -35,7 +35,7 @@ export function WorkflowDashboard() {
 
     const [workflows, setWorkflows] = useState<WorkflowSummary[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    // const [error, setError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
     const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
     const [sortOrder, setSortOrder] = useState<SortOrder>("newest");
@@ -76,12 +76,12 @@ export function WorkflowDashboard() {
         if (!authenticated) return;
 
         setIsLoading(true);
-        setError(null);
+        // setError(null);
 
         try {
             const accessToken = await getPrivyAccessToken();
             if (!accessToken) {
-                setError("Unable to authenticate. Please log in again.");
+                // setError("Unable to authenticate. Please log in again.");
                 setIsLoading(false);
                 return;
             }
@@ -91,10 +91,11 @@ export function WorkflowDashboard() {
             if (result.success) {
                 setWorkflows(result.data || []);
             } else {
-                setError(result.error?.message || "Failed to load workflows");
+                // setError(result.error?.message || "Failed to load workflows");
+                console.error(result.error?.message);
             }
         } catch (err) {
-            setError("An unexpected error occurred");
+            // setError("An unexpected error occurred");
             console.error(err);
         } finally {
             setIsLoading(false);

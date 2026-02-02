@@ -39,7 +39,12 @@ import insurace from "@/assets/blocks/InsurAce.svg";
 import qwen from "@/assets/blocks/Qwen.svg";
 import glm from "@/assets/blocks/GLM.svg";
 import deepseek from "@/assets/blocks/Deepseek.svg";
+import { TbApi } from "react-icons/tb";
 import chatgpt from "@/assets/blocks/ChatGPT.svg";
+
+export const ApiLogo = ({ className }: LogoProps) => (
+  <TbApi className={`text-orange-500 ${className || ""}`} />
+);
 
 interface LogoProps {
   className?: string;

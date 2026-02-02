@@ -7,7 +7,7 @@ import { InputProps } from "./Input";
 import { Typography } from "./Typography";
 
 export interface FormInputProps extends Omit<InputProps, "id"> {
-  label: string;
+  label?: string;
   required?: boolean;
   helperText?: string;
   error?: string;
@@ -41,23 +41,25 @@ const FormInput = React.forwardRef<
     const generatedId = React.useId();
     const inputId = id || `form-input-${generatedId}`;
     const hasError = !!error;
-    
+
     // Extract onChange and className from textareaProps to handle them separately
     const { onChange: textareaOnChange, className: textareaClassName, ...restTextareaProps } = textareaProps || {};
 
     return (
       <div className="space-y-2">
         <label htmlFor={inputId} className="block">
-          <Typography
-            variant="caption"
-            className={cn(
-              "mb-1",
-              hasError ? "text-destructive" : "text-muted-foreground"
-            )}
-          >
-            {label}
-            {required && <span className="text-destructive ml-1">*</span>}
-          </Typography>
+          {label && (
+            <Typography
+              variant="caption"
+              className={cn(
+                "mb-1",
+                hasError ? "text-destructive" : "text-muted-foreground"
+              )}
+            >
+              {label}
+              {required && <span className="text-destructive ml-1">*</span>}
+            </Typography>
+          )}
           {as === "input" ? (
             <>
               <input
