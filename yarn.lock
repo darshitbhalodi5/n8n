@@ -5781,9 +5781,9 @@ hermes-parser@^0.25.1:
     hermes-estree "0.25.1"
 
 hono@^4.10.3:
-  version "4.11.3"
-  resolved "https://registry.npmjs.org/hono/-/hono-4.11.3.tgz"
-  integrity sha512-PmQi306+M/ct/m5s66Hrg+adPnkD5jiO6IjA7WhWw0gSBSo1EcRegwuI1deZ+wd5pzCGynCcn2DprnE4/yEV4w==
+  version "4.11.5"
+  resolved "https://registry.yarnpkg.com/hono/-/hono-4.11.5.tgz#22dce7bb4ef589f3ece357affabd422fee898d0e"
+  integrity sha512-WemPi9/WfyMwZs+ZUXdiwcCh9Y+m7L+8vki9MzDw3jJ+W9Lc+12HGsd368Qc1vZi1xwW8BWMMsnK5efYKPdt4g==
 
 humanize-ms@^1.2.1:
   version "1.2.1"
